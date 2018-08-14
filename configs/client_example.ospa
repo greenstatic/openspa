@@ -1,0 +1,77 @@
+# Required field. Version of the OpenSPA OSPA file format
+version: "0.1.0"
+
+# Required field. Represents the name of the service, can be anything.
+name: "My SPA server"
+
+# Required field. The client's unique ID (should be a UUID) that
+# the server uses along with the client's packet signature to
+# verify authentication and authorization.
+clientDeviceId: "c19541ee-4e58-4e66-98ea-7e896e4e73a1"
+
+# Optional field. The OpenSPA server IP, to where we should send
+# OpenSPA request packets. If not provided, it is required that
+# you provide it with the command flag.
+#serverIp: 1.1.1.1
+
+# Optional field. The OpenSPA server port, to where we should send
+# OpenSPA request packets. If not provided the default port 22211
+# will be used. Can be overridden using a command flag.
+#serverPort: 22211
+
+# Optional field. The Echo-IP server to use to resolve the client's
+# public IP and if the client is behind a NAT. If not provided the
+# default Echo-IP server will be used: "https://ip.openspa.org". If
+# you wish to host your own the source code is available here:
+# https://github.com/greenstatic/echo-ip
+# You can override this field using a command flag.
+#echoIpServer: "https://ip.openspa.org"
+
+
+# Required field. The client's private RSA 2048 bit key. This should
+# be the private key corresponding to the "publicKey" field public key.
+# This field should be provided as a YAML multiline string like so:
+#
+# privateKey: |
+#   -----BEGIN RSA PRIVATE KEY-----
+#   <PRIVATE KEY CONTENTS HERE>
+#   -----END RSA PRIVATE KEY-----
+#
+# Note the "|" character after the field name, it denotes a multiline
+# string with new lines preserved.
+
+privateKey: |
+  -----BEGIN RSA PRIVATE KEY-----
+  <PRIVATE KEY CONTENTS HERE>
+  -----END RSA PRIVATE KEY-----
+
+# Required field. The client's public RSA 2048 bit key. This field
+# should be provided as a YAML multiline string like so:
+#
+# publicKey: |
+#   -----BEGIN PUBLIC KEY-----
+#   <PUBLIC KEY CONTENTS HERE>
+#   -----END PUBLIC KEY-----
+#
+# Note the "|" character after the field name, it denotes a multiline
+# string with new lines preserved.
+publicKey: |
+  -----BEGIN PUBLIC KEY-----
+  <PUBLIC KEY CONTENTS HERE>
+  -----END PUBLIC KEY-----
+
+# Required field. The server's public RSA 2048 bit key.
+# This field should be provided as a YAML multiline string like so:
+#
+# serverPublicKey: |
+#   -----BEGIN PUBLIC KEY-----
+#   <PUBLIC KEY CONTENTS HERE>
+#   -----END PUBLIC KEY-----
+#
+# Note the "|" character after the field name, it denotes a multiline
+# string with new lines preserved.
+
+serverPublicKey: |
+  -----BEGIN PUBLIC KEY-----
+  <PUBLIC KEY CONTENTS HERE>
+  -----END PUBLIC KEY-----
