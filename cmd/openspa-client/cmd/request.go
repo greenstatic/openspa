@@ -207,13 +207,13 @@ var requestCmd = &cobra.Command{
 			return
 		}
 
-		// Parse ports
-		if startPort == 0 {
-			log.Error("Port cannot be 0")
+		if !tools.PortCanBeZero(protocolByte) && startPort == 0 {
+			log.Error("Protocol requires port")
 			os.Exit(badPrameters)
 			return
 		}
 
+		// Parse ports
 		if endPort == 0 {
 			endPort = startPort
 		}
@@ -283,7 +283,7 @@ func init() {
 	requestCmd.Flags().StringVar(&echoIPv6Server, "echo-ipv6-server", ipresolver.DefaultEchoIpV6Server,
 		"The IPv6 Echo-IP server to use for automatic public IP discovery (can be a domain or IP address)")
 
-	requestCmd.MarkFlagRequired("port")
+	//requestCmd.MarkFlagRequired("port")
 
 	rootCmd.AddCommand(requestCmd)
 }
@@ -399,6 +399,7 @@ func request(clientPrivKey *rsa.PrivateKey, clientPubKey *rsa.PublicKey, serverP
 		}
 
 		log.WithFields(log.Fields{
+			"protocol": tools.ConvertProtoByteToStr(resp.Payload.Protocol),
 			"startPort": resp.Payload.StartPort,
 			"endPort":   resp.Payload.EndPort,
 			"duration":  resp.Payload.Duration,
