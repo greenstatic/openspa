@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/greenstatic/openspa/internal/cmdimpl"
 	"github.com/greenstatic/openspa/internal/ipresolver"
+	"github.com/spf13/cobra"
 	"os"
 )
 

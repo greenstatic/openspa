@@ -2,16 +2,16 @@ package cmd
 
 import (
 	"errors"
-	"github.com/greenstatic/openspalib/cryptography"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"net"
 	"github.com/greenstatic/openspa/internal/extensionScripts"
 	"github.com/greenstatic/openspa/internal/firewalltracker"
 	"github.com/greenstatic/openspa/internal/ipresolver"
 	"github.com/greenstatic/openspa/internal/ospa"
 	"github.com/greenstatic/openspa/internal/server"
+	"github.com/greenstatic/openspalib/cryptography"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -88,6 +88,8 @@ var serverCmd = &cobra.Command{
 		}
 
 		fwState := firewalltracker.Create(es.GetRuleAdd(), es.GetRuleRemove())
+		replay := server.ReplayDetect{}
+		replay.Setup()
 
 		bindIp := net.ParseIP(viper.GetString("bind"))
 		binPort := uint16(viper.GetInt("port"))
@@ -98,7 +100,8 @@ var serverCmd = &cobra.Command{
 			privKey,
 			pubKey,
 			es,
-			fwState}
+			fwState,
+			&replay}
 
 		log.WithFields(log.Fields{"bindIp": bindIp, "port": binPort}).Info("Starting server")
 

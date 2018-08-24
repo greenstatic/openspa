@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"github.com/greenstatic/openspa/internal/genOspa"
 	"github.com/greenstatic/openspalib/cryptography"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/greenstatic/openspa/internal/genOspa"
 	"os"
 	"path/filepath"
 )

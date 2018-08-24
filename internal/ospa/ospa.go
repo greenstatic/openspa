@@ -2,12 +2,12 @@ package ospa
 
 import (
 	"errors"
+	"github.com/greenstatic/openspa/internal/client"
+	"github.com/greenstatic/openspa/internal/ipresolver"
 	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"net"
-	"github.com/greenstatic/openspa/internal/client"
-	"github.com/greenstatic/openspa/internal/ipresolver"
 	"regexp"
 	"strconv"
 )

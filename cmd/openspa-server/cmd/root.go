@@ -3,10 +3,10 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"github.com/greenstatic/openspa/internal/server"
 	"github.com/greenstatic/openspalib"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/greenstatic/openspa/internal/server"
 	"os"
 )
 

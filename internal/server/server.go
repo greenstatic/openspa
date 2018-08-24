@@ -2,10 +2,10 @@ package server
 
 import (
 	"crypto/rsa"
-	"github.com/greenstatic/openspalib/request"
-	"net"
 	"github.com/greenstatic/openspa/internal/extensionScripts"
 	"github.com/greenstatic/openspa/internal/firewalltracker"
+	"github.com/greenstatic/openspalib/request"
+	"net"
 )
 
 const (
@@ -19,4 +19,5 @@ type New struct {
 	PublicKey        *rsa.PublicKey
 	ExtensionScripts extensionScripts.Scripts
 	FirewallState    *firewalltracker.State
+	Replay           *ReplayDetect
 }

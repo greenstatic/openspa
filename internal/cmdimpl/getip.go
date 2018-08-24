@@ -2,8 +2,8 @@ package cmdimpl
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/greenstatic/openspa/internal/ipresolver"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 )
 

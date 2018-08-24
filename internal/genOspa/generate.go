@@ -5,10 +5,10 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 	"github.com/greenstatic/openspa/internal/client"
 	"github.com/greenstatic/openspa/internal/ospa"
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 // Encodes the RSA private key to a PEM formatted byte slice

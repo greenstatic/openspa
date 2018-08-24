@@ -3,13 +3,13 @@ package server
 import (
 	"crypto/rsa"
 	"errors"
+	"github.com/greenstatic/openspa/internal/firewalltracker"
 	"github.com/greenstatic/openspalib/cryptography"
 	"github.com/greenstatic/openspalib/request"
 	"github.com/greenstatic/openspalib/response"
 	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"net"
-	"github.com/greenstatic/openspa/internal/firewalltracker"
 	"strconv"
 	"time"
 )
@@ -89,6 +89,24 @@ func (n *New) processPacket(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	// Check the timestamp field is valid
+	if err = expiredPacket(packet); err != nil {
+		log.WithFields(log.Fields{
+			"clientDeviceId": packet.Payload.ClientDeviceID,
+			"created":        packet.Payload.Timestamp.UTC().String(),
+		}).Warning("Received old packet or the client doesn't have their clock synchronized")
+		return nil, err
+	}
+
+	// Replay detection by hashing the packet
+	if err = n.Replay.Check(data); err != nil {
+		log.WithFields(log.Fields{
+			"clientDeviceId": packet.Payload.ClientDeviceID,
+			"created":        packet.Payload.Timestamp.UTC().String(),
+		}).Warning("Replay detected - packet already received, discarding packet")
+		return nil, errors.New("replay detected")
+	}
+
 	clientID := packet.Payload.ClientDeviceID
 	log.WithField("clientDeviceId", clientID).
 		Debug("Getting the user's public key to verify packet")
@@ -100,7 +118,12 @@ func (n *New) processPacket(data []byte) ([]byte, error) {
 		return nil, errors.New("failed to get user's public key")
 	}
 
-	// TODO - if clientPubKey is null return with no packet data since they are not authorized
+	// If clientPubKey is null return with no packet data since they are not authorized
+	if clientPubKey == nil {
+		log.WithField("clientDeviceId", packet.Payload.ClientDeviceID).
+			Info("No client public key found, discarding packet")
+		return nil, errors.New("no client public key found")
+	}
 
 	// Verify signature
 	signatureValid := cryptography.RSA_SHA256_signature_verify(packet.ByteData, clientPubKey, packet.Signature)

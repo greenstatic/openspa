@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"crypto/rsa"
+	"github.com/greenstatic/openspa/internal/client"
+	"github.com/greenstatic/openspa/internal/ipresolver"
+	"github.com/greenstatic/openspa/internal/ospa"
 	"github.com/greenstatic/openspalib/cryptography"
 	"github.com/greenstatic/openspalib/response"
 	"github.com/greenstatic/openspalib/tools"
@@ -9,9 +12,6 @@ import (
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net"
-	"github.com/greenstatic/openspa/internal/client"
-	"github.com/greenstatic/openspa/internal/ipresolver"
-	"github.com/greenstatic/openspa/internal/ospa"
 	"os"
 	"strconv"
 	"time"
@@ -399,7 +399,7 @@ func request(clientPrivKey *rsa.PrivateKey, clientPubKey *rsa.PublicKey, serverP
 		}
 
 		log.WithFields(log.Fields{
-			"protocol": tools.ConvertProtoByteToStr(resp.Payload.Protocol),
+			"protocol":  tools.ConvertProtoByteToStr(resp.Payload.Protocol),
 			"startPort": resp.Payload.StartPort,
 			"endPort":   resp.Payload.EndPort,
 			"duration":  resp.Payload.Duration,

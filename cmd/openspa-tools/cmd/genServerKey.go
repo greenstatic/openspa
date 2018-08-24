@@ -3,9 +3,9 @@ package cmd
 import (
 	"crypto/x509"
 	"encoding/pem"
+	"github.com/greenstatic/openspa/internal/genOspa"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/greenstatic/openspa/internal/genOspa"
 	"os"
 	"path/filepath"
 )

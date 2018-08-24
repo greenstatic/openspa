@@ -3,8 +3,8 @@ package extensionScripts
 import (
 	"bytes"
 	"errors"
-	log "github.com/sirupsen/logrus"
 	"github.com/greenstatic/openspa/internal/firewalltracker"
+	log "github.com/sirupsen/logrus"
 	"os/exec"
 	"strconv"
 )

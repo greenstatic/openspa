@@ -96,7 +96,6 @@ go get -u ./...
 ```
 
 ## TODO
-- [ ] Implement packet replay detection
 - [ ] Improve the firewalltracker package
 - [ ] OpenSPA Client support for encrypted private keys
 - [ ] OpenSPA Server public IP resolver
