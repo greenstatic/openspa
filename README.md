@@ -1,7 +1,8 @@
 # OpenSPA
 OpenSPA: An open and extensible Single Packet Authorization (SPA) implementation of the [OpenSPA Protocol](./docs/protocol.md).
 
-**This software is under heavy development. No guarantees are made that it will remain backwards compatible in it's current form. 
+**This software is under heavy development (2021). No guarantees are made that it will remain backwards compatible in 
+it's current form. 
 We WILL break it during development. 
 You have been warned.**
 Don't worry, we are always happy to get contributors. If you are interesting do get in touch: hello[at]openspa[dot]org.
