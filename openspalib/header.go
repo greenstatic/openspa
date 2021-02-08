@@ -8,22 +8,21 @@ import (
 )
 
 const (
-	HeaderSize int   = 2  // size of the header in bytes
+	HeaderSize int = 2 // size of the header in bytes
 
 	CryptoSuite_RSA_2048_WITH_AES_256_CBC uint8 = 0x01
-	cryptoSuiteFieldMax uint8 = 63
-
+	cryptoSuiteFieldMax                   uint8 = 63
 )
+
 var (
 	SupportedCryptoSuites = []uint8{CryptoSuite_RSA_2048_WITH_AES_256_CBC}
 )
 
 type Header struct {
-	Version          uint8
-	IsRequest        bool
-	CryptoSuite      uint8
+	Version     uint8
+	IsRequest   bool
+	CryptoSuite uint8
 }
-
 
 // Encodes the header struct into a byte slice. If the header version specified
 // is larger than the one specified in the source return an error. Checks that
