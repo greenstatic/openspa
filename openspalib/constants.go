@@ -1,7 +1,7 @@
 package openspalib
 
 const (
-	Version = 1 // version of the protocol
+	Version = 2 // version of the protocol
 
 	// Protocol numbers are according to: https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 	Protocol_ICMP   = 1

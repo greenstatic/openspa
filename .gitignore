@@ -78,3 +78,4 @@ venv.bak/
 # --- Custom ---
 .idea/
 .DS_Store
+temp/
