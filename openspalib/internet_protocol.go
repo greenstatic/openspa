@@ -1,12 +1,11 @@
 package openspalib
 
 const (
-	ProtocolICMP InternetProtocolNumber = 1
-	ProtocolIPV4 InternetProtocolNumber = 4
-	ProtocolTCP InternetProtocolNumber = 6
-	ProtocolUDP InternetProtocolNumber = 17
+	ProtocolICMP   InternetProtocolNumber = 1
+	ProtocolIPV4   InternetProtocolNumber = 4
+	ProtocolTCP    InternetProtocolNumber = 6
+	ProtocolUDP    InternetProtocolNumber = 17
 	ProtocolICMPv6 InternetProtocolNumber = 58
-
 
 	maxTCPUDPPort = 65535
 )

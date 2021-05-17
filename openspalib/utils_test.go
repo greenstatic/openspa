@@ -56,7 +56,6 @@ func TestByteInSlice(t *testing.T) {
 	}
 }
 
-
 func TestCompareTwoByteSlices(t *testing.T) {
 	tests := []struct {
 		inputSlice1    []byte
@@ -115,7 +114,6 @@ func TestCompareTwoByteSlices(t *testing.T) {
 		}
 	}
 }
-
 
 func TestIsIPv6(t *testing.T) {
 	tests := []struct {

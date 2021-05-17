@@ -34,7 +34,6 @@ func compareTwoByteSlices(s1, s2 []byte) bool {
 	return true
 }
 
-
 // Returns if the ip parameter string is an IPv6 address. In case there is no error, false signifies that it is an
 // IPv4 address and true signifies that is is an IPv6 address.
 func isIPv6(ip string) (bool, error) {

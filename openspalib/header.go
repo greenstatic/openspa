@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	Version = 2 // version of the protocol
+	Version    = 2 // version of the protocol
 	HeaderSize = 2 // size of the header in bytes
 )
 
 type Header struct {
-	Version     uint8
-	IsRequest   bool
+	Version          uint8
+	IsRequest        bool
 	EncryptionMethod EncryptionMethod
 }
 
@@ -121,7 +121,6 @@ func headerUnmarshal(data []byte) (header Header, err error) {
 
 	return Header{ver, isRequest, cryptoSuite}, nil
 }
-
 
 // Returns the byte slice without the header (note, here we simply cut off the header size from the slice, no smart
 // lookup if it's actually the header. We do not make a copy of the input byte slice, so be careful with the returned

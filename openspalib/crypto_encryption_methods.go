@@ -15,7 +15,6 @@ func (c *EncryptionMethod) ToBin() byte {
 	return uint8(*c)
 }
 
-
 // EncryptionMethodIsSupported returns true if the input CryptoSuite is supported.
 func EncryptionMethodIsSupported(c EncryptionMethod) bool {
 	// Currently we only support 1 crypto suite
@@ -28,7 +27,6 @@ func EncryptionMethodSupport() []EncryptionMethod {
 		EncryptionMethodRSA2048WithAES256CBC,
 	}
 }
-
 
 // Encrypts the data with AES-256-CBC with a random key and then encrypts the random AES key
 // with a RSA 2048 bit public key. The key is then appended as the prefix of the ciphertext.

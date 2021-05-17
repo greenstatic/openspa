@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	ResponsePacketBodySize = 24   // bytes
+	ResponsePacketBodySize = 24 // bytes
 )
 
 type Response struct {
-	Header  Header
-	Body ResponseBody
+	Header Header
+	Body   ResponseBody
 }
 
 type ResponseBody struct {
@@ -23,7 +23,7 @@ type ResponseBody struct {
 	EndPort         uint16
 	Duration        time.Duration
 	SignatureMethod SignatureMethod
-	Signature []byte
+	Signature       []byte
 }
 
 type ResponseData struct {
@@ -33,7 +33,6 @@ type ResponseData struct {
 	Duration        time.Duration
 	SignatureMethod SignatureMethod
 }
-
 
 // Encode encodes the response packet body according to the OpenSPA specification.
 func (body *ResponseBody) Encode() ([]byte, error) {
@@ -116,7 +115,6 @@ func (body *ResponseBody) Encode() ([]byte, error) {
 	return payloadBuff, nil
 }
 
-
 // Decodes the packet payload according to the OpenSPA specification for request packet payload.
 func responseDecode(data []byte) (body *ResponseBody, signature []byte, err error) {
 	if len(data) < ResponsePacketBodySize {
@@ -153,7 +151,7 @@ func responseDecode(data []byte) (body *ResponseBody, signature []byte, err erro
 
 	// Start Port - 16 bits = 2 bytes
 	const startPortSize = 2 // bytes
-	startPort, err := decodePort(data[offset : offset+startPortSize], body.Protocol)
+	startPort, err := decodePort(data[offset:offset+startPortSize], body.Protocol)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -163,7 +161,7 @@ func responseDecode(data []byte) (body *ResponseBody, signature []byte, err erro
 
 	// End Port - 16 bits = 2 bytes
 	const endPortSize = 2 // bytes
-	endPort, err := decodePort(data[offset : offset+endPortSize], body.Protocol)
+	endPort, err := decodePort(data[offset:offset+endPortSize], body.Protocol)
 	if err != nil {
 		return nil, nil, err
 	}

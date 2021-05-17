@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	nonceSize = 3    // bytes - according to the OpenSPA protocol
+	nonceSize = 3 // bytes - according to the OpenSPA protocol
 )
 
 type Nonce []byte
@@ -21,7 +21,6 @@ func RandomNonce() (Nonce, error) {
 
 	return nonce, nil
 }
-
 
 // Generate a cryptographically secure pseudorandom key. Size parameter should by in bytes.
 func randomKey(size uint) ([]byte, error) {

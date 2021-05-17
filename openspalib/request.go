@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	RequestPacketBodySize = 68   // bytes
+	RequestPacketBodySize = 68 // bytes
 )
 
 // Request represents an OpenSPA Request packet. Either create a Request struct using NewRequest() or craft it yourself.
@@ -39,16 +39,16 @@ type RequestBody struct {
 
 // RequestData contains fields that will be used to generate a Request.
 type RequestData struct {
-	ClientDeviceID  string
-	Protocol        InternetProtocolNumber
-	StartPort       uint16
-	EndPort         uint16
-	ClientBehindNat bool
+	ClientDeviceID   string
+	Protocol         InternetProtocolNumber
+	StartPort        uint16
+	EndPort          uint16
+	ClientBehindNat  bool
 	EncryptionMethod EncryptionMethod
-	SignatureMethod SignatureMethod
+	SignatureMethod  SignatureMethod
 
-	ClientPublicIP  net.IP
-	ServerPublicIP  net.IP
+	ClientPublicIP net.IP
+	ServerPublicIP net.IP
 }
 
 // NewRequest creates a Request struct
@@ -141,7 +141,7 @@ func (r *Request) SignAndEncrypt(privKey *rsa.PrivateKey, pubKey *rsa.PublicKey)
 		return nil, err
 	}
 
-	packet := make([]byte, 0, len(head) + len(ciphertext))
+	packet := make([]byte, 0, len(head)+len(ciphertext))
 	packet = append(packet, head...)
 	packet = append(packet, ciphertext...)
 
@@ -188,7 +188,7 @@ func (r *Request) signaturePlaintextData() ([]byte, error) {
 		return nil, err
 	}
 
-	data := make([]byte, 0, len(header) + len(body))
+	data := make([]byte, 0, len(header)+len(body))
 	data = append(data, header...)
 	data = append(data, body...)
 
@@ -225,7 +225,7 @@ func (r *Request) encryptionPlaintextData() ([]byte, error) {
 		return nil, err
 	}
 
-	data := make([]byte, 0, len(body) + len(r.Signature))
+	data := make([]byte, 0, len(body)+len(r.Signature))
 	data = append(data, body...)
 	data = append(data, r.Signature...)
 
@@ -241,7 +241,6 @@ func (r *Request) encrypt(pubKey *rsa.PublicKey) ([]byte, error) {
 	ciphertext, err := r.encryptRsa2048WithAes256Cbc(plaintext, pubKey)
 	return ciphertext, err
 }
-
 
 // Encrypts the byte data using 2048 bit RSA with AES 256-bit CBC mode and adds it to the packet.
 func (r *Request) encryptRsa2048WithAes256Cbc(plaintext []byte, pubKey *rsa.PublicKey) ([]byte, error) {

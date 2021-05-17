@@ -37,7 +37,6 @@ func encodeClientDeviceID(clientDeviceId string) ([]byte, error) {
 	return buff, nil
 }
 
-
 // Decodes a 16-byte client device ID byte slice into a string
 func decodeClientDeviceID(data []byte) (string, error) {
 	clientDeviceIdDashless := hex.EncodeToString(data)

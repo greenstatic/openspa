@@ -57,7 +57,6 @@ func TestRequestBodyEncode(t *testing.T) {
 				ClientBehindNat: false,
 				ClientPublicIP:  net.ParseIP("2001:1470:8000::72"),
 				ServerPublicIP:  net.ParseIP("2a02:7a8:1:250::80:1"),
-
 			},
 			false,
 			[]byte{
@@ -94,7 +93,6 @@ func TestRequestBodyEncode(t *testing.T) {
 	}
 }
 
-
 func TestNewRequest(t *testing.T) {
 	// The difference in time between when we create the packet and when we test it
 	const maxTimestampDelta = 10 // sec
@@ -125,16 +123,16 @@ func TestNewRequest(t *testing.T) {
 					EncryptionMethod: EncryptionMethodRSA2048WithAES256CBC,
 				},
 				Body: RequestBody{
-					Timestamp: time.Now(),
-					ClientDeviceID:   "8f97e69c-1bb1-4d2f-8cb0-24f2e874254d",
+					Timestamp:       time.Now(),
+					ClientDeviceID:  "8f97e69c-1bb1-4d2f-8cb0-24f2e874254d",
 					Nonce:           []byte{0x00, 0x00, 0x00}, // we do not check this, since it should be cryptographically random
 					Protocol:        ProtocolTCP,
 					StartPort:       80,
 					EndPort:         80,
 					SignatureMethod: SignatureMethod_RSA_SHA256,
 					ClientBehindNat: false,
-					ClientPublicIP: net.IPv4(88, 200, 23, 4),
-					ServerPublicIP: net.IPv4(88, 200, 23, 5),
+					ClientPublicIP:  net.IPv4(88, 200, 23, 4),
+					ServerPublicIP:  net.IPv4(88, 200, 23, 5),
 				},
 				Signature: []byte{},
 			},
@@ -166,7 +164,7 @@ func TestNewRequest(t *testing.T) {
 				EncryptionMethod: EncryptionMethodRSA2048WithAES256CBC,
 				SignatureMethod:  SignatureMethod_RSA_SHA256,
 				ClientPublicIP:   net.IPv4(88, 200, 23, 4),
-				ServerPublicIP: net.IPv4(88, 200, 23, 5),
+				ServerPublicIP:   net.IPv4(88, 200, 23, 5),
 			},
 			true,
 			Request{},
@@ -182,7 +180,7 @@ func TestNewRequest(t *testing.T) {
 				EncryptionMethod: 0,
 				SignatureMethod:  255,
 				ClientPublicIP:   net.IPv4(88, 200, 23, 4),
-				ServerPublicIP: net.IPv4(88, 200, 23, 5),
+				ServerPublicIP:   net.IPv4(88, 200, 23, 5),
 			},
 			true,
 			Request{},
@@ -198,7 +196,7 @@ func TestNewRequest(t *testing.T) {
 				EncryptionMethod: 255,
 				SignatureMethod:  SignatureMethod_RSA_SHA256,
 				ClientPublicIP:   net.IPv4(88, 200, 23, 4),
-				ServerPublicIP: net.IPv4(88, 200, 23, 5),
+				ServerPublicIP:   net.IPv4(88, 200, 23, 5),
 			},
 			true,
 			Request{},
@@ -213,8 +211,8 @@ func TestNewRequest(t *testing.T) {
 				ClientBehindNat:  true,
 				EncryptionMethod: EncryptionMethodRSA2048WithAES256CBC,
 				SignatureMethod:  SignatureMethod_RSA_SHA256,
-				ClientPublicIP: net.IPv4(88, 200, 23, 4),
-				ServerPublicIP: net.ParseIP("2a02:7a8:1:250::80:1"),
+				ClientPublicIP:   net.IPv4(88, 200, 23, 4),
+				ServerPublicIP:   net.ParseIP("2a02:7a8:1:250::80:1"),
 			},
 			true,
 			Request{
@@ -225,15 +223,15 @@ func TestNewRequest(t *testing.T) {
 				},
 				Body: RequestBody{
 					Timestamp:       time.Now(),
-					ClientDeviceID: "8f97e69c-1bb1-4d2f-8cb0-24f2e874254d",
+					ClientDeviceID:  "8f97e69c-1bb1-4d2f-8cb0-24f2e874254d",
 					Nonce:           []byte{0x00, 0x00, 0x00}, // we do not check this, since it should be cryptographically random
 					Protocol:        ProtocolTCP,
 					StartPort:       80,
 					EndPort:         80,
 					ClientBehindNat: true,
 					SignatureMethod: SignatureMethod_RSA_SHA256,
-					ClientPublicIP: net.IPv4(88, 200, 23, 4),
-					ServerPublicIP: net.ParseIP("2a02:7a8:1:250::80:1"),
+					ClientPublicIP:  net.IPv4(88, 200, 23, 4),
+					ServerPublicIP:  net.ParseIP("2a02:7a8:1:250::80:1"),
 				},
 				Signature: []byte{},
 			},

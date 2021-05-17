@@ -215,14 +215,14 @@ func TestHeaderMarshal(t *testing.T) {
 
 		if len(result) != len(test.expectedResult) {
 			t.Errorf("Test case: %d failed, %v != %v, reason: %s",
-				i + 1, len(result), len(test.expectedResult), test.onErrorStr)
+				i+1, len(result), len(test.expectedResult), test.onErrorStr)
 			continue
 		}
 
 		for j := range result {
 			if result[j] != test.expectedResult[j] {
 				t.Errorf("Test case: %d failed, %v != %v, reason: %s",
-					i + 1, result, test.expectedResult, test.onErrorStr)
+					i+1, result, test.expectedResult, test.onErrorStr)
 			}
 		}
 
