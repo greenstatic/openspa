@@ -1,11 +1,10 @@
 package openspalib
 
 import (
-	"bytes"
 	"testing"
 )
 
-func TestDecode(t *testing.T) {
+func TestHeaderDecode(t *testing.T) {
 	tests := []struct {
 		inputData      []byte
 		expectedErr    bool
@@ -15,20 +14,20 @@ func TestDecode(t *testing.T) {
 		{
 			[]byte{0x20, 0x01},
 			false,
-			Header{2, true, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
-			"failed to decode header from two byte slice - version 2, request type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			Header{2, true, EncryptionMethodRSA2048WithAES256CBC},
+			"failed to decode header from two byte slice - version 2, request type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		{
 			[]byte{0x28, 0x01},
 			false,
-			Header{2, false, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
-			"failed to decode header from two byte slice - version 2, response type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			Header{2, false, EncryptionMethodRSA2048WithAES256CBC},
+			"failed to decode header from two byte slice - version 2, response type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		{
 			[]byte{0x20, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
 			false,
-			Header{2, true, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
-			"failed to decode header from byte slice greater than two - version 2, request type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			Header{2, true, EncryptionMethodRSA2048WithAES256CBC},
+			"failed to decode header from byte slice greater than two - version 2, request type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		{
 			[]byte{0x20},
@@ -57,7 +56,7 @@ func TestDecode(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		result, err := Decode(test.inputData)
+		result, err := HeaderDecode(test.inputData)
 
 		if err != nil != test.expectedErr {
 			t.Errorf("Test case: %d failed, reason: %s",
@@ -71,7 +70,7 @@ func TestDecode(t *testing.T) {
 	}
 }
 
-func TestEncode(t *testing.T) {
+func TestHeaderEncode(t *testing.T) {
 	tests := []struct {
 		inputData      Header
 		expectedErr    bool
@@ -80,24 +79,24 @@ func TestEncode(t *testing.T) {
 	}{
 		// Test case: 1
 		{
-			Header{2, true, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
+			Header{2, true, EncryptionMethodRSA2048WithAES256CBC},
 			false,
 			[]byte{0x20, 0x01},
-			"failed to encode header version 2, request type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			"failed to encode header version 2, request type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		// Test case: 2
 		{
-			Header{1, true, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
+			Header{1, true, EncryptionMethodRSA2048WithAES256CBC},
 			true,
 			[]byte{},
-			"failed to return error on encoding header version 1 (unsupported version), request type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			"failed to return error on encoding header version 1 (unsupported version), request type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		// Test case: 3
 		{
-			Header{1, false, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
+			Header{1, false, EncryptionMethodRSA2048WithAES256CBC},
 			true,
 			[]byte{},
-			"failed to return error on encoding unsupported header version 1, response type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			"failed to return error on encoding unsupported header version 1, response type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		// Test case: 4
 		{
@@ -108,10 +107,10 @@ func TestEncode(t *testing.T) {
 		},
 		// Test case: 5
 		{
-			Header{16, true, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
+			Header{16, true, EncryptionMethodRSA2048WithAES256CBC},
 			true,
 			[]byte{},
-			"failed to return error on encoding unsupported header version 16 (value can't be ever supported), request type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			"failed to return error on encoding unsupported header version 16 (value can't be ever supported), request type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		// Test case: 6
 		{
@@ -137,11 +136,10 @@ func TestEncode(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		b := bytes.Buffer{}
-		if err := test.inputData.Encode(&b); err != nil != test.expectedErr {
+		result, err := test.inputData.Encode()
+		if err != nil != test.expectedErr {
 			t.Errorf("Test case: %d failed, reason: %s", i+1, test.onErrorStr)
 		}
-		result := b.Bytes()
 
 		if len(result) != len(test.expectedResult) {
 			t.Errorf("Test case: %d failed, %v != %v, reason: %s",
@@ -167,24 +165,24 @@ func TestHeaderMarshal(t *testing.T) {
 	}{
 		// Test case: 1
 		{
-			Header{2, true, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
+			Header{2, true, EncryptionMethodRSA2048WithAES256CBC},
 			false,
 			[]byte{0x20, 0x01},
-			"failed to encode header version 2, request type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			"failed to encode header version 2, request type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		// Test case: 2
 		{
-			Header{2, true, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
+			Header{2, true, EncryptionMethodRSA2048WithAES256CBC},
 			false,
 			[]byte{0x20, 0x01},
-			"failed to encode header version 2, request type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			"failed to encode header version 2, request type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		// Test case: 3
 		{
-			Header{2, false, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
+			Header{2, false, EncryptionMethodRSA2048WithAES256CBC},
 			false,
 			[]byte{0x28, 0x01},
-			"failed to encode header version 2, response type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			"failed to encode header version 2, response type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		// Test case: 4
 		{
@@ -210,12 +208,10 @@ func TestHeaderMarshal(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		b := bytes.Buffer{}
-		if err := test.inputData.marshal(&b); err != nil {
+		result, err := headerMarshal(test.inputData)
+		if err != nil {
 			t.Error(err)
 		}
-
-		result := b.Bytes()
 
 		if len(result) != len(test.expectedResult) {
 			t.Errorf("Test case: %d failed, %v != %v, reason: %s",
@@ -244,22 +240,22 @@ func TestHeaderUnmarshal(t *testing.T) {
 		{
 			[]byte{0x10, 0x01},
 			false,
-			Header{1, true, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
-			"failed to work with an input of two bytes for version 1, request packet type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			Header{1, true, EncryptionMethodRSA2048WithAES256CBC},
+			"failed to work with an input of two bytes for version 1, request packet type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		// Test case: 2
 		{
 			[]byte{0x18, 0x01},
 			false,
-			Header{1, false, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
-			"failed to work with an input of two bytes for version 1, response packet type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			Header{1, false, EncryptionMethodRSA2048WithAES256CBC},
+			"failed to work with an input of two bytes for version 1, response packet type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		// Test case: 3
 		{
 			[]byte{0x10, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
 			false,
-			Header{1, true, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
-			"failed to work with a larger than two byte input for version 1, request packet type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			Header{1, true, EncryptionMethodRSA2048WithAES256CBC},
+			"failed to work with a larger than two byte input for version 1, request packet type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		// Test case: 4
 		{
@@ -279,15 +275,15 @@ func TestHeaderUnmarshal(t *testing.T) {
 		{
 			[]byte{0x20, 0x01},
 			false,
-			Header{2, true, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
-			"failed to work with an input of two bytes for version 1, request packet type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			Header{2, true, EncryptionMethodRSA2048WithAES256CBC},
+			"failed to work with an input of two bytes for version 1, request packet type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		// Test case: 7
 		{
 			[]byte{0xF0, 0x01},
 			false,
-			Header{15, true, CryptoSuite_RSA_2048_WITH_AES_256_CBC},
-			"failed to work with an input of two bytes for version 15 (max version), request packet type with CryptoSuite_RSA_2048_WITH_AES_256_CBC",
+			Header{15, true, EncryptionMethodRSA2048WithAES256CBC},
+			"failed to work with an input of two bytes for version 15 (max version), request packet type with EncryptionMethodRSA2048WithAES256CBC",
 		},
 		// Test case: 8
 		{
