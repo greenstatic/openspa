@@ -14,7 +14,7 @@ Authorized users authenticate by sending a single packet to the OpenSPA server, 
 
 OpenSPA builds what essentially is a dynamic firewall.
 
-![OpenSPA-Demo](openspa/assets/openspa_brief.png)
+![OpenSPA-Demo](docs/assets/openspa_brief.png)
 
 Unauthorized users will not be able to detect via the network the presence of the hidden service (no ping, traceroute, port scans, fingerprinting, etc.).
 Once the user sends an OpenSPA request packet (via UDP) and they are authorized only then will the server respond with a response.
