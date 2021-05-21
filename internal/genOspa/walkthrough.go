@@ -72,7 +72,7 @@ func AskClientOSPAFileParameters(serverPublicKey *rsa.PublicKey) (OSPAFileParame
 
 	if clientDeviceId == "" {
 		log.Debug("Generating random client device UUID...")
-		clientDeviceId = uuid.Must(uuid.NewV4()).String()
+		clientDeviceId = uuid.Must(uuid.NewV4(),err).String()
 		log.WithField("clientDeviceId", clientDeviceId).Info("Generated random client device UUID")
 	}
 
