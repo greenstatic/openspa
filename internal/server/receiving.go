@@ -159,7 +159,7 @@ func (n *New) initiateRequestPipeline(packet request.Packet, clientPubKey *rsa.P
 	}).Debug("User is authorized")
 
 	// Generate a connectionId for the firewall tracker
-	connIdUUID, err := uuid.NewV4()
+	connIdUUID := uuid.NewV4()
 	if err != nil {
 		panic(err)
 	}
