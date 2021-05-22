@@ -115,7 +115,7 @@ func TestIsIPv6(t *testing.T) {
 
 		if test.expectedResult != result {
 			t.Errorf("Test case: %d failed (%s), returned boolean does not match %v != %v",
-				testNo, test.onErrorStr, test.expectedErr, result)
+				testNo, test.onErrorStr, test.expectedResult, result)
 		}
 	}
 }
