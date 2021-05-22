@@ -1,6 +1,9 @@
 package openspalib
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestByteInSlice(t *testing.T) {
 	tests := []struct {
@@ -56,109 +59,63 @@ func TestByteInSlice(t *testing.T) {
 	}
 }
 
-func TestCompareTwoByteSlices(t *testing.T) {
-	tests := []struct {
-		inputSlice1    []byte
-		inputSlice2    []byte
-		expectedResult bool
-		onErrorStr     string
-	}{
-		{
-			[]byte{},
-			[]byte{},
-			true,
-			"fails to work when both slices are empty",
-		},
-		{
-			[]byte{0x1},
-			[]byte{},
-			false,
-			"fails to work when first slice is not empty and the second is",
-		},
-		{
-			[]byte{},
-			[]byte{0x1},
-			false,
-			"fails to work when second slice is not empty and the first is",
-		},
-		{
-			[]byte{0x1},
-			[]byte{0x1},
-			true,
-			"fails to work when both slices contain one (the same) byte",
-		},
-		{
-			[]byte{0x1},
-			[]byte{0x1, 0x1},
-			false,
-			"fails to work when both slices contain the same element but the second slice is longer",
-		},
-		{
-			[]byte{0x9, 0x4},
-			[]byte{0x1, 0x1},
-			false,
-			"fails to work when both slices are the same length but contain completely different elements",
-		},
-		{
-			[]byte{0x9, 0x4},
-			[]byte{0x1, 0x1, 0x5},
-			false,
-			"fails to work when both slices are the different lengths and contain completely different elements",
-		},
-	}
-
-	for _, test := range tests {
-		result := compareTwoByteSlices(test.inputSlice1, test.inputSlice2)
-		if result != test.expectedResult {
-			t.Errorf("%v != %v, reason: %s", result, test.expectedResult, test.onErrorStr)
-		}
-	}
-}
-
 func TestIsIPv6(t *testing.T) {
 	tests := []struct {
 		inputData      string
-		expectedErr    bool
+		expectedErr    error
 		expectedResult bool
 		onErrorStr     string
 	}{
 		{
 			"193.2.1.66",
+			nil,
 			false,
-			false,
-			"failed to detect IPv4 address 193.2.1.66",
+			"IPv4 address 193.2.1.66",
 		},
 		{
 			"212.235.188.20",
+			nil,
 			false,
-			false,
-			"failed to detect IPv4 address 212.235.188.20",
+			"IPv4 address 212.235.188.20",
 		},
 		{
 			"2001:1470:8000::66",
-			false,
+			nil,
 			true,
-			"failed to detect IPv6 address 2001:1470:8000::66",
+			"IPv6 address 2001:1470:8000::66",
 		},
 		{
 			"2a02:7a8:1:250::80:1",
-			false,
+			nil,
 			true,
-			"failed to detect IPv6 address 2a02:7a8:1:250::80:1",
+			"IPv6 address 2a02:7a8:1:250::80:1",
+		},
+		{
+			"",
+			ErrBadIP,
+			false,
+			"empty string",
+		},
+		{
+			"778.22.21.1",
+			ErrBadIP,
+			false,
+			"wrongly formatted IPv4 address 778.22.21.1",
 		},
 	}
 
 	for i, test := range tests {
+		testNo := i + 1
 		result, err := isIPv6(test.inputData)
 
-		if err != nil != test.expectedErr {
-			t.Errorf("test case: %d, reason: %s, error: %s", i, test.onErrorStr, err)
-			continue
+		if !errors.Is(err, test.expectedErr) {
+			t.Errorf("Test case: %d failed, returned error does not match, error:%v != error:%v",
+				testNo, test.expectedErr, err)
 		}
 
-		if result != test.expectedResult {
-			t.Errorf("Expected different header on test case: %d, %v != %v, reason: %s",
-				i, result, test.expectedResult, test.onErrorStr)
+		if test.expectedResult != result {
+			t.Errorf("Test case: %d failed (%s), returned boolean does not match %v != %v",
+				testNo, test.onErrorStr, test.expectedErr, result)
 		}
 	}
 }

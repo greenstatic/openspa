@@ -68,3 +68,22 @@ func paddingPKCS7Remove(data []byte) ([]byte, error) {
 
 	return data[:len(data)-size], nil
 }
+
+type EncryptionMethodImps []EncryptionMethodImp
+
+type EncryptionMethodImp interface {
+	Encrypt(plaintext []byte) (ciphertext []byte, err error)
+	Decrypt(ciphertext []byte) (plaintext []byte, err error)
+}
+
+type encryptionMethodMock struct{}
+
+func (_ encryptionMethodMock) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
+	ciphertext = plaintext
+	return
+}
+
+func (_ encryptionMethodMock) Decrypt(ciphertext []byte) (plaintext []byte, err error) {
+	plaintext = ciphertext
+	return
+}

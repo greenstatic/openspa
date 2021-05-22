@@ -1,6 +1,9 @@
 package openspalib
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 // Tests the following functions:
 // * rsaEncrypt()
@@ -49,7 +52,7 @@ func TestRSAEncryptAndDecrypt(t *testing.T) {
 				i, err, test.onErrorStr)
 		}
 
-		if !compareTwoByteSlices(plaintext, test.inputData) {
+		if !bytes.Equal(plaintext, test.inputData) {
 			t.Errorf("Decrypted content after encryption is not the same as the initial encrypted content for test case: %d, reason: %s",
 				i, test.onErrorStr)
 		}

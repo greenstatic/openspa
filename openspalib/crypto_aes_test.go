@@ -1,6 +1,9 @@
 package openspalib
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 func TestAes256CbcEncrypt(t *testing.T) {
 	tests := []struct {
@@ -67,7 +70,7 @@ func TestAes256CbcEncrypt(t *testing.T) {
 			continue
 		}
 
-		if !compareTwoByteSlices(result, test.expectedResult) {
+		if !bytes.Equal(result, test.expectedResult) {
 			t.Errorf("Expected different ciphertext for test case: %d, %v != %v, reason: %s",
 				i, result, test.expectedResult, test.onErrorStr)
 		}
@@ -125,7 +128,7 @@ func TestAes256CbcDecrypt(t *testing.T) {
 			continue
 		}
 
-		if !compareTwoByteSlices(result, test.expectedResult) {
+		if !bytes.Equal(result, test.expectedResult) {
 			t.Errorf("Expected different ciphertext for test case: %d, %v != %v, reason: %s",
 				i, result, test.expectedResult, test.onErrorStr)
 		}
@@ -173,7 +176,7 @@ func TestAes256CbcRandomIV(t *testing.T) {
 				continue
 			}
 
-			if compareTwoByteSlices(results[i], results[j]) {
+			if bytes.Equal(results[i], results[j]) {
 				t.Errorf("Generated duplicate IV: %v", results[i])
 			}
 		}
@@ -229,7 +232,7 @@ func TestAes256CbcEncryptAndDecryptWithPadding(t *testing.T) {
 
 		plaintext, err := aes256CbcDecryptWithPadding(ciphertext, test.inputDataKeyDecrypt)
 
-		keyValid := compareTwoByteSlices(test.inputDataKeyEncrypt, test.inputDataKeyDecrypt) // the same encryption/decryption key
+		keyValid := bytes.Equal(test.inputDataKeyEncrypt, test.inputDataKeyDecrypt) // the same encryption/decryption key
 
 		// && keyValid because if it is false, it means that we decrypted the message using a bad key and the
 		// padding information is lost and can result in triggering an error (if the padding info denotes
@@ -239,12 +242,12 @@ func TestAes256CbcEncryptAndDecryptWithPadding(t *testing.T) {
 		}
 
 		if keyValid {
-			if !compareTwoByteSlices(plaintext, test.inputDataPlaintext) {
+			if !bytes.Equal(plaintext, test.inputDataPlaintext) {
 				t.Errorf("After encrypting the message and decrypting it, we received a different byte slice, test case: %d, %v != %v, reason: %s",
 					i, plaintext, test.inputDataPlaintext, test.onErrorStr)
 			}
 		} else {
-			if compareTwoByteSlices(plaintext, test.inputDataPlaintext) {
+			if bytes.Equal(plaintext, test.inputDataPlaintext) {
 				t.Errorf("After encrypting the message and decrypting it with a wrong key, we received the same byte slice, test case: %d, %v != %v, reason: %s",
 					i, plaintext, test.inputDataPlaintext, test.onErrorStr)
 			}

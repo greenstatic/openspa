@@ -1,6 +1,9 @@
 package openspalib
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 func TestRandomKey(t *testing.T) {
 	// See if multiple calls result in different values. There is a negligible probability that we will generate
@@ -28,7 +31,7 @@ func TestRandomKey(t *testing.T) {
 				continue
 			}
 
-			if compareTwoByteSlices(results[i], results[j]) {
+			if bytes.Equal(results[i], results[j]) {
 				t.Errorf("Generated duplicate key: %v", results[i])
 			}
 		}
@@ -64,7 +67,7 @@ func TestPaddingPKCS7(t *testing.T) {
 	for i, test := range tests {
 		result := paddingPKCS7(test.inputData, test.inputDataSize)
 
-		if !compareTwoByteSlices(result, test.expectedResult) {
+		if !bytes.Equal(result, test.expectedResult) {
 			t.Errorf("Bad padding for test case: %d, %v != %v, reason: %s",
 				i, result, test.expectedResult, test.onErrorStr)
 		}
@@ -114,7 +117,7 @@ func TestPaddingPKCS7Remove(t *testing.T) {
 			continue
 		}
 
-		if !compareTwoByteSlices(result, test.expectedResult) {
+		if !bytes.Equal(result, test.expectedResult) {
 			t.Errorf("Bad padding for test case: %d, %v != %v, reason: %s",
 				i, result, test.expectedResult, test.onErrorStr)
 		}

@@ -11,20 +11,25 @@ import (
 	"time"
 )
 
+var (
+	ErrDeviceIdInvalid  = errors.New("deviceId is invalid")
+	ErrTimestampInvalid = errors.New("timestamp is invalid")
+)
+
 // Encodes the client's device ID, which should be a UUID v4 in such a way that we remove the dashes and return a byte
 // slice. Accepts also a client device ID without dashes (as long as it's a UUID).
-func encodeClientDeviceID(clientDeviceId string) ([]byte, error) {
+func clientDeviceIdEncode(id string) ([]byte, error) {
 	const size = 16             // bytes
 	const stringSize = size * 2 // two characters (encoded as hex) from a string represent a single byte
 	const noDashes = 4
 
 	// checks if the size is appropriate for a string with and without dashes for a UUID v4
-	if len(clientDeviceId) != stringSize && len(clientDeviceId) != stringSize+noDashes {
-		return nil, errors.New("client device ID is not the appropriate size")
+	if len(id) != stringSize && len(id) != stringSize+noDashes {
+		return nil, ErrDeviceIdInvalid
 	}
 
 	// remove dashes from the client device ID string
-	clientDeviceIdStrTmp := strings.Split(clientDeviceId, "-")
+	clientDeviceIdStrTmp := strings.Split(id, "-")
 	clientDeviceIdStr := strings.Join(clientDeviceIdStrTmp, "")
 	buff, err := hex.DecodeString(clientDeviceIdStr)
 
@@ -38,7 +43,7 @@ func encodeClientDeviceID(clientDeviceId string) ([]byte, error) {
 }
 
 // Decodes a 16-byte client device ID byte slice into a string
-func decodeClientDeviceID(data []byte) (string, error) {
+func clientDeviceIdDecode(data []byte) (string, error) {
 	clientDeviceIdDashless := hex.EncodeToString(data)
 
 	// add dashes in the format 8-4-4-4-12
@@ -61,8 +66,7 @@ func decodeClientDeviceID(data []byte) (string, error) {
 }
 
 // Encodes a time.Time field into a unix 64-bit timestamp - 8 byte slice
-func encodeTimestamp(timestamp time.Time) []byte {
-
+func timestampEncode(timestamp time.Time) []byte {
 	timestampBinBuffer := new(bytes.Buffer)
 	binary.Write(timestampBinBuffer, binary.BigEndian, timestamp.Unix())
 
@@ -71,21 +75,18 @@ func encodeTimestamp(timestamp time.Time) []byte {
 }
 
 // Decodes an 8-byte timestamp byte slice into a time.Time field
-func decodeTimestamp(data []byte) (time.Time, error) {
-
+func timestampDecode(data []byte) (time.Time, error) {
 	const timestampSize = 8 // bytes
 
 	if len(data) != timestampSize {
-		return time.Time{}, errors.New("inputted slice is not 8 bytes long")
+		return time.Time{}, ErrTimestampInvalid
 	}
 
 	var timestampInt int64
 
 	// decode the byte slice into an int64
 	timestampBuff := bytes.NewReader(data)
-	err := binary.Read(timestampBuff, binary.BigEndian, &timestampInt)
-
-	if err != nil {
+	if err := binary.Read(timestampBuff, binary.BigEndian, &timestampInt); err != nil {
 		// Failed to decode timestamp
 		return time.Time{}, err
 	}

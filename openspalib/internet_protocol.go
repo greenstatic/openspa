@@ -14,8 +14,8 @@ const (
 // See: https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 type InternetProtocolNumber uint8
 
-func (i *InternetProtocolNumber) ToBin() byte {
-	return uint8(*i)
+func (i InternetProtocolNumber) ToBin() byte {
+	return uint8(i)
 }
 
 // InternetProtocolNumberSupported returns a slice of InternetProtocolNumber that are supported.
@@ -32,9 +32,7 @@ func InternetProtocolNumberSupported() []InternetProtocolNumber {
 // portCanBeZero returns if the port can be equal to zero for the specified protocol.
 func portCanBeZero(protocol InternetProtocolNumber) bool {
 	switch protocol {
-	case ProtocolTCP:
-		return false
-	case ProtocolUDP:
+	case ProtocolTCP, ProtocolUDP:
 		return false
 	default:
 		return true

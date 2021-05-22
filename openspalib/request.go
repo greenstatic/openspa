@@ -73,7 +73,7 @@ func NewRequest(data RequestData) (*Request, error) {
 	r.Body.SignatureMethod = data.SignatureMethod
 
 	// Check if client device ID is valid
-	_, err := encodeClientDeviceID(data.ClientDeviceID)
+	_, err := clientDeviceIdEncode(data.ClientDeviceID)
 	if err != nil {
 		return &Request{}, errors.New("client device ID is not a UUID")
 	}
@@ -261,7 +261,7 @@ func (body *RequestBody) Encode() ([]byte, error) {
 
 	// Unix Timestamp - 64 bit = 8 bytes
 	const timestampSize = 8 // bytes
-	timestampBin := encodeTimestamp(body.Timestamp)
+	timestampBin := timestampEncode(body.Timestamp)
 
 	for i := 0; i < timestampSize; i++ {
 		bodyBuff[offset+i] = timestampBin[i]
@@ -271,7 +271,7 @@ func (body *RequestBody) Encode() ([]byte, error) {
 
 	// Client device ID - 128 bits = 16 bytes
 	const clientDeviceIdSize = 16 // bytes
-	clientDeviceId, err := encodeClientDeviceID(body.ClientDeviceID)
+	clientDeviceId, err := clientDeviceIdEncode(body.ClientDeviceID)
 	if err != nil {
 		return nil, err
 	}

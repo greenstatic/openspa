@@ -43,7 +43,7 @@ func (body *ResponseBody) Encode() ([]byte, error) {
 
 	// Unix Timestamp - 64 bit = 8 bytes
 	const timestampSize = 8 // bytes
-	timestampBin := encodeTimestamp(body.Timestamp)
+	timestampBin := timestampEncode(body.Timestamp)
 
 	for i := 0; i < timestampSize; i++ {
 		payloadBuff[offset+i] = timestampBin[i]
@@ -131,7 +131,7 @@ func responseDecode(data []byte) (body *ResponseBody, signature []byte, err erro
 
 	// UNIX Timestamp - 64 bits = 8 bytes
 	const timestampSize = 8 // bytes
-	timestamp, err := decodeTimestamp(data[offset : offset+timestampSize])
+	timestamp, err := timestampDecode(data[offset : offset+timestampSize])
 	if err != nil {
 		return nil, nil, err
 	}
