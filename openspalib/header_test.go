@@ -15,24 +15,24 @@ func TestHeaderDecode(t *testing.T) {
 	}{
 		// Test case: 1
 		{
-			[]byte{0x20, 0x01},
+			[]byte{0x20, 0x00, 0x01, 0x00},
 			nil,
-			Header{2, true, EncryptionMethodRSA2048WithAES256CBC},
-			"header from two byte slice - version 2, request type with EncryptionMethodRSA2048WithAES256CBC",
+			Header{2, true, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
+			"header from four byte slice - version 2, request type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 2
 		{
-			[]byte{0x28, 0x01},
+			[]byte{0x28, 0x00, 0x01, 0x00},
 			nil,
-			Header{2, false, EncryptionMethodRSA2048WithAES256CBC},
-			"header from two byte slice - version 2, response type with EncryptionMethodRSA2048WithAES256CBC",
+			Header{2, false, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
+			"header from four byte slice - version 2, response type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 3
 		{
-			[]byte{0x20, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+			[]byte{0x20, 0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00},
 			nil,
-			Header{2, true, EncryptionMethodRSA2048WithAES256CBC},
-			"header from byte slice greater than two - version 2, request type with EncryptionMethodRSA2048WithAES256CBC",
+			Header{2, true, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0xFF},
+			"header from byte slice greater than four - version 2, request type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 4
 		{
@@ -43,24 +43,24 @@ func TestHeaderDecode(t *testing.T) {
 		},
 		// Test case: 5
 		{
-			[]byte{0x25},
+			[]byte{0x25, 0x12},
 			ErrHeaderInvalid,
 			Header{},
 			"too short byte slice",
 		},
 		// Test case: 6
 		{
-			[]byte{0x10, 0x01},
+			[]byte{0x10, 0x00, 0x01, 0x00},
 			ErrProtocolVersionNotSupported{1},
 			Header{},
 			"unsupported version (1)",
 		},
 		// Test case: 7
 		{
-			[]byte{0x20, 0x02},
-			ErrEncryptionMethodNotSupported{0x02},
+			[]byte{0x20, 0x00, 0x02, 0x00},
+			ErrCipherSuiteNotSupported{0x02},
 			Header{},
-			"failed to return error for unsupported encryption method (2)",
+			"failed to return error for unsupported cipher method (0x2)",
 		},
 	}
 
@@ -89,24 +89,24 @@ func TestHeaderEncode(t *testing.T) {
 	}{
 		// Test case: 1
 		{
-			Header{1, true, EncryptionMethodRSA2048WithAES256CBC},
+			Header{1, true, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
 			ErrProtocolVersionNotSupported{1},
 			[]byte{},
-			"encode header version 1, request type with EncryptionMethodRSA2048WithAES256CBC",
+			"encode header version 1, request type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		//Test case: 2
 		{
-			Header{Version, true, EncryptionMethodRSA2048WithAES256CBC},
+			Header{Version, true, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
 			nil,
-			[]byte{0x20, 0x01},
-			"header version 2, request type with EncryptionMethodRSA2048WithAES256CBC",
+			[]byte{0x20, 0x00, 0x01, 0x00},
+			"header version 2, request type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 3
 		{
-			Header{Version, false, EncryptionMethodRSA2048WithAES256CBC},
+			Header{Version, false, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 12},
 			nil,
-			[]byte{0x28, 0x01},
-			"encode header version 2, response type with EncryptionMethodRSA2048WithAES256CBC",
+			[]byte{0x28, 0x00, 0x01, 0x0C},
+			"encode header version 2, response type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 4
 		{
@@ -117,31 +117,31 @@ func TestHeaderEncode(t *testing.T) {
 		},
 		// Test case: 5
 		{
-			Header{15, true, 63},
+			Header{15, true, 63, 0},
 			ErrProtocolVersionNotSupported{15},
 			[]byte{},
 			"encode header version 15, request type with encryption method 63",
 		},
 		// Test case: 6
 		{
-			Header{Version, true, 0x02},
-			ErrEncryptionMethodNotSupported{0x02},
+			Header{Version, true, 0x02, 0},
+			ErrCipherSuiteNotSupported{0x02},
 			[]byte{},
 			"encode header version 15, request type with encryption method 0x02",
 		},
 		// Test case: 7
 		{
-			Header{16, true, 64},
+			Header{16, true, 64, 0},
 			ErrProtocolVersionNotSupported{16},
 			[]byte{},
 			"encode overflow with header version 16 and encryption method 64 (both one value too large from the max value)",
 		},
 		// Test case: 8
 		{
-			Header{Version, true, 64},
-			ErrEncryptionMethodNotSupported{64},
+			Header{Version, true, 0x64, 0},
+			ErrCipherSuiteNotSupported{0x64},
 			[]byte{},
-			"encode header version 2 and encryption method 64 (overflow field)",
+			"encode header version 2 and encryption method 0x64",
 		},
 	}
 
@@ -170,45 +170,52 @@ func TestHeaderMarshal(t *testing.T) {
 	}{
 		// Test case: 1
 		{
-			Header{1, true, EncryptionMethodRSA2048WithAES256CBC},
+			Header{1, true, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 16},
 			nil,
-			[]byte{0x10, 0x01},
-			"encode header version 1, request type with EncryptionMethodRSA2048WithAES256CBC",
+			[]byte{0x10, 0x00, 0x01, 0x10},
+			"encode header version 1, request type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256 with offset 16",
 		},
 		//Test case: 2
 		{
-			Header{2, true, EncryptionMethodRSA2048WithAES256CBC},
+			Header{2, true, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
 			nil,
-			[]byte{0x20, 0x01},
-			"header version 2, request type with EncryptionMethodRSA2048WithAES256CBC",
+			[]byte{0x20, 0x00, 0x01, 0x00},
+			"header version 2, request type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 3
 		{
-			Header{2, false, EncryptionMethodRSA2048WithAES256CBC},
+			Header{2, false, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 13},
 			nil,
-			[]byte{0x28, 0x01},
-			"encode header version 2, response type with EncryptionMethodRSA2048WithAES256CBC",
+			[]byte{0x28, 0x00, 0x01, 0x0d},
+			"encode header version 2, response type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256 with offset 13",
 		},
 		// Test case: 4
 		{
 			Header{},
 			nil,
-			[]byte{0x08, 0x00},
+			[]byte{0x08, 0x00, 0x00, 0x00},
 			"encode empty header",
 		},
 		// Test case: 5
 		{
-			Header{15, true, 63},
+			Header{15, true, 0x63, 0},
 			nil,
-			[]byte{0xF0, 0x3F},
-			"encode header version 15, request type with encryption method 63",
+			[]byte{0xF0, 0x00, 0x63, 0x00},
+			"encode header version 15, request type with cipher suite 0x63",
 		},
 		// Test case: 6
 		{
-			Header{16, true, 64},
+			Header{16, true, 0x64, 0},
 			nil,
-			[]byte{0x00, 0x00},
-			"encode overflow with header version 16 and encryption method 64 (both one value too large from the max value)",
+			[]byte{0x00, 0x00, 0x64, 0x00},
+			"version field overflow with value 16",
+		},
+		// Test case: 6
+		{
+			Header{2, true, 0x400, 0},
+			nil,
+			[]byte{0x20, 0x00, 0x0, 0x00},
+			"cipher suite overflow with value 0x400",
 		},
 	}
 
@@ -222,8 +229,8 @@ func TestHeaderMarshal(t *testing.T) {
 		}
 
 		if !bytes.Equal(test.expectedResult, result) {
-			t.Errorf("Test case: %d failed (%s), returned byte slice does not match",
-				testNo, test.onErrorStr)
+			t.Errorf("Test case: %d failed (%s), returned byte slice does not match: %v != %v",
+				testNo, test.onErrorStr, test.expectedResult, result)
 		}
 
 	}
@@ -238,45 +245,52 @@ func Test__HeaderMarshal2(t *testing.T) {
 	}{
 		// Test case: 1
 		{
-			Header{1, true, EncryptionMethodRSA2048WithAES256CBC},
+			Header{1, true, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
 			nil,
-			[]byte{0x10, 0x01},
-			"encode header version 1, request type with EncryptionMethodRSA2048WithAES256CBC",
+			[]byte{0x10, 0x00, 0x01, 0x00},
+			"encode header version 1, request type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		//Test case: 2
 		{
-			Header{2, true, EncryptionMethodRSA2048WithAES256CBC},
+			Header{2, true, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
 			nil,
-			[]byte{0x20, 0x01},
-			"header version 2, request type with EncryptionMethodRSA2048WithAES256CBC",
+			[]byte{0x20, 0x00, 0x01, 0x00},
+			"header version 2, request type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 3
 		{
-			Header{2, false, EncryptionMethodRSA2048WithAES256CBC},
+			Header{2, false, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
 			nil,
-			[]byte{0x28, 0x01},
-			"encode header version 2, response type with EncryptionMethodRSA2048WithAES256CBC",
+			[]byte{0x28, 0x00, 0x01, 0x00},
+			"encode header version 2, response type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 4
 		{
 			Header{},
 			nil,
-			[]byte{0x08, 0x00},
+			[]byte{0x08, 0x00, 0x00, 0x00},
 			"encode empty header",
 		},
 		// Test case: 5
 		{
-			Header{15, true, 63},
+			Header{15, true, 0x63, 0},
 			nil,
-			[]byte{0xF0, 0x3F},
-			"encode header version 15, request type with encryption method 63",
+			[]byte{0xF0, 0x00, 0x63, 0x00},
+			"encode header version 15, request type with cipher suite 0x63",
 		},
 		// Test case: 6
 		{
-			Header{16, true, 64},
+			Header{16, true, 0x64, 0},
 			nil,
-			[]byte{0x00, 0x00},
-			"encode overflow with header version 16 and encryption method 64 (both one value too large from the max value)",
+			[]byte{0x00, 0x00, 0x64, 0x00},
+			"version field overflow with value 16",
+		},
+		// Test case: 6
+		{
+			Header{2, true, 0x400, 0},
+			nil,
+			[]byte{0x20, 0x00, 0x00, 0x00},
+			"cipher suite overflow with value 0x400",
 		},
 	}
 
@@ -300,9 +314,9 @@ func Test__HeaderMarshal2(t *testing.T) {
 
 func BenchmarkHeaderMarshal(b *testing.B) {
 	h := Header{
-		Version:          Version,
-		IsRequest:        false,
-		EncryptionMethod: EncryptionMethodRSA2048WithAES256CBC,
+		Version:     Version,
+		IsRequest:   false,
+		CipherSuite: CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256,
 	}
 	var buff []byte
 	for i := 0; i < b.N; i++ {
@@ -313,9 +327,9 @@ func BenchmarkHeaderMarshal(b *testing.B) {
 
 func Benchmark__HeaderMarshal2(b *testing.B) {
 	h := Header{
-		Version:          Version,
-		IsRequest:        false,
-		EncryptionMethod: EncryptionMethodRSA2048WithAES256CBC,
+		Version:     Version,
+		IsRequest:   false,
+		CipherSuite: CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256,
 	}
 	// We store the buffer on purpose only once, to simulate the best possible result
 	// if we would reuse the buffer when assembling the OpenSPA packet.
@@ -334,31 +348,31 @@ func TestHeaderUnmarshal(t *testing.T) {
 	}{
 		// Test case: 1
 		{
-			[]byte{0x10, 0x01},
+			[]byte{0x10, 0x0, 0x01, 0x00},
 			nil,
-			Header{1, true, EncryptionMethodRSA2048WithAES256CBC},
-			"input of two bytes for version 1, request packet type with EncryptionMethodRSA2048WithAES256CBC",
+			Header{1, true, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
+			"input of four bytes for version 1, request packet type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 2
 		{
-			[]byte{0x18, 0x01},
+			[]byte{0x18, 0x00, 0x01, 0x00},
 			nil,
-			Header{1, false, EncryptionMethodRSA2048WithAES256CBC},
-			"input of two bytes for version 1, response packet type with EncryptionMethodRSA2048WithAES256CBC",
+			Header{1, false, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
+			"input of four bytes for version 1, response packet type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 3
 		{
-			[]byte{0x28, 0x01},
+			[]byte{0x28, 0x00, 0x01, 0x00},
 			nil,
-			Header{Version, false, EncryptionMethodRSA2048WithAES256CBC},
-			"input of two bytes for version 2, response packet type with EncryptionMethodRSA2048WithAES256CBC",
+			Header{Version, false, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
+			"input of four bytes for version 2, response packet type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 4
 		{
-			[]byte{0x20, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+			[]byte{0x20, 0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
 			nil,
-			Header{2, true, EncryptionMethodRSA2048WithAES256CBC},
-			"larger than two byte input for version 1, request packet type with EncryptionMethodRSA2048WithAES256CBC",
+			Header{2, true, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0xFF},
+			"larger than four byte input for version 1, request packet type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 5
 		{
@@ -369,38 +383,38 @@ func TestHeaderUnmarshal(t *testing.T) {
 		},
 		// Test case: 6
 		{
-			[]byte{0x20, 0x01},
+			[]byte{0x20, 0x00, 0x01, 0x00},
 			nil,
-			Header{Version, true, EncryptionMethodRSA2048WithAES256CBC},
-			"input of two bytes for version 2, request packet type with EncryptionMethodRSA2048WithAES256CBC",
+			Header{Version, true, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
+			"input of four bytes for version 2, request packet type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 7
 		{
-			[]byte{0xF0, 0x01},
+			[]byte{0xF0, 0x00, 0x01, 0x00},
 			nil,
-			Header{15, true, EncryptionMethodRSA2048WithAES256CBC},
-			"input of two bytes for version 15 (max version), request packet type with EncryptionMethodRSA2048WithAES256CBC",
+			Header{15, true, CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256, 0},
+			"input of four bytes for version 15 (max version), request packet type with CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
 		},
 		// Test case: 8
 		{
-			[]byte{0x10, 0x02},
+			[]byte{0x10, 0x00, 0x02, 0x00},
 			nil,
-			Header{1, true, 0x02},
-			"input of two bytes for version 1, request packet type with encryption type 0x02",
+			Header{1, true, 0x02, 0},
+			"input of four bytes for version 1, request packet type with encryption type 0x02",
 		},
 		// Test case: 9
 		{
-			[]byte{0x10, 0x3F},
+			[]byte{0x10, 0x00, 0x3F, 0x00},
 			nil,
-			Header{1, true, 0x3F},
-			"input of two bytes for version 1, request packet type with encryption type 0x3F (max encryption number)",
+			Header{1, true, 0x3F, 0},
+			"input of four bytes for version 1, request packet type with cipher suite 0x3F",
 		},
 		// Test case: 10
 		{
-			[]byte{0x10, 0x00},
+			[]byte{0x10, 0x00, 0x00, 0x00},
 			nil,
-			Header{1, true, 0x00},
-			"input of two bytes for version 1, request packet type with encryption type 0x00",
+			Header{1, true, 0x00, 0},
+			"input of four bytes for version 1, request packet type with cipher suite 0x00",
 		},
 	}
 
@@ -445,38 +459,6 @@ func TestErrProtocolVersionNotSupported(t *testing.T) {
 	for i, test := range tests {
 		testNo := i + 1
 		err := ErrProtocolVersionNotSupported{test.inputData}
-		if test.expectedErr != err.Error() {
-			t.Errorf("Test case: %d failed, errors did not match: %s != %s",
-				testNo, test.expectedErr, err.Error())
-		}
-	}
-}
-
-func TestErrEncryptionMethodNotSupported(t *testing.T) {
-	tests := []struct {
-		inputData   EncryptionMethod
-		expectedErr string
-	}{
-		// Test case: 1
-		{
-			inputData:   EncryptionMethod(0),
-			expectedErr: "encryption method 0 not supported",
-		},
-		// Test case: 2
-		{
-			inputData:   EncryptionMethod(1),
-			expectedErr: "encryption method 1 not supported",
-		},
-		// Test case: 3
-		{
-			inputData:   EncryptionMethod(123),
-			expectedErr: "encryption method 123 not supported",
-		},
-	}
-
-	for i, test := range tests {
-		testNo := i + 1
-		err := ErrEncryptionMethodNotSupported{test.inputData}
 		if test.expectedErr != err.Error() {
 			t.Errorf("Test case: %d failed, errors did not match: %s != %s",
 				testNo, test.expectedErr, err.Error())

@@ -6,9 +6,24 @@ import (
 	"io"
 )
 
+// PDU Header binary format:
+// 0                   1                   2                   3
+// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |Version|T|   Reserved    |   Cipher Suite    |  Body Offset  |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//
+// * Version (4 bits): Specifies the version of the protocol (0001 = v1).
+// * Type (1 bit): Denotes the packet payload type (0=request, 1=response).
+// * Reserved (9 bits): Field reserved for future use.
+// * Cipher Suite (10 bits): The method the payload is encrypted and signed
+// * PDU Body Offset (8 bits): Offset, where the PDU Body starts
+//
+// 4 + 1 + 9 + 10 + 8 = 32 bits = 4 bytes total header size
+
 const (
 	Version    = 2 // version of the protocol
-	HeaderSize = 2 // size of the header in bytes
+	HeaderSize = 4 // size of the header in bytes
 )
 
 var (
@@ -17,9 +32,12 @@ var (
 
 // Header represents the head of an OpenSPA packet (request or response).
 type Header struct {
-	Version          uint8
-	IsRequest        bool
-	EncryptionMethod EncryptionMethod
+	Version       uint8  // Protocol version
+	IsRequest     bool   // Is an OpenSPA request, if false then it is an OpenSPA response
+	CipherSuite   CipherSuiteId
+
+	// Offset where the PDU Body begins
+	PduBodyOffset uint8
 }
 
 type ErrProtocolVersionNotSupported struct {
@@ -28,14 +46,6 @@ type ErrProtocolVersionNotSupported struct {
 
 func (e ErrProtocolVersionNotSupported) Error() string {
 	return fmt.Sprintf("protocol version %d not supported", e.version)
-}
-
-type ErrEncryptionMethodNotSupported struct {
-	encMethod EncryptionMethod
-}
-
-func (e ErrEncryptionMethodNotSupported) Error() string {
-	return fmt.Sprintf("encryption method %d not supported", uint8(e.encMethod))
 }
 
 // Encode encodes the header struct into a byte slice. If the header version specified is larger than the one
@@ -48,8 +58,8 @@ func (header *Header) Encode() ([]byte, error) {
 	}
 
 	// Reject encryption methods that are not supported
-	if !EncryptionMethodIsSupported(header.EncryptionMethod) {
-		return nil, ErrEncryptionMethodNotSupported{header.EncryptionMethod}
+	if !CipherSuiteIsSupported(header.CipherSuite) {
+		return nil, ErrCipherSuiteNotSupported{header.CipherSuite}
 	}
 
 	return headerMarshal(*header)
@@ -70,9 +80,9 @@ func HeaderDecode(data []byte) (Header, error) {
 	}
 
 	// Return error on unsupported encryption methods
-	if !EncryptionMethodIsSupported(header.EncryptionMethod) {
+	if !CipherSuiteIsSupported(header.CipherSuite) {
 		//return Header{}, fmt.Errorf("encryption method: %v is not supported", header.EncryptionMethod)
-		return Header{}, ErrEncryptionMethodNotSupported{header.EncryptionMethod}
+		return Header{}, ErrCipherSuiteNotSupported{header.CipherSuite}
 	}
 
 	return header, nil
@@ -81,7 +91,7 @@ func HeaderDecode(data []byte) (Header, error) {
 // Converts a Header into it's byte representation according to the OpenSPA specification. This function does not
 // perform any validation it merely does a dumb mapping of the header values to it's binary form. It will overflow if
 // given values that are too large. It is up to the caller to check if the values make sense.
-//
+// ---------------------------------------------------------------------------------------------------------------------
 // This function returns a byte slice and does not accept a io.Writer interface because according to our benchmarks,
 // it is slower:
 //
@@ -113,12 +123,16 @@ func headerMarshal(h Header) ([]byte, error) {
 		buffer[0x0] = buffer[0x0] | 0x08
 	}
 
-	// Crypto Suite
-	// 	 0011 1111	<- 0x3f
-	// & RRCC CCCC
-	// ------------
-	//   00CC CCCC
-	buffer[0x1] = 0x3F & h.EncryptionMethod.ToBin()
+	cs := h.CipherSuite.ToBin()
+
+	// Cipher Suite
+	//   0011 1111 1111
+	// & RRCC CCCC CCCC
+	buffer[0x1] = cs[0] & 0x3
+	buffer[0x2] = cs[1]
+
+	// PDU Body Offset
+	buffer[0x3] = h.PduBodyOffset
 
 	return buffer, nil
 }
@@ -143,12 +157,14 @@ func __headerMarshal2(h Header, w io.Writer) error {
 		buffer[0x0] = buffer[0x0] | 0x08
 	}
 
-	// Crypto Suite
-	// 	 0011 1111	<- 0x3f
-	// & RRCC CCCC
-	// ------------
-	//   00CC CCCC
-	buffer[0x1] = 0x3F & h.EncryptionMethod.ToBin()
+	cs := h.CipherSuite.ToBin()
+	// Cipher Suite
+	//   0011 1111 1111
+	// & RRCC CCCC CCCC
+	buffer[0x1] = cs[0] & 0x3
+	buffer[0x2] = cs[1]
+
+	buffer[0x3] = h.PduBodyOffset
 
 	w.Write(buffer)
 
@@ -163,7 +179,7 @@ func headerUnmarshal(data []byte) (Header, error) {
 	}
 
 	headerBin := data[:HeaderSize]
-	/// Version (V) 4 bits || Packet Type (T) 1 bit || Reserved (R) 5 bits || Crypto Suite (C) 6 bits
+	/// Version (V) 4 bits || Packet Type (T) 1 bit || Reserved (R) 5 bits || Cipher Suite (C) 6 bits
 
 	// Version
 	// VVVV TRRR >> 4 =
@@ -180,14 +196,25 @@ func headerUnmarshal(data []byte) (Header, error) {
 
 	isRequest := typeOfPacket == 0
 
-	// Crypto Suite
-	// 	 0011 1111	<- 0x3f
-	// & RRCC CCCC
-	// ------------
-	//   00CC CCCC
-	cryptoSuite := EncryptionMethod(0x3F & headerBin[0x1])
+	// Cipher Suite
+	//   0011 1111 1111
+	// & RRCC CCCC CCCC
+	csH := headerBin[0x1] & 0x3
+	csL := headerBin[0x2]
 
-	return Header{ver, isRequest, cryptoSuite}, nil
+	cs := uint16(csL)
+	cs = cs | (uint16(csH) << 8)
+
+	cipherS := CipherSuiteId(cs)
+
+	pduBodyOffset := headerBin[0x3]
+
+	return Header{
+		Version:       ver,
+		IsRequest:     isRequest,
+		CipherSuite:   cipherS,
+		PduBodyOffset: pduBodyOffset,
+	}, nil
 }
 
 // TODO - do we have to remove this?
