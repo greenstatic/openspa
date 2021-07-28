@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/pkg/errors"
+	"math"
 	"net"
 	"strings"
 	"time"
@@ -14,7 +15,26 @@ import (
 var (
 	ErrDeviceIdInvalid  = errors.New("deviceId is invalid")
 	ErrTimestampInvalid = errors.New("timestamp is invalid")
+	ErrUnsupportedStartPort = errors.New("unsupported start port")
+	ErrUnsupportedEndPort = errors.New("unsupported end port")
+	ErrStartEndPortMismatch = errors.New("start port end port mismatch")
+	ErrClientIpIsEmpty = errors.New("client public ip is empty")
+	ErrServerIpIsEmpty = errors.New("server public ip is empty")
+	ErrSignatureOffsetTooLarge = errors.New("signature offset too large")
 )
+
+type PDU interface {
+
+}
+
+type ErrCipherSuiteNotSupported struct {
+	cipherSuite CipherSuiteId
+}
+
+func (e ErrCipherSuiteNotSupported) Error() string {
+	return fmt.Sprintf("cipher suite %d not supported", uint8(e.cipherSuite))
+}
+
 
 // Encodes the client's device ID, which should be a UUID v4 in such a way that we remove the dashes and return a byte
 // slice. Accepts also a client device ID without dashes (as long as it's a UUID).
@@ -113,11 +133,21 @@ func decodePort(data []byte, protocol InternetProtocolNumber) (uint16, error) {
 	return port, nil
 }
 
-// Encodes the parameters set in the Misc field.
-func encodeMiscField(behindNAT bool) byte {
-	// X0000000 <- final byte, where X is Client NAT field
+// Encodes the parameters set in the Misc field. Always returns 4 byte long slice if no error is returned.
+func encodeMiscField(behindNAT bool, signatureOffset uint) ([]byte, error) {
+	// Byte 1: NXXXXXXX
+	// Byte 2: XXXXXXXX
+	// Byte 3: XXXXXXSS
+	// Byte 4: SSSSSSSS
+	//
+	// N - Client's behind NAT, boolean (1 bit)
+	// X - Reserved for future use (21 bits)
+	// S - Signature offset (10 bits)
 
-	var finalByte byte = 0x0
+	var b1 byte = 0x0
+	var b2 byte = 0x0
+	var b3 byte = 0x0
+	var b4 byte = 0x0
 
 	// Client is behind NAT - 1 bit
 	var clientBehindNat byte = 0x0 // BIN: 0000 0000 <- not behind nat
@@ -126,10 +156,18 @@ func encodeMiscField(behindNAT bool) byte {
 		clientBehindNat = 0x80 // BIN: 1000 0000 <- behind nat
 	}
 
-	finalByte = finalByte | clientBehindNat
+	b1 = b1 | clientBehindNat
 
-	// the remanding bits are reserved but not in use
-	return finalByte
+	// Signature offset - 10 bits
+	if signatureOffset >= uint(math.Pow(2, signatureOffsetBitSize)) {
+		return nil, ErrSignatureOffsetTooLarge
+	}
+
+	sigOffset := uint16(signatureOffset)
+	b4 = uint8(sigOffset) & 0xFF
+	b3 = uint8(sigOffset >> 8) & 0x03
+
+	return []byte{b1, b2, b3, b4}, nil
 }
 
 // Returns from the misc field byte data the parsed values of:
@@ -138,16 +176,6 @@ func decodeMiscField(data byte) (clientBehindNAT bool, err error) {
 	clientBehindNatBin := data >> 7
 	clientBehindNAT = int(clientBehindNatBin) != 0 // convert to bool
 	return
-}
-
-// Decodes a byte signature method. Checks if the signature method is supported.
-func decodeSignatureMethod(data byte) (SignatureMethod, error) {
-	s := SignatureMethod(data)
-	if !SignatureMethodIsSupported(s) {
-		return 0, errors.New("unsupported signature method:" + fmt.Sprintf("%x", data))
-	}
-
-	return s, nil
 }
 
 // Returns a byte slice 16 bytes long which represents an IPv4 or IPv6 address (depending on the inputted IP address).

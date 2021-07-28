@@ -4,13 +4,51 @@ import (
 	"crypto/rand"
 	"fmt"
 	"github.com/pkg/errors"
+	"os"
+	"strings"
 )
 
 const (
 	nonceSize = 3 // bytes - according to the OpenSPA protocol
+
+	CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256 = CipherSuiteId(0x1)
+
+	// CipherSuite_Mock - DO NOT USE IN PRODUCTION! No cipher operations will be performed (i.e. no encryption & signing)
+	CipherSuite_Mock = CipherSuiteId(0x0)
 )
 
 type Nonce []byte
+
+// CipherSuiteId can be max 10 bits, i.e. 0x3FF according to the OpenSPA spec.
+type CipherSuiteId uint16
+
+type CipherSuite interface {
+	CryptoEncryptionMethod
+	CryptoDecryptionMethod
+	CryptoSignatureMethod
+	CryptoSignatureVerificationMethod
+	CipherSuiteId() CipherSuiteId
+}
+
+type CryptoEncryptionMethod interface {
+	Encrypt(plaintext []byte) (ciphertext []byte, err error)
+}
+
+type CryptoDecryptionMethod interface {
+	Decrypt(ciphertext []byte) (plaintext []byte, err error)
+}
+
+type CryptoSignatureMethod interface {
+	Sign(data []byte) (signature []byte, err error)
+}
+
+type CryptoSignatureVerificationMethod interface {
+	Verify(text, signature []byte) (valid bool, err error)
+}
+
+// CryptoMethodMock DO NOT USE THIS IN PRODUCTION!!! This mocks all cryptographic operations and does not encrypt/sign
+// anything. This is only to be used for development testing.
+type CryptoMethodMock struct{}
 
 func RandomNonce() (Nonce, error) {
 	nonce := make([]byte, nonceSize)
@@ -20,6 +58,79 @@ func RandomNonce() (Nonce, error) {
 	}
 
 	return nonce, nil
+}
+
+// ToBin converts a CipherSuiteId to the binary representation. This is limited by the OpenSPA protocol specification to
+// be a maximum of 10 bits. The returned byte slice represents the bits in big endian format. Larger values that 2^10
+// i.e. 0x3FF will overflow!.
+func (c *CipherSuiteId) ToBin() [2]byte {
+	h := uint8((*c >> 8) & 0x03)
+	l := uint8(*c & 0xFF)
+
+	return [2]byte{h, l}
+}
+
+// CipherSuiteIsSupported returns true if the input CipherSuiteId is supported.
+func CipherSuiteIsSupported(c CipherSuiteId) bool {
+	s := CipherSuiteSupport()
+	for _, i := range s {
+		if i == c {
+			return true
+		}
+	}
+
+	return false
+}
+
+// CipherSuiteSupport returns a slice of all CipherSuiteId that are supported. If the OS env variable
+// `OSPA_CIPHER_SUITE_MOCK` is defined and set to "true" (case-insensitive), CipherSuite_Mock will be added to the slice
+// of supported cipher suites.
+func CipherSuiteSupport() []CipherSuiteId {
+	mockAllowed := false
+	if strings.ToLower(os.Getenv("OSPA_CIPHER_SUITE_MOCK")) == "true" {
+		mockAllowed = true
+	}
+
+	return cipherSuiteSupport(mockAllowed)
+}
+
+// CipherSuiteSupport returns a slice of all CipherSuiteId that are supported. If mockAllowed is true, CipherSuite_Mock
+// will be added to the slice of supported cipher suites.
+func cipherSuiteSupport(mockAllowed bool) []CipherSuiteId {
+	s := []CipherSuiteId{
+		CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256,
+	}
+
+	if mockAllowed {
+		s = append(s, CipherSuite_Mock)
+	}
+
+	return s
+}
+
+
+func (_ CryptoMethodMock) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
+	ciphertext = plaintext
+	return
+}
+
+func (_ CryptoMethodMock) Decrypt(ciphertext []byte) (plaintext []byte, err error) {
+	plaintext = ciphertext
+	return
+}
+
+func (_ CryptoMethodMock) Sign(text []byte) (signature []byte, err error) {
+	signature = []byte{0x0, 0x1, 0x2, 0x3}
+	err = nil
+	return
+}
+
+func (_ CryptoMethodMock) Verify(text, signature []byte) (valid bool, err error) {
+	return true, nil
+}
+
+func (_ CryptoMethodMock) CipherSuiteId() CipherSuiteId {
+	return CipherSuiteId(0x1) // Pretend to be
 }
 
 // Generate a cryptographically secure pseudorandom key. Size parameter should by in bytes.
@@ -67,23 +178,4 @@ func paddingPKCS7Remove(data []byte) ([]byte, error) {
 	}
 
 	return data[:len(data)-size], nil
-}
-
-type EncryptionMethodImps []EncryptionMethodImp
-
-type EncryptionMethodImp interface {
-	Encrypt(plaintext []byte) (ciphertext []byte, err error)
-	Decrypt(ciphertext []byte) (plaintext []byte, err error)
-}
-
-type encryptionMethodMock struct{}
-
-func (_ encryptionMethodMock) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
-	ciphertext = plaintext
-	return
-}
-
-func (_ encryptionMethodMock) Decrypt(ciphertext []byte) (plaintext []byte, err error) {
-	plaintext = ciphertext
-	return
 }

@@ -5,32 +5,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	EncryptionMethodRSA2048WithAES256CBC EncryptionMethod = 0x01
-)
-
-type EncryptionMethod uint8
-
-func (c *EncryptionMethod) ToBin() byte {
-	return uint8(*c)
-}
-
-// EncryptionMethodIsSupported returns true if the input CryptoSuite is supported.
-func EncryptionMethodIsSupported(c EncryptionMethod) bool {
-	// Currently we only support 1 crypto suite
-	return c == EncryptionMethodRSA2048WithAES256CBC
-}
-
-// EncryptionMethodSupport returns a slice of CryptoSuite that are supported.
-func EncryptionMethodSupport() []EncryptionMethod {
-	return []EncryptionMethod{
-		EncryptionMethodRSA2048WithAES256CBC,
-	}
-}
-
 // Encrypts the data with AES-256-CBC with a random key and then encrypts the random AES key
-// with a RSA 2048 bit public key. The key is then appended as the prefix of the ciphertext.
-func encryptWithRSA2048WithAES256CBC(plaintext []byte, pubKey *rsa.PublicKey) ([]byte, error) {
+// with a RSA public key. The key is then appended as the prefix of the ciphertext.
+func encryptWithRSAWithAES256CBC(plaintext []byte, pubKey *rsa.PublicKey) ([]byte, error) {
 	// Generate random AES key
 	const aesKeyLength = 32 // 32 bytes = 256 bits
 	aesKey, err := randomKey(aesKeyLength)
@@ -60,7 +37,8 @@ func encryptWithRSA2048WithAES256CBC(plaintext []byte, pubKey *rsa.PublicKey) ([
 	return encryptedDataByte, nil
 }
 
-func decryptWithRSA2048WithAES256CBC(ciphertext []byte, privKey *rsa.PrivateKey) ([]byte, error) {
+func decryptWithRSAWithAES256CBC(ciphertext []byte, privKey *rsa.PrivateKey) ([]byte, error) {
+	// TODO - fix this
 	const rsaEncAESKeyLen = 256             // bytes (2048 * 8 = 256)
 	if len(ciphertext) <= rsaEncAESKeyLen { // <= because we also need something to decrypt using AES (not just the key)
 		return nil, errors.New("ciphertext is too short to be encrypted using RSA 2048 + AES 256 CBC")

@@ -2,8 +2,50 @@ package openspalib
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
 	"testing"
 )
+
+func TestTestingRsaKeyPair(t *testing.T) {
+	tests := []struct{
+		f func() (*rsa.PrivateKey, *rsa.PublicKey)
+	}{
+		// Test case: 1
+		{
+			f: TestingRsaKeyPair1,
+		},
+		// Test case: 2
+		{
+			f: TestingRsaKeyPair2,
+		},
+	}
+
+	for i, test := range tests {
+		testNo := i + 1
+
+		priv, pub := test.f()
+
+		text := "here be dragons"
+
+		encrypted, err := rsa.EncryptPKCS1v15(rand.Reader, pub, []byte(text))
+		if err != nil {
+			t.Fatalf("Test case: %d failed to encrypt test string, err: %v", testNo, err)
+		}
+
+		decrypted, err := rsa.DecryptPKCS1v15(rand.Reader, priv, encrypted)
+		if err != nil {
+			t.Fatalf("Test case: %d failed to decrypt test string, err: %v", testNo, err)
+		}
+
+		decryptedStr := string(decrypted)
+		if text != decryptedStr {
+			t.Errorf("Test case: %d Text does not match, %s != %s", testNo, text, decryptedStr)
+		}
+	}
+
+}
+
 
 // Tests the following functions:
 // * rsaEncrypt()

@@ -5,6 +5,61 @@ import (
 	"testing"
 )
 
+func TestCipherSuiteToBin(t *testing.T) {
+	tests := []struct {
+		inputData      CipherSuiteId
+		expectedResult []byte
+		onErrorStr     string
+	}{
+		{
+			inputData:      CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256,
+			expectedResult: []byte{0x0, 0x1},
+			onErrorStr:     "CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256",
+		},
+		{
+			inputData:      0x2,
+			expectedResult: []byte{0x0, 0x2},
+			onErrorStr:     "0x02",
+		},
+		{
+			inputData:      0x24,
+			expectedResult: []byte{0x0, 0x24},
+			onErrorStr:     "0x24",
+		},
+		{
+			inputData:      0xFF,
+			expectedResult: []byte{0x0, 0xFF},
+			onErrorStr:     "0xFF",
+		},
+		{
+			inputData:      0x100,
+			expectedResult: []byte{0x1, 0x00},
+			onErrorStr:     "0x100",
+		},
+		{
+			inputData:      0x3FF,
+			expectedResult: []byte{0x3, 0xFF},
+			onErrorStr:     "0x3FF - max represented crypto suite",
+		},
+		{
+			inputData:      0x400,
+			expectedResult: []byte{0x0, 0x00},
+			onErrorStr:     "0x400 should overflow",
+		},
+	}
+
+	for i, test := range tests {
+		testNo := i + 1
+		result := test.inputData.ToBin()
+
+		if !bytes.Equal(test.expectedResult, []byte{result[0], result[1]}) {
+			t.Errorf("Test case: %d failed (%s), returned byte slice does not match: %v != %v",
+				testNo, test.onErrorStr, test.expectedResult, result)
+		}
+	}
+}
+
+
 func TestRandomKey(t *testing.T) {
 	// See if multiple calls result in different values. There is a negligible probability that we will generate
 	// two identical keys's.
@@ -121,5 +176,26 @@ func TestPaddingPKCS7Remove(t *testing.T) {
 			t.Errorf("Bad padding for test case: %d, %v != %v, reason: %s",
 				i, result, test.expectedResult, test.onErrorStr)
 		}
+	}
+}
+
+func TestCipherSuiteSupport(t *testing.T) {
+	s := cipherSuiteSupport(false)
+	for _, i := range s {
+		if i == CipherSuite_Mock {
+			t.Errorf("cipherSuiteSupport with mockAllowed=false, returned mock CipherSuiteId")
+		}
+	}
+
+	mockReturned := false
+	s = cipherSuiteSupport(true)
+	for _, i := range s {
+		if i == CipherSuite_Mock {
+			mockReturned = true
+		}
+	}
+
+	if !mockReturned {
+		t.Errorf("cipherSuiteSupport with mockAllowed=true, did not return mock CipherSuiteId")
 	}
 }

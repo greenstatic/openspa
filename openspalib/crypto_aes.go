@@ -14,7 +14,6 @@ import (
 //
 // Inspired by the example at: https://golang.org/pkg/crypto/cipher/#NewCBCEncrypter
 func aes256CbcEncrypt(plaintext []byte, key []byte, iv []byte) ([]byte, error) {
-
 	const ivSize = aes.BlockSize
 
 	// check just to be sure that the plaintext body is a multiple of the AES block size
@@ -72,7 +71,6 @@ func aes256CbcDecrypt(ciphertext []byte, key []byte) ([]byte, error) {
 // Calls AES_256_CBC_encrypt() with a randomly generated IV and appends the PKCS7 corresponding
 // padding. See the return value of AES_256_CBC_encrypt().
 func aes256CbcEncryptWithPadding(plaintext []byte, key []byte) ([]byte, error) {
-
 	// Pad the data
 	paddingSize := aes.BlockSize - (len(plaintext) % aes.BlockSize)
 	dataPadded := paddingPKCS7(plaintext, paddingSize)

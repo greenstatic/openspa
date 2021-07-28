@@ -22,16 +22,15 @@ type ResponseBody struct {
 	StartPort       uint16
 	EndPort         uint16
 	Duration        time.Duration
-	SignatureMethod SignatureMethod
 	Signature       []byte
 }
 
 type ResponseData struct {
-	Protocol        InternetProtocolNumber
-	StartPort       uint16
-	EndPort         uint16
-	Duration        time.Duration
-	SignatureMethod SignatureMethod
+	CipherSuite CipherSuiteId
+	Protocol    InternetProtocolNumber
+	StartPort   uint16
+	EndPort     uint16
+	Duration    time.Duration
 }
 
 // Encode encodes the response packet body according to the OpenSPA specification.
@@ -94,11 +93,12 @@ func (body *ResponseBody) Encode() ([]byte, error) {
 
 	offset += durationSize
 
+	// TODO - fix
 	// Signature method - 8 bits = 1 byte
-	const signatureMethodSize = 1 // byte
-	payloadBuff[offset] = body.SignatureMethod.ToBin()
+	//const signatureMethodSize = 1 // byte
+	//payloadBuff[offset] = body.SignatureMethod.ToBin()
 
-	offset += signatureMethodSize
+	//offset += signatureMethodSize
 
 	// Reserved - 40 bits = 5 byte
 	const reservedSize = 5 // bytes
@@ -179,15 +179,16 @@ func responseDecode(data []byte) (body *ResponseBody, signature []byte, err erro
 	body.Duration = duration
 	offset += durationSize
 
+	// TODO - fix
 	// Signature method - 8 bits = 1 byte
-	const signatureMethodSize = 1 // byte
-	sigMethod, err := decodeSignatureMethod(data[offset])
-	if err != nil {
-		return nil, nil, err
-	}
-
-	body.SignatureMethod = sigMethod
-	offset += signatureMethodSize
+	//const signatureMethodSize = 1 // byte
+	//sigMethod, err := decodeSignatureMethod(data[offset])
+	//if err != nil {
+	//	return nil, nil, err
+	//}
+	//
+	//body.SignatureMethod = sigMethod
+	//offset += signatureMethodSize
 
 	// Reserved - 40 bits = 5 byte
 	const reservedSize = 5 // byte

@@ -9,28 +9,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	SignatureMethod_RSA_SHA256 = 0x01
-)
-
-type SignatureMethod uint8
-
-func (s *SignatureMethod) ToBin() byte {
-	return uint8(*s)
-}
-
-// SignatureMethodIsSupported returns true if the input SignatureMethod is supported.
-func SignatureMethodIsSupported(s SignatureMethod) bool {
-	return s == SignatureMethod_RSA_SHA256
-}
-
-// SignatureMethodSupport returns a slice of SignatureMethod that are supported.
-func SignatureMethodSupport() []SignatureMethod {
-	return []SignatureMethod{
-		SignatureMethod_RSA_SHA256,
-	}
-}
-
 // Creates a signature by hashing the data using SHA-256 then using the private RSA key to sign the message.
 func rsaSha256Signature(data []byte, privKey *rsa.PrivateKey) (signature []byte, err error) {
 	// Sign the header and the unsigned body slice
