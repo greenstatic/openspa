@@ -1,24 +1,20 @@
 package openspalib
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"github.com/pkg/errors"
 	"io"
-	"math"
 )
 
-// All numbers are encoded in big endian format
 // PDU Header binary format:
 // 0               |   1           |       2       |           3
 // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// | Control Field |     TID   |    Cipher Suite   | Offset Mult.|
+// | Control Field | Transaction ID|  Cipher Suite |   Reserved  |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |                Reserved for eBPF optimization               |
+// |                        Reserved for ADK                     |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |             Additional Header Data (optional)               |
+// |                           PDU Body                          |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //
 // ----------------------------------------------------------------------
@@ -51,36 +47,25 @@ import (
 // ----------------------------------------------------------------------
 // * Control Field (1 byte):
 //		Various data regarding the PDU body, e.g. request or response, protocol version.
-// * TID: Transaction ID (6 bits):
+// * TID: Transaction ID (1 byte):
 //		This should be a random uint (big endian) number representing a request/response exchange.
-// * Cipher Suite (10 bits):
+// * Cipher Suite (1 byte):
 //		The method the payload is encrypted and signed
-// * PDU Body Offset Multiplicand (1 byte)
-//		PDU Body Offset = PDU Body Offset Multiplicand * 4
-//		The offset from the fixed header that the PDU Body starts or in other words the number of bytes the additional
-//	 	header data field takes. This value can be 0 (i.e. additional header data is empty).
-// * Additional Header Data (optional, variable number of bits):
-//		This field can encode additional data that will NOT be encrypted, since it is in the header. If you wish to
-//		add additional data that will be encrypted, see the PDU body Additional Body Data field.
-//		Data is encoded as TLV where the Type and Length values are both 2 bytes. Example:
-//		The type 0x3F with a value of 0x1234 would be encoded as: 0x00 0x3F 0x00 0x02 0x12 0x34
+// * ADK: Anti DoS-Knocking Protection (4 bytes):
+//		Field is reserved.
+// * PDU Body (variable number of bytes):
+//		Data encoded using TLV (Type-Length-Value) where the type is defined using 2 bytes (big endian), length in 1
+//		byte (uint8) and value a variable number of bytes - as defined by the length field.
+//		The type 0x3F with a value of 0x1234 would be encoded as: 0x00 0x3F 0x02 0x12 0x34.
+//
+// Integers are encoded in big endian format.
 
-const (
-	Version                    uint8 = 2 // version of the protocol
-	HeaderFixedSize                  = 8 // size of the fixed header in bytes (i.e. without additional header data)
-	pduBodyOffsetMultiplier          = 4
-	pduBodyOffsetMax                 = 0xFF * pduBodyOffsetMultiplier
-	additionalHeaderDataLenMax       = pduBodyOffsetMax
-)
+const HeaderSize = 8 // bytes
 
-var (
-	ErrHeaderTooShort              = errors.New("header too short")
-	ErrHeaderInvalid              = errors.New("header invalid")
-	ErrAdditionalHeaderDataTooLong = errors.New("additional header data too long")
-)
+var ErrHeaderTooShort = errors.New("header too short")
 
 type ErrProtocolVersionNotSupported struct {
-	version uint8
+	version int
 }
 
 func (e ErrProtocolVersionNotSupported) Error() string {
@@ -89,12 +74,9 @@ func (e ErrProtocolVersionNotSupported) Error() string {
 
 // Header represents the head of an OpenSPA packet (request or response).
 type Header struct {
-	controlField  byte
+	controlField  uint8
 	TransactionId uint8
 	CipherSuite   CipherSuiteId
-
-	// Format is: 2 bytes for tag ID, 2 bytes for length and then the number of bytes defined by the length
-	AdditionalHeaderData TLVContainer
 }
 
 func (header *Header) Type() PDUType {
@@ -107,12 +89,12 @@ func (header *Header) SetType(pduType PDUType) {
 	header.controlField = controlFieldEncode(pduType, v)
 }
 
-func (header *Header) Version() uint8 {
+func (header *Header) Version() int {
 	_, ver := controlFieldDecode(header.controlField)
 	return ver
 }
 
-func (header *Header) SetVersion(version uint8) {
+func (header *Header) SetVersion(version int) {
 	t, _ := controlFieldDecode(header.controlField)
 	header.controlField = controlFieldEncode(t, version)
 }
@@ -131,24 +113,7 @@ func (header *Header) Encode() ([]byte, error) {
 		return nil, ErrCipherSuiteNotSupported{header.CipherSuite}
 	}
 
-	if header.AdditionalHeaderData != nil && header.AdditionalHeaderData.BytesBufferLen() > additionalHeaderDataLenMax {
-		return nil, ErrAdditionalHeaderDataTooLong
-	}
-
 	return headerMarshal(*header)
-}
-
-func (header *Header) pduBodyOffsetMultiplicand() uint8 {
-	t := header.AdditionalHeaderData
-	if t == nil {
-		return 0
-	}
-
-	l := t.BytesBufferLen()
-
-	f := float64(l) / float64(pduBodyOffsetMultiplier)
-
-	return uint8(math.Ceil(f))
 }
 
 // Equal returns true if the supplied header is semantically equal to the structs header, otherwise false.
@@ -167,30 +132,6 @@ func (header *Header) Equal(h Header) bool {
 
 	if header.CipherSuite != h.CipherSuite {
 		return false
-	}
-
-	ahd1 := header.AdditionalHeaderData
-	ahd2 := h.AdditionalHeaderData
-
-	if ahd1 != nil && ahd2 == nil || ahd1 == nil && ahd2 != nil {
-		return false
-	}
-
-	if ahd1 != nil && ahd2 != nil {
-		b1, err := io.ReadAll(ahd1.BytesBuffer())
-		if err != nil {
-			panic(err)
-		}
-
-		b2, err := io.ReadAll(ahd2.BytesBuffer())
-		if err != nil {
-			panic(err)
-		}
-
-		if !bytes.Equal(b1, b2) {
-			return false
-		}
-
 	}
 
 	return true
@@ -230,47 +171,22 @@ func HeaderDecode(data []byte) (Header, error) {
 // pkg: github.com/greenstatic/openspa/openspalib
 // cpu: Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
 // BenchmarkHeaderMarshal
-// BenchmarkHeaderMarshal-8      	87877300	        14.41 ns/op
+// BenchmarkHeaderMarshal-8      	57187353	        18.15 ns/op
 // Benchmark__HeaderMarshal2
-// Benchmark__HeaderMarshal2-8   	46393939	        28.10 ns/op
+// Benchmark__HeaderMarshal2-8   	45415515	        26.98 ns/op
 // PASS
 func headerMarshal(h Header) ([]byte, error) {
-	buffer := make([]byte, HeaderFixedSize)
+	buffer := make([]byte, HeaderSize)
 
-	buffer[0x00] = h.controlField
+	buffer[0x0] = h.controlField
+	buffer[0x1] = h.TransactionId
+	buffer[0x2] = h.CipherSuite.Bin()
 
-	// Transaction ID and Cipher Suite
-	tId := h.TransactionId << 2
-	cs := h.CipherSuite.ToBin()
-
-	// The two least significant bits of the tID byte contain the most significant bits of the Cipher Suite
-	tId |= cs[0] & 0b0000_0011
-	buffer[0x01] = tId
-	buffer[0x02] = cs[1]
-
-	// PDU Body Offset
-	pduBodyOffsetMultiplicand := h.pduBodyOffsetMultiplicand()
-	buffer[0x03] = pduBodyOffsetMultiplicand
-
-	// Field Reserved for eBPF optimization
-	buffer[0x04] = 0
-	buffer[0x05] = 0
-	buffer[0x06] = 0
-	buffer[0x07] = 0
-
-	// Additional Header Data (optional)
-	if h.AdditionalHeaderData != nil {
-		b, err := io.ReadAll(h.AdditionalHeaderData.BytesBuffer())
-		if err != nil {
-			return nil, errors.Wrap(err, "io read all additional header data")
-		}
-
-		buffer = append(buffer, b...)
-		slack := additionalHeaderDataSlack(pduBodyOffsetMultiplicand, len(b))
-		if slack != nil && len(slack) > 0 {
-			buffer = append(buffer, slack...)
-		}
-	}
+	// Field Reserved for ADK
+	buffer[0x4] = 0
+	buffer[0x5] = 0
+	buffer[0x6] = 0
+	buffer[0x7] = 0
 
 	return buffer, nil
 }
@@ -278,38 +194,11 @@ func headerMarshal(h Header) ([]byte, error) {
 // This function should not be used, please use headerMarshal. __headerMarshal2 is merely used to benchmark the
 // difference between the writer interface vs. a byte slice.
 func __headerMarshal2(h Header, w io.Writer) error {
-	buffer := make([]byte, HeaderFixedSize)
-	buffer[0x00] = controlFieldEncode(h.Type(), h.Version())
-
-	// Transaction ID and Cipher Suite
-	tId := h.TransactionId << 2
-	cs := h.CipherSuite.ToBin()
-
-	// The two least significant bits of the tID byte contain the most significant bits of the Cipher Suite
-	tId |= cs[0] & 0b0000_0011
-	buffer[0x01] = tId
-	buffer[0x02] = cs[1]
-
-	// PDU Body Offset
-	pduBodyOffsetMultiplicand := h.pduBodyOffsetMultiplicand()
-	buffer[0x03] = pduBodyOffsetMultiplicand
-
-
-	// Additional Header Data (optional)
-	if h.AdditionalHeaderData != nil {
-		b, err := io.ReadAll(h.AdditionalHeaderData.BytesBuffer())
-		if err != nil {
-			return errors.Wrap(err, "io read all additional header data")
-		}
-
-		buffer = append(buffer, b...)
-		slack := additionalHeaderDataSlack(pduBodyOffsetMultiplicand, len(b))
-		if slack != nil && len(slack) > 0 {
-			buffer = append(buffer, slack...)
-		}
-	}
-
-	_, err := w.Write(buffer)
+	_, err := w.Write([]byte{
+		h.controlField,
+		h.TransactionId,
+		h.CipherSuite.Bin(),
+	})
 	if err != nil {
 		return errors.Wrap(err, "write to buffer")
 	}
@@ -320,43 +209,21 @@ func __headerMarshal2(h Header, w io.Writer) error {
 // Converts a byte slice into a header struct according to the OpenSPA specification. Does not validate any binary
 // according to the specification it merely does a dumb mapping of binary to the OpenSPA specification.
 func headerUnmarshal(data []byte) (Header, error) {
-	if len(data) < HeaderFixedSize {
+	if len(data) < HeaderSize {
 		return Header{}, ErrHeaderTooShort
 	}
 
-	h := Header{}
-
-	h.controlField = data[0x0]
-
-	// Transaction ID
-	h.TransactionId = data[0x1] >> 2
-
-	// Cipher Suite
-	//   0011 1111 1111
-	// & TTCC CCCC CCCC
-	csH := data[0x1] & 0b0011
-	csL := data[0x2]
-	h.CipherSuite = CipherSuiteId(binary.BigEndian.Uint16([]byte{csH, csL}))
-
-	pduBodyOffsetMultiplicand := data[0x3]
-	pduBodyOffset := pduBodyOffset(pduBodyOffsetMultiplicand)
-	if HeaderFixedSize + pduBodyOffset > len(data) {
-		return Header{}, ErrHeaderInvalid
-	}
-
-	if pduBodyOffset != 0 {
-		if HeaderFixedSize + pduBodyOffset > len(data) {
-			return Header{}, ErrHeaderTooShort
-		}
-
-		h.AdditionalHeaderData = NewTLVContainer(data[HeaderFixedSize : HeaderFixedSize+pduBodyOffset], additionalHeaderDataLenMax)
+	h := Header{
+		controlField:  data[0x0],
+		TransactionId: data[0x1],
+		CipherSuite:   CipherSuiteId(data[0x2]),
 	}
 
 	return h, nil
 }
 
-func controlFieldEncode(t PDUType, version uint8) byte {
-	b := version << 4
+func controlFieldEncode(t PDUType, version int) byte {
+	b := uint8(version) << 4
 
 	if t == PDUResponseType {
 		b |= 0b1000_0000
@@ -368,8 +235,8 @@ func controlFieldEncode(t PDUType, version uint8) byte {
 	return b
 }
 
-func controlFieldDecode(b byte) (t PDUType, version uint8) {
-	version = (b >> 4) & 0b0000_0111
+func controlFieldDecode(b uint8) (t PDUType, version int) {
+	version = int((b >> 4) & 0b0000_0111)
 
 	if (b >> 7) & 0b0000_0001 == 0x00 {
 		t = PDURequestType
@@ -377,16 +244,4 @@ func controlFieldDecode(b byte) (t PDUType, version uint8) {
 		t = PDUResponseType
 	}
 	return
-}
-
-func additionalHeaderDataSlack(pduBodyOffsetMultiplicand uint8, tlvContainerLen int) []byte {
-	slackBytes := pduBodyOffset(pduBodyOffsetMultiplicand) - tlvContainerLen
-	if slackBytes < 0 {
-		panic("invalid pdu body offset multiplicand")
-	}
-	return make([]byte, slackBytes)
-}
-
-func pduBodyOffset(multiplicand uint8) int {
-	return int(multiplicand) * pduBodyOffsetMultiplier
 }

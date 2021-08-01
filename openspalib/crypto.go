@@ -18,9 +18,7 @@ const (
 )
 
 type Nonce []byte
-
-// CipherSuiteId can be max 10 bits, i.e. 0x3FF according to the OpenSPA spec.
-type CipherSuiteId uint16
+type CipherSuiteId uint8
 
 type CipherSuite interface {
 	CryptoEncryptionMethod
@@ -46,6 +44,10 @@ type CryptoSignatureVerificationMethod interface {
 	Verify(text, signature []byte) (valid bool, err error)
 }
 
+func (c CipherSuiteId) Bin() byte {
+	return byte(c)
+}
+
 // CryptoMethodMock DO NOT USE THIS IN PRODUCTION!!! This mocks all cryptographic operations and does not encrypt/sign
 // anything. This is only to be used for development testing.
 type CryptoMethodMock struct{}
@@ -58,16 +60,6 @@ func RandomNonce() (Nonce, error) {
 	}
 
 	return nonce, nil
-}
-
-// ToBin converts a CipherSuiteId to the binary representation. This is limited by the OpenSPA protocol specification to
-// be a maximum of 10 bits. The returned byte slice represents the bits in big endian format. Larger values that 2^10
-// i.e. 0x3FF will overflow!.
-func (c *CipherSuiteId) ToBin() [2]byte {
-	h := uint8((*c >> 8) & 0x03)
-	l := uint8(*c & 0xFF)
-
-	return [2]byte{h, l}
 }
 
 // CipherSuiteIsSupported returns true if the input CipherSuiteId is supported.

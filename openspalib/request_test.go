@@ -216,7 +216,6 @@ func TestNewRequest(t *testing.T) {
 				Head: Header{
 					controlField: controlFieldEncode(PDURequestType, Version),
 					CipherSuite: CipherSuite_RSA_AES_128_CBC_WITH_RSA_SHA256,
-					AdditionalHeaderData: nil,
 				},
 				Body: RequestBody{
 					Timestamp:       time.Now(),

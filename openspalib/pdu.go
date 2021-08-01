@@ -12,6 +12,12 @@ import (
 	"time"
 )
 
+const (
+	Version = 2 // version of the protocol
+	PDUMaxSize = 1408 // bytes (UDP payload i.e. OpenSPA header + body)
+	BodyMaxSize = PDUMaxSize - HeaderSize // bytes
+)
+
 var (
 	ErrDeviceIdInvalid  = errors.New("deviceId is invalid")
 	ErrTimestampInvalid = errors.New("timestamp is invalid")
