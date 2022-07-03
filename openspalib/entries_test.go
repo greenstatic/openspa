@@ -171,6 +171,12 @@ func TestIPv4Encode_IPv6Address(t *testing.T) {
 	assert.Nil(t, ip)
 }
 
+func TestIPv4Encode_Nil(t *testing.T) {
+	ip, err := IPv4Encode(nil)
+	assert.ErrorIs(t, err, ErrBadInput)
+	assert.Nil(t, ip)
+}
+
 func TestIPv4Decode(t *testing.T) {
 	tests := []struct {
 		input    []byte
@@ -201,4 +207,143 @@ func TestIPv4Decode_IPv6Address(t *testing.T) {
 	ip, err := IPv4Decode([]byte(net.IPv6loopback))
 	assert.ErrorIs(t, err, ErrInvalidBytes)
 	assert.Nil(t, ip)
+}
+
+func TestIPv4Decode_Nil(t *testing.T) {
+	ip, err := IPv4Decode(nil)
+	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.Nil(t, ip)
+}
+
+func TestIPv6Encode(t *testing.T) {
+
+	tests := []struct {
+		input    net.IP
+		expected []byte
+	}{
+		{
+			input:    net.ParseIP("2001:1470:fffd:2073:250:56ff:fe81:741f"),
+			expected: []byte{0x20, 0x01, 0x14, 0x70, 0xff, 0xfd, 0x20, 0x73, 0x02, 0x50, 0x56, 0xff, 0xfe, 0x81, 0x74, 0x1f},
+		},
+		{
+			input:    net.IPv6loopback,
+			expected: []byte(net.IPv6loopback),
+		},
+	}
+
+	for _, test := range tests {
+		b, err := IPv6Encode(test.input)
+		assert.NoError(t, err)
+		assert.Equal(t, test.expected, b)
+	}
+}
+
+func TestIPv6Encode_IPv4Address(t *testing.T) {
+	ip, err := IPv6Encode(net.IPv4(88, 200, 23, 9))
+	assert.ErrorIs(t, err, ErrBadInput)
+	assert.Nil(t, ip)
+}
+
+func TestIPv6Encode_IPv4Address2(t *testing.T) {
+	ip, err := IPv6Encode(net.IPv4(88, 200, 23, 9).To4())
+	assert.ErrorIs(t, err, ErrBadInput)
+	assert.Nil(t, ip)
+}
+
+func TestIPv6Encode_Nil(t *testing.T) {
+	ip, err := IPv6Encode(nil)
+	assert.ErrorIs(t, err, ErrBadInput)
+	assert.Nil(t, ip)
+}
+
+func TestIPv6Decode(t *testing.T) {
+	tests := []struct {
+		input    []byte
+		expected net.IP
+	}{
+		{
+			input:    []byte{0x20, 0x01, 0x14, 0x70, 0xff, 0xfd, 0x20, 0x73, 0x02, 0x50, 0x56, 0xff, 0xfe, 0x81, 0x74, 0x1f},
+			expected: net.ParseIP("2001:1470:fffd:2073:250:56ff:fe81:741f"),
+		},
+		{
+			input:    []byte(net.IPv6loopback),
+			expected: net.IPv6loopback,
+		},
+	}
+
+	for _, test := range tests {
+		b, err := IPv6Decode(test.input)
+		assert.NoError(t, err)
+		assert.Equal(t, test.expected, b)
+	}
+}
+
+func TestIPv6Decode_IPv4Address(t *testing.T) {
+	ip, err := IPv6Decode([]byte(net.IPv4(88, 200, 23, 9).To4()))
+	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.Nil(t, ip)
+}
+
+func TestIPv6Decode_Nil(t *testing.T) {
+	ip, err := IPv6Decode(nil)
+	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.Nil(t, ip)
+}
+
+func TestIsIPv4(t *testing.T) {
+	tests := []struct {
+		input    net.IP
+		expected bool
+	}{
+		{
+			input:    net.ParseIP("2001:1470:fffd:2073:250:56ff:fe81:741f"),
+			expected: false,
+		},
+		{
+			input:    net.IPv6loopback,
+			expected: false,
+		},
+		{
+			input:    net.IPv4allrouter,
+			expected: true,
+		},
+		{
+			input:    net.IPv4(127, 0, 0, 1),
+			expected: true,
+		},
+	}
+
+	for _, test := range tests {
+		b := isIPv4(test.input)
+		assert.Equal(t, test.expected, b)
+	}
+}
+
+func TestIsIPv6(t *testing.T) {
+	tests := []struct {
+		input    net.IP
+		expected bool
+	}{
+		{
+			input:    net.ParseIP("2001:1470:fffd:2073:250:56ff:fe81:741f"),
+			expected: true,
+		},
+		{
+			input:    net.IPv6loopback,
+			expected: true,
+		},
+		{
+			input:    net.IPv4allrouter,
+			expected: false,
+		},
+		{
+			input:    net.IPv4(127, 0, 0, 1),
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		b := isIPv6(test.input)
+		assert.Equal(t, test.expected, b)
+	}
 }

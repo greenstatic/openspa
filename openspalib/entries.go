@@ -3,6 +3,7 @@ package openspalib
 import (
 	"encoding/binary"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -43,11 +44,11 @@ func ProtocolDecode(b []byte) (InternetProtocolNumber, error) {
 }
 
 func IPv4Encode(ip net.IP) ([]byte, error) {
-	ipv4 := ip.To4()
-	if ipv4 == nil {
+	ip = ip.To4()
+	if !isIPv4(ip) || ip == nil {
 		return nil, errors.Wrap(ErrBadInput, "input is not ipv4 address")
 	}
-	b := []byte(ipv4)
+	b := []byte(ip)
 	return b, nil
 }
 
@@ -60,10 +61,43 @@ func IPv4Decode(b []byte) (net.IP, error) {
 
 	ip := net.IP(b)
 
-	ipv4 := ip.To4()
-	if ipv4 == nil {
+	ip = ip.To4()
+	if !isIPv4(ip) {
 		return nil, errors.Wrap(ErrBadInput, "input is not ipv4 address")
 	}
 
-	return ipv4, nil
+	return ip, nil
+}
+
+func IPv6Encode(ip net.IP) ([]byte, error) {
+	ip = ip.To16()
+	if !isIPv6(ip) || ip == nil {
+		return nil, errors.Wrap(ErrBadInput, "input is not ipv6 address")
+	}
+	b := []byte(ip)
+	return b, nil
+}
+
+func IPv6Decode(b []byte) (net.IP, error) {
+	const ipv6Size = 16 // bytes
+
+	if len(b) != ipv6Size {
+		return nil, ErrInvalidBytes
+	}
+
+	ip := net.IP(b)
+	ip = ip.To16()
+	if !isIPv6(ip) {
+		return nil, errors.Wrap(ErrBadInput, "input is not ipv6 address")
+	}
+
+	return ip, nil
+}
+
+func isIPv4(ip net.IP) bool {
+	return !isIPv6(ip)
+}
+
+func isIPv6(ip net.IP) bool {
+	return strings.Contains(ip.String(), ":")
 }

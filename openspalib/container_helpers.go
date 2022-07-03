@@ -115,6 +115,56 @@ func ServerIPv4ToContainer(c Container, ip net.IP) error {
 	return nil
 }
 
+func ClientIPv6FromContainer(c Container) (net.IP, error) {
+	b, ok := c.GetBytes(ClientIPv6Key)
+	if !ok {
+		return nil, errors.Wrap(ErrMissingEntry, "no client ipv6 key in container")
+	}
+
+	ip, err := IPv6Decode(b)
+	if err != nil {
+		return nil, errors.Wrap(err, "ipv6 decode")
+	}
+
+	return ip, nil
+}
+
+func ClientIPv6ToContainer(c Container, ip net.IP) error {
+	b, err := IPv6Encode(ip)
+	if err != nil {
+		return errors.Wrap(err, "ipv6 encode")
+	}
+
+	c.SetBytes(ClientIPv6Key, b)
+
+	return nil
+}
+
+func ServerIPv6FromContainer(c Container) (net.IP, error) {
+	b, ok := c.GetBytes(ServerIPv6Key)
+	if !ok {
+		return nil, errors.Wrap(ErrMissingEntry, "no server ipv6 key in container")
+	}
+
+	ip, err := IPv6Decode(b)
+	if err != nil {
+		return nil, errors.Wrap(err, "ipv6 decode")
+	}
+
+	return ip, nil
+}
+
+func ServerIPv6ToContainer(c Container, ip net.IP) error {
+	b, err := IPv6Encode(ip)
+	if err != nil {
+		return errors.Wrap(err, "ipv6 encode")
+	}
+
+	c.SetBytes(ServerIPv6Key, b)
+
+	return nil
+}
+
 func ClientIPFromContainer(c Container) (net.IP, error) {
 	return nil, nil
 }

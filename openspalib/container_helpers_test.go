@@ -96,3 +96,47 @@ func TestServerIPv4ToContainer(t *testing.T) {
 
 	c.AssertExpectations(t)
 }
+
+func TestClientIPv6FromContainer(t *testing.T) {
+	c := NewContainerMock()
+	c.On("GetBytes", ClientIPv6Key).Return([]byte(net.IPv6loopback), true).Once()
+	expect := net.IPv6loopback
+
+	ip, err := ClientIPv6FromContainer(c)
+	assert.NoError(t, err)
+	assert.True(t, expect.Equal(ip))
+
+	c.AssertExpectations(t)
+}
+
+func TestClientIPv6ToContainer(t *testing.T) {
+	c := NewContainerMock()
+	c.On("SetBytes", ClientIPv6Key, []byte(net.IPv6loopback)).Once()
+
+	err := ClientIPv6ToContainer(c, net.IPv6loopback)
+	assert.NoError(t, err)
+
+	c.AssertExpectations(t)
+}
+
+func TestServerIPv6FromContainer(t *testing.T) {
+	c := NewContainerMock()
+	c.On("GetBytes", ServerIPv6Key).Return([]byte(net.IPv6loopback), true).Once()
+	expect := net.IPv6loopback
+
+	ip, err := ServerIPv6FromContainer(c)
+	assert.NoError(t, err)
+	assert.True(t, expect.Equal(ip))
+
+	c.AssertExpectations(t)
+}
+
+func TestServerIPv6ToContainer(t *testing.T) {
+	c := NewContainerMock()
+	c.On("SetBytes", ServerIPv6Key, []byte(net.IPv6loopback)).Once()
+
+	err := ServerIPv6ToContainer(c, net.IPv6loopback)
+	assert.NoError(t, err)
+
+	c.AssertExpectations(t)
+}

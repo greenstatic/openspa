@@ -8,7 +8,7 @@ const (
 	PortStartKey        uint8 = 5
 	PortEndKey          uint8 = 6
 	ClientIPv4Key       uint8 = 7
-	ClientIPV6Key       uint8 = 8
+	ClientIPv6Key       uint8 = 8
 	ServerIPv4Key       uint8 = 9
 	ServerIPv6Key       uint8 = 10
 	NonceKey            uint8 = 11
