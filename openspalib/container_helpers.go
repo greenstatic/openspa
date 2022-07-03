@@ -166,7 +166,57 @@ func ServerIPv6ToContainer(c Container, ip net.IP) error {
 }
 
 func ClientIPFromContainer(c Container) (net.IP, error) {
-	return nil, nil
+	b4, ok4 := c.GetBytes(ClientIPv4Key)
+	b6, ok6 := c.GetBytes(ClientIPv6Key)
+
+	if !ok4 && !ok6 {
+		return nil, errors.Wrap(ErrMissingEntry, "no client ipv4 or ipv6 key in container")
+	}
+
+	if ok4 && ok6 {
+		return nil, errors.Wrap(ErrViolationOfProtocolSpec, "cannot have both client ipv4 and ipv6 in container")
+	}
+
+	if ok4 {
+		ip, err := IPv4Decode(b4)
+		if err != nil {
+			return nil, errors.Wrap(err, "ipv4 decode")
+		}
+		return ip, nil
+	}
+
+	ip, err := IPv6Decode(b6)
+	if err != nil {
+		return nil, errors.Wrap(err, "ipv6 decode")
+	}
+	return ip, nil
+}
+
+func ServerIPFromContainer(c Container) (net.IP, error) {
+	b4, ok4 := c.GetBytes(ServerIPv4Key)
+	b6, ok6 := c.GetBytes(ServerIPv6Key)
+
+	if !ok4 && !ok6 {
+		return nil, errors.Wrap(ErrMissingEntry, "no server ipv4 or ipv6 key in container")
+	}
+
+	if ok4 && ok6 {
+		return nil, errors.Wrap(ErrViolationOfProtocolSpec, "cannot have both server ipv4 and ipv6 in container")
+	}
+
+	if ok4 {
+		ip, err := IPv4Decode(b4)
+		if err != nil {
+			return nil, errors.Wrap(err, "ipv4 decode")
+		}
+		return ip, nil
+	}
+
+	ip, err := IPv6Decode(b6)
+	if err != nil {
+		return nil, errors.Wrap(err, "ipv6 decode")
+	}
+	return ip, nil
 }
 
 func DurationFromContainer(c Container) (time.Duration, error) {

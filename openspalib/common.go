@@ -3,10 +3,11 @@ package openspalib
 import "errors"
 
 var (
-	ErrInvalidBytes        = errors.New("invalid bytes")
-	ErrMissingEntry        = errors.New("missing entry")
-	ErrBadInput            = errors.New("bad input")
-	ErrCipherSuiteRequired = errors.New("cipher suite required")
+	ErrInvalidBytes            = errors.New("invalid bytes")
+	ErrMissingEntry            = errors.New("missing entry")
+	ErrBadInput                = errors.New("bad input")
+	ErrViolationOfProtocolSpec = errors.New("violation of protocol spec")
+	ErrCipherSuiteRequired     = errors.New("cipher suite required")
 )
 
 const (

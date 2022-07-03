@@ -140,3 +140,103 @@ func TestServerIPv6ToContainer(t *testing.T) {
 
 	c.AssertExpectations(t)
 }
+
+func TestClientIPFromContainer_IPv4(t *testing.T) {
+	c := NewContainerMock()
+	expect := net.IPv4(88, 200, 23, 9).To4()
+	c.On("GetBytes", ClientIPv4Key).Return([]byte(expect), true).Once()
+	c.On("GetBytes", ClientIPv6Key).Return([]byte{}, false).Once()
+
+	ip, err := ClientIPFromContainer(c)
+	assert.NoError(t, err)
+	assert.True(t, expect.Equal(ip))
+
+	c.AssertExpectations(t)
+}
+
+func TestClientIPFromContainer_IPv6(t *testing.T) {
+	c := NewContainerMock()
+	expect := net.ParseIP("2001:1470:fffd:2073:250:56ff:fe81:741f")
+	c.On("GetBytes", ClientIPv6Key).Return([]byte(expect), true).Once()
+	c.On("GetBytes", ClientIPv4Key).Return([]byte{}, false).Once()
+
+	ip, err := ClientIPFromContainer(c)
+	assert.NoError(t, err)
+	assert.True(t, expect.Equal(ip))
+
+	c.AssertExpectations(t)
+}
+
+func TestClientIPFromContainer_IPv4AndIPv6(t *testing.T) {
+	c := NewContainerMock()
+	c.On("GetBytes", ClientIPv4Key).Return([]byte(net.IPv4(88, 200, 23, 9).To4()), true).Once()
+	c.On("GetBytes", ClientIPv6Key).Return([]byte(net.ParseIP("2001:1470:fffd:2073:250:56ff:fe81:741f")), true).Once()
+
+	ip, err := ClientIPFromContainer(c)
+	assert.ErrorIs(t, err, ErrViolationOfProtocolSpec)
+	assert.Nil(t, ip)
+
+	c.AssertExpectations(t)
+}
+
+func TestClientIPFromContainer_Empty(t *testing.T) {
+	c := NewContainerMock()
+	c.On("GetBytes", ClientIPv4Key).Return([]byte{}, false).Once()
+	c.On("GetBytes", ClientIPv6Key).Return([]byte{}, false).Once()
+
+	ip, err := ClientIPFromContainer(c)
+	assert.ErrorIs(t, err, ErrMissingEntry)
+	assert.Nil(t, ip)
+
+	c.AssertExpectations(t)
+}
+
+func TestServerIPFromContainer_IPv4(t *testing.T) {
+	c := NewContainerMock()
+	expect := net.IPv4(88, 200, 23, 9).To4()
+	c.On("GetBytes", ServerIPv4Key).Return([]byte(expect), true).Once()
+	c.On("GetBytes", ServerIPv6Key).Return([]byte{}, false).Once()
+
+	ip, err := ServerIPFromContainer(c)
+	assert.NoError(t, err)
+	assert.True(t, expect.Equal(ip))
+
+	c.AssertExpectations(t)
+}
+
+func TestServerIPFromContainer_IPv6(t *testing.T) {
+	c := NewContainerMock()
+	expect := net.ParseIP("2001:1470:fffd:2073:250:56ff:fe81:741f")
+	c.On("GetBytes", ServerIPv6Key).Return([]byte(expect), true).Once()
+	c.On("GetBytes", ServerIPv4Key).Return([]byte{}, false).Once()
+
+	ip, err := ServerIPFromContainer(c)
+	assert.NoError(t, err)
+	assert.True(t, expect.Equal(ip))
+
+	c.AssertExpectations(t)
+}
+
+func TestServerIPFromContainer_IPv4AndIPv6(t *testing.T) {
+	c := NewContainerMock()
+	c.On("GetBytes", ServerIPv4Key).Return([]byte(net.IPv4(88, 200, 23, 9).To4()), true).Once()
+	c.On("GetBytes", ServerIPv6Key).Return([]byte(net.ParseIP("2001:1470:fffd:2073:250:56ff:fe81:741f")), true).Once()
+
+	ip, err := ServerIPFromContainer(c)
+	assert.ErrorIs(t, err, ErrViolationOfProtocolSpec)
+	assert.Nil(t, ip)
+
+	c.AssertExpectations(t)
+}
+
+func TestServerIPFromContainer_Empty(t *testing.T) {
+	c := NewContainerMock()
+	c.On("GetBytes", ServerIPv4Key).Return([]byte{}, false).Once()
+	c.On("GetBytes", ServerIPv6Key).Return([]byte{}, false).Once()
+
+	ip, err := ServerIPFromContainer(c)
+	assert.ErrorIs(t, err, ErrMissingEntry)
+	assert.Nil(t, ip)
+
+	c.AssertExpectations(t)
+}
