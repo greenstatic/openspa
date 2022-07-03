@@ -74,3 +74,25 @@ func TestClientIPv4ToContainer(t *testing.T) {
 
 	c.AssertExpectations(t)
 }
+
+func TestServerIPv4FromContainer(t *testing.T) {
+	c := NewContainerMock()
+	c.On("GetBytes", ServerIPv4Key).Return([]byte{88, 200, 23, 9}, true).Once()
+	expect := net.IPv4(88, 200, 23, 9)
+
+	ip, err := ServerIPv4FromContainer(c)
+	assert.NoError(t, err)
+	assert.True(t, expect.Equal(ip))
+
+	c.AssertExpectations(t)
+}
+
+func TestServerIPv4ToContainer(t *testing.T) {
+	c := NewContainerMock()
+	c.On("SetBytes", ServerIPv4Key, []byte{88, 200, 23, 9}).Once()
+
+	err := ServerIPv4ToContainer(c, net.IPv4(88, 200, 23, 9))
+	assert.NoError(t, err)
+
+	c.AssertExpectations(t)
+}
