@@ -1,6 +1,7 @@
 package openspalib
 
 import (
+	"net"
 	"testing"
 	"time"
 
@@ -132,4 +133,72 @@ func TestProtocolDecode_ICMPv6(t *testing.T) {
 	p, err := ProtocolDecode([]byte{0x3a})
 	assert.NoError(t, err)
 	assert.Equal(t, InternetProtocolNumber(58), p)
+}
+
+func TestIPv4Encode(t *testing.T) {
+	tests := []struct {
+		input    net.IP
+		expected []byte
+	}{
+		{
+			input:    net.IPv4(192, 168, 1, 2),
+			expected: []byte{192, 168, 1, 2},
+		},
+		{
+			input:    net.IPv4(127, 0, 0, 1),
+			expected: []byte{127, 0, 0, 1},
+		},
+		{
+			input:    net.IPv4(1, 0, 0, 1),
+			expected: []byte{1, 0, 0, 1},
+		},
+		{
+			input:    net.IPv4(1, 0, 0, 1).To4(),
+			expected: []byte{1, 0, 0, 1},
+		},
+	}
+
+	for _, test := range tests {
+		b, err := IPv4Encode(test.input)
+		assert.NoError(t, err)
+		assert.Equal(t, test.expected, b)
+	}
+}
+
+func TestIPv4Encode_IPv6Address(t *testing.T) {
+	ip, err := IPv4Encode(net.IPv6loopback)
+	assert.ErrorIs(t, err, ErrBadInput)
+	assert.Nil(t, ip)
+}
+
+func TestIPv4Decode(t *testing.T) {
+	tests := []struct {
+		input    []byte
+		expected net.IP
+	}{
+		{
+			input:    []byte{192, 168, 1, 2},
+			expected: net.IPv4(192, 168, 1, 2).To4(),
+		},
+		{
+			input:    []byte{127, 0, 0, 1},
+			expected: net.IPv4(127, 0, 0, 1).To4(),
+		},
+		{
+			input:    []byte{1, 0, 0, 1},
+			expected: net.IPv4(1, 0, 0, 1).To4(),
+		},
+	}
+
+	for _, test := range tests {
+		b, err := IPv4Decode(test.input)
+		assert.NoError(t, err)
+		assert.Equal(t, test.expected, b)
+	}
+}
+
+func TestIPv4Decode_IPv6Address(t *testing.T) {
+	ip, err := IPv4Decode([]byte(net.IPv6loopback))
+	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.Nil(t, ip)
 }

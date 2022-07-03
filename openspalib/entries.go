@@ -2,7 +2,10 @@ package openspalib
 
 import (
 	"encoding/binary"
+	"net"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 func TimestampEncode(t time.Time) ([]byte, error) {
@@ -37,4 +40,30 @@ func ProtocolDecode(b []byte) (InternetProtocolNumber, error) {
 	}
 
 	return InternetProtocolNumber(b[0]), nil
+}
+
+func IPv4Encode(ip net.IP) ([]byte, error) {
+	ipv4 := ip.To4()
+	if ipv4 == nil {
+		return nil, errors.Wrap(ErrBadInput, "input is not ipv4 address")
+	}
+	b := []byte(ipv4)
+	return b, nil
+}
+
+func IPv4Decode(b []byte) (net.IP, error) {
+	const ipv4Size = 4 // bytes
+
+	if len(b) != ipv4Size {
+		return nil, ErrInvalidBytes
+	}
+
+	ip := net.IP(b)
+
+	ipv4 := ip.To4()
+	if ipv4 == nil {
+		return nil, errors.Wrap(ErrBadInput, "input is not ipv4 address")
+	}
+
+	return ipv4, nil
 }

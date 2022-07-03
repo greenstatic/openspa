@@ -5,6 +5,7 @@ import "errors"
 var (
 	ErrInvalidBytes        = errors.New("invalid bytes")
 	ErrMissingEntry        = errors.New("missing entry")
+	ErrBadInput            = errors.New("bad input")
 	ErrCipherSuiteRequired = errors.New("cipher suite required")
 )
 

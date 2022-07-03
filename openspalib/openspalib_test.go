@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpenSpaLib_EndToEnd(t *testing.T) {
+func TestOpenSpaLib_Usability(t *testing.T) {
 	cs := NewCipherSuiteMock()
 	cs.On("CipherSuiteId").Return(0)
 	//cs.On("Secure")

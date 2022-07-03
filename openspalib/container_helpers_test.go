@@ -1,6 +1,7 @@
 package openspalib
 
 import (
+	"net"
 	"testing"
 	"time"
 
@@ -47,6 +48,28 @@ func TestProtocolToContainer(t *testing.T) {
 	c.On("SetByte", ProtocolKey, byte(0x3A)).Once()
 
 	err := ProtocolToContainer(c, ProtocolICMPv6)
+	assert.NoError(t, err)
+
+	c.AssertExpectations(t)
+}
+
+func TestClientIPv4FromContainer(t *testing.T) {
+	c := NewContainerMock()
+	c.On("GetBytes", ClientIPv4Key).Return([]byte{88, 200, 23, 9}, true).Once()
+	expect := net.IPv4(88, 200, 23, 9)
+
+	ip, err := ClientIPv4FromContainer(c)
+	assert.NoError(t, err)
+	assert.True(t, expect.Equal(ip))
+
+	c.AssertExpectations(t)
+}
+
+func TestClientIPv4ToContainer(t *testing.T) {
+	c := NewContainerMock()
+	c.On("SetBytes", ClientIPv4Key, []byte{88, 200, 23, 9}).Once()
+
+	err := ClientIPv4ToContainer(c, net.IPv4(88, 200, 23, 9))
 	assert.NoError(t, err)
 
 	c.AssertExpectations(t)

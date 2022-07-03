@@ -65,6 +65,31 @@ func FirewallPortEndFromContainer(c Container) (int, error) {
 	return 0, nil
 }
 
+func ClientIPv4FromContainer(c Container) (net.IP, error) {
+	b, ok := c.GetBytes(ClientIPv4Key)
+	if !ok {
+		return nil, errors.Wrap(ErrMissingEntry, "no client ipv4 key in container")
+	}
+
+	ip, err := IPv4Decode(b)
+	if err != nil {
+		return nil, errors.Wrap(err, "ipv4 decode")
+	}
+
+	return ip, nil
+}
+
+func ClientIPv4ToContainer(c Container, ip net.IP) error {
+	b, err := IPv4Encode(ip)
+	if err != nil {
+		return errors.Wrap(err, "ipv4 encode")
+	}
+
+	c.SetBytes(ClientIPv4Key, b)
+
+	return nil
+}
+
 func ClientIPFromContainer(c Container) (net.IP, error) {
 	return nil, nil
 }
