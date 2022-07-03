@@ -135,6 +135,115 @@ func TestProtocolDecode_ICMPv6(t *testing.T) {
 	assert.Equal(t, InternetProtocolNumber(58), p)
 }
 
+func TestPortStartEndEncode(t *testing.T) {
+	tests := []struct {
+		input    int
+		expected []byte
+	}{
+		{
+			input:    80,
+			expected: []byte{0, 80},
+		},
+		{
+			input:    0,
+			expected: []byte{0, 0},
+		},
+		{
+			input:    8080,
+			expected: []byte{0x1F, 0x90},
+		},
+		{
+			input:    65_535,
+			expected: []byte{0xFF, 0xFF},
+		},
+		{
+			input:    65_534,
+			expected: []byte{0xFF, 0xFE},
+		},
+	}
+
+	for _, test := range tests {
+		b, err := PortStartEncode(test.input)
+		assert.NoError(t, err)
+		assert.Equal(t, test.expected, b)
+
+		b, err = PortEndEncode(test.input)
+		assert.NoError(t, err)
+		assert.Equal(t, test.expected, b)
+	}
+}
+
+func TestPortStartEndEncode_TooLargePort(t *testing.T) {
+	b, err := PortStartEncode(65_536)
+	assert.ErrorIs(t, err, ErrBadInput)
+	assert.Nil(t, b)
+
+	b, err = PortStartEncode(65_536)
+	assert.ErrorIs(t, err, ErrBadInput)
+	assert.Nil(t, b)
+}
+func TestPortStartEndEncode_TooLargePort2(t *testing.T) {
+	b, err := PortStartEncode(65_537)
+	assert.ErrorIs(t, err, ErrBadInput)
+	assert.Nil(t, b)
+
+	b, err = PortEndEncode(65_537)
+	assert.ErrorIs(t, err, ErrBadInput)
+	assert.Nil(t, b)
+}
+
+func TestPortStartEndDecode(t *testing.T) {
+	tests := []struct {
+		input    []byte
+		expected int
+	}{
+		{
+			input:    []byte{80},
+			expected: 80,
+		},
+		{
+			input:    []byte{0, 80},
+			expected: 80,
+		},
+		{
+			input:    []byte{0, 0},
+			expected: 0,
+		},
+		{
+			input:    []byte{0x1F, 0x90},
+			expected: 8080,
+		},
+		{
+			input:    []byte{0xFF, 0xFF},
+			expected: 65_535,
+		},
+		{
+			input:    []byte{0xFF, 0xFE},
+			expected: 65_534,
+		},
+	}
+
+	for _, test := range tests {
+		b, err := PortStartDecode(test.input)
+		assert.NoError(t, err)
+		assert.Equal(t, test.expected, b)
+
+		b, err = PortEndDecode(test.input)
+		assert.NoError(t, err)
+		assert.Equal(t, test.expected, b)
+	}
+}
+
+func TestPortStartEndDecode_TooLargePort(t *testing.T) {
+	i, err := PortStartDecode([]byte{0x01, 0xFF, 0xFF})
+	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.Equal(t, 0, i)
+
+	i, err = PortEndDecode([]byte{0x01, 0xFF, 0xFF})
+	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.Equal(t, 0, i)
+}
+
 func TestIPv4Encode(t *testing.T) {
 	tests := []struct {
 		input    net.IP

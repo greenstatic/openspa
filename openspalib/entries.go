@@ -2,6 +2,7 @@ package openspalib
 
 import (
 	"encoding/binary"
+	"math"
 	"net"
 	"strings"
 	"time"
@@ -41,6 +42,59 @@ func ProtocolDecode(b []byte) (InternetProtocolNumber, error) {
 	}
 
 	return InternetProtocolNumber(b[0]), nil
+}
+
+func PortStartEncode(p int) ([]byte, error) {
+	if err := convertableToUint16(p); err != nil {
+		return nil, errors.Wrap(err, "uint16 conversion")
+	}
+	return uint16Encode(uint16(p))
+}
+func PortEndEncode(p int) ([]byte, error) {
+	return PortStartEncode(p)
+}
+
+func convertableToUint16(i int) error {
+	if i < 0 {
+		return errors.Wrap(ErrBadInput, "cannot convert negative integers")
+	}
+
+	if math.Log2(float64(i)) >= 16 {
+		return errors.Wrap(ErrBadInput, "too large for uint16")
+	}
+	return nil
+}
+
+func uint16Encode(i uint16) ([]byte, error) {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, i)
+	return b, nil
+}
+
+func uint16Decode(b []byte) (uint16, error) {
+	const size = 2 // bytes
+
+	if len(b) > size || len(b) == 0 {
+		return 0, ErrInvalidBytes
+	}
+
+	if len(b) == 1 {
+		bTemp := make([]byte, 2)
+		bTemp[0] = 0
+		bTemp[1] = b[0]
+		b = bTemp
+	}
+
+	return binary.BigEndian.Uint16(b), nil
+}
+
+func PortStartDecode(b []byte) (int, error) {
+	i, err := uint16Decode(b)
+	return int(i), err
+}
+
+func PortEndDecode(b []byte) (int, error) {
+	return PortStartDecode(b)
 }
 
 func IPv4Encode(ip net.IP) ([]byte, error) {

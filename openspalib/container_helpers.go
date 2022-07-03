@@ -57,11 +57,11 @@ func ProtocolToContainer(c Container, p InternetProtocolNumber) error {
 	return nil
 }
 
-func FirewallPortStartFromContainer(c Container) (int, error) {
+func PortStartFromContainer(c Container) (int, error) {
 	return 0, nil
 }
 
-func FirewallPortEndFromContainer(c Container) (int, error) {
+func PortEndFromContainer(c Container) (int, error) {
 	return 0, nil
 }
 
