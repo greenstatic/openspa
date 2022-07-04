@@ -222,3 +222,22 @@ func ServerIPFromContainer(c Container) (net.IP, error) {
 func DurationFromContainer(c Container) (time.Duration, error) {
 	return 0, nil
 }
+
+func NonceFromContainer(c Container) ([]byte, error) {
+	b, ok := c.GetBytes(NonceKey)
+	if !ok {
+		return nil, errors.Wrap(ErrMissingEntry, "no nonce key in container")
+	}
+	return b, nil
+}
+
+func NonceToContainer(c Container, n []byte) error {
+	b, err := NonceEncode(n)
+	if err != nil {
+		return errors.Wrap(err, "nonce encode")
+	}
+
+	c.SetBytes(NonceKey, b)
+
+	return nil
+}

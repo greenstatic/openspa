@@ -155,3 +155,23 @@ func isIPv4(ip net.IP) bool {
 func isIPv6(ip net.IP) bool {
 	return strings.Contains(ip.String(), ":")
 }
+
+func NonceEncode(n []byte) ([]byte, error) {
+	const nonceSize = 3 // bytes
+
+	if len(n) != nonceSize {
+		return nil, ErrInvalidBytes
+	}
+
+	return n, nil
+}
+
+func NonceDecode(b []byte) ([]byte, error) {
+	const nonceSize = 3 // bytes
+
+	if len(b) != nonceSize {
+		return nil, ErrInvalidBytes
+	}
+
+	return b, nil
+}
