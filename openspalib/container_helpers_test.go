@@ -55,6 +55,48 @@ func TestProtocolToContainer(t *testing.T) {
 	c.AssertExpectations(t)
 }
 
+func TestPortStartFromContainer(t *testing.T) {
+	c := NewContainerMock()
+	c.On("GetBytes", PortStartKey).Return([]byte{0x1F, 0x90}, true).Once()
+
+	p, err := PortStartFromContainer(c)
+	assert.NoError(t, err)
+	assert.Equal(t, 8080, p)
+
+	c.AssertExpectations(t)
+}
+
+func TestPortStartToContainer(t *testing.T) {
+	c := NewContainerMock()
+	c.On("SetBytes", PortStartKey, []byte{0x1F, 0x90}).Once()
+
+	err := PortStartToContainer(c, 8080)
+	assert.NoError(t, err)
+
+	c.AssertExpectations(t)
+}
+
+func TestPortEndFromContainer(t *testing.T) {
+	c := NewContainerMock()
+	c.On("GetBytes", PortEndKey).Return([]byte{0x1F, 0x90}, true).Once()
+
+	p, err := PortEndFromContainer(c)
+	assert.NoError(t, err)
+	assert.Equal(t, 8080, p)
+
+	c.AssertExpectations(t)
+}
+
+func TestPortEndToContainer(t *testing.T) {
+	c := NewContainerMock()
+	c.On("SetBytes", PortEndKey, []byte{0x1F, 0x90}).Once()
+
+	err := PortEndToContainer(c, 8080)
+	assert.NoError(t, err)
+
+	c.AssertExpectations(t)
+}
+
 func TestClientIPv4FromContainer(t *testing.T) {
 	c := NewContainerMock()
 	c.On("GetBytes", ClientIPv4Key).Return([]byte{88, 200, 23, 9}, true).Once()

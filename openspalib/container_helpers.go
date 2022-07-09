@@ -58,11 +58,53 @@ func ProtocolToContainer(c Container, p InternetProtocolNumber) error {
 }
 
 func PortStartFromContainer(c Container) (int, error) {
-	return 0, nil
+	b, ok := c.GetBytes(PortStartKey)
+	if !ok {
+		return 0, errors.Wrap(ErrMissingEntry, "no port start key in container")
+	}
+
+	p, err := PortStartDecode(b)
+	if err != nil {
+		return 0, errors.Wrap(err, "port start decode")
+	}
+
+	return p, nil
+}
+
+func PortStartToContainer(c Container, p int) error {
+	b, err := PortStartEncode(p)
+	if err != nil {
+		return errors.Wrap(err, "port start encode")
+	}
+
+	c.SetBytes(PortStartKey, b)
+
+	return nil
 }
 
 func PortEndFromContainer(c Container) (int, error) {
-	return 0, nil
+	b, ok := c.GetBytes(PortEndKey)
+	if !ok {
+		return 0, errors.Wrap(ErrMissingEntry, "no port end key in container")
+	}
+
+	p, err := PortEndDecode(b)
+	if err != nil {
+		return 0, errors.Wrap(err, "port end decode")
+	}
+
+	return p, nil
+}
+
+func PortEndToContainer(c Container, p int) error {
+	b, err := PortEndEncode(p)
+	if err != nil {
+		return errors.Wrap(err, "port end encode")
+	}
+
+	c.SetBytes(PortEndKey, b)
+
+	return nil
 }
 
 func ClientIPv4FromContainer(c Container) (net.IP, error) {
