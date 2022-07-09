@@ -268,3 +268,31 @@ func TestNonceToContainer(t *testing.T) {
 
 	c.AssertExpectations(t)
 }
+
+func TestDurationFromContainer(t *testing.T) {
+	b, err := DurationEncode(time.Hour)
+	assert.NoError(t, err)
+
+	c := NewContainerMock()
+	c.On("GetBytes", DurationKey).Return(b, true).Once()
+
+	d, err := DurationFromContainer(c)
+	assert.NoError(t, err)
+	assert.Equal(t, d, time.Hour)
+
+	c.AssertExpectations(t)
+}
+
+func TestDurationToContainer(t *testing.T) {
+	d := time.Hour
+	b, err := DurationEncode(d)
+	assert.NoError(t, err)
+
+	c := NewContainerMock()
+	c.On("SetBytes", DurationKey, b).Once()
+
+	err = DurationToContainer(c, d)
+	assert.NoError(t, err)
+
+	c.AssertExpectations(t)
+}

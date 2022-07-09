@@ -507,3 +507,46 @@ func TestNonceDecode_Nil(t *testing.T) {
 	assert.ErrorIs(t, err, ErrInvalidBytes)
 	assert.Nil(t, b)
 }
+
+func TestDurationEncode(t *testing.T) {
+	b, err := DurationEncode(10 * time.Minute)
+	assert.NoError(t, err)
+	assert.Equal(t, []byte{0x00, 0x02, 0x58}, b)
+}
+
+func TestDurationEncode_TooSmallDuration(t *testing.T) {
+	b, err := DurationEncode(100 * time.Millisecond)
+	assert.ErrorIs(t, err, ErrBadInput)
+	assert.Nil(t, b)
+}
+
+func TestDurationEncode_TooLargeDuration(t *testing.T) {
+	b, err := DurationEncode(200 * 24 * time.Hour)
+	assert.ErrorIs(t, err, ErrBadInput)
+	assert.Nil(t, b)
+}
+
+func TestDurationDecode(t *testing.T) {
+	expect := 10 * time.Minute
+	d, err := DurationDecode([]byte{0x00, 0x02, 0x58})
+	assert.NoError(t, err)
+	assert.Equal(t, expect, d)
+}
+
+func TestDurationDecode_TooLarge(t *testing.T) {
+	d, err := DurationDecode([]byte{0x02, 0x58, 0x00, 0x00})
+	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.Equal(t, time.Duration(0), d)
+}
+
+func TestDurationDecode_TooShort(t *testing.T) {
+	d, err := DurationDecode([]byte{0x02, 0x58})
+	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.Equal(t, time.Duration(0), d)
+}
+
+func TestDurationDecode_Nil(t *testing.T) {
+	d, err := DurationDecode(nil)
+	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.Equal(t, time.Duration(0), d)
+}

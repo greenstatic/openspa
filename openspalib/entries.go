@@ -175,3 +175,39 @@ func NonceDecode(b []byte) ([]byte, error) {
 
 	return b, nil
 }
+
+const durationSizeEncoded = 3
+
+var maxDuration = int(math.Pow(2, 8*durationSizeEncoded)) - 1
+
+func DurationEncode(d time.Duration) ([]byte, error) {
+	s := int(d.Seconds())
+	if s > maxDuration {
+		return nil, errors.Wrap(ErrBadInput, "duration too long")
+	}
+
+	if s < 1 {
+		return nil, errors.Wrap(ErrBadInput, "duration too small")
+	}
+
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, uint32(s))
+
+	return []byte{b[1], b[2], b[3]}, nil
+}
+
+func DurationDecode(b []byte) (time.Duration, error) {
+	if len(b) != durationSizeEncoded {
+		return time.Duration(0), ErrInvalidBytes
+	}
+
+	bCpy := make([]byte, 4)
+	bCpy[0] = 0
+	bCpy[1] = b[0]
+	bCpy[2] = b[1]
+	bCpy[3] = b[2]
+
+	i := binary.BigEndian.Uint32(bCpy)
+
+	return time.Second * time.Duration(i), nil
+}

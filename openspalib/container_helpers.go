@@ -219,10 +219,6 @@ func ServerIPFromContainer(c Container) (net.IP, error) {
 	return ip, nil
 }
 
-func DurationFromContainer(c Container) (time.Duration, error) {
-	return 0, nil
-}
-
 func NonceFromContainer(c Container) ([]byte, error) {
 	b, ok := c.GetBytes(NonceKey)
 	if !ok {
@@ -238,6 +234,31 @@ func NonceToContainer(c Container, n []byte) error {
 	}
 
 	c.SetBytes(NonceKey, b)
+
+	return nil
+}
+
+func DurationFromContainer(c Container) (time.Duration, error) {
+	b, ok := c.GetBytes(DurationKey)
+	if !ok {
+		return 0, errors.Wrap(ErrMissingEntry, "no duration key in container")
+	}
+
+	d, err := DurationDecode(b)
+	if err != nil {
+		return 0, errors.Wrap(err, "duration decode")
+	}
+
+	return d, nil
+}
+
+func DurationToContainer(c Container, d time.Duration) error {
+	b, err := DurationEncode(d)
+	if err != nil {
+		return errors.Wrap(err, "duration encode")
+	}
+
+	c.SetBytes(DurationKey, b)
 
 	return nil
 }
