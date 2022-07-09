@@ -8,7 +8,7 @@ You have been warned.**
 Don't worry, we are always happy to get contributors. If you are interesting do get in touch: hello[at]openspa[dot]org.
 
 ## What is OpenSPA?
-OpenSPA is an open and extensible SPA implementation built upon the [OpenSPA Protocol](docs/protocol.md).
+OpenSPA is an open and extensible SPA implementation built upon the OpenSPA Protocol.
 OpenSPA allows the deployment of a service on an internal network or the internet, that is hidden to all unauthorized users.
 Authorized users authenticate by sending a single packet to the OpenSPA server, which will reveal itself only if the user is authorized to access the service.
 

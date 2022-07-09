@@ -24,9 +24,9 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 	assert.Equal(t, 1, rS.Header.Version)
 	require.NoError(t, err)
 
-	portA, err := FirewallPortStartFromContainer(rS.Body)
+	portA, err := PortStartFromContainer(rS.Body)
 	assert.NoError(t, err)
-	portB, err := FirewallPortEndFromContainer(rS.Body)
+	portB, err := PortEndFromContainer(rS.Body)
 	assert.NoError(t, err)
 	cIP, err := ClientIPFromContainer(rS.Body)
 	assert.NoError(t, err)
