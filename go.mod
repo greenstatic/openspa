@@ -1,4 +1,4 @@
-module github.com/greenstatic/openspa/openspalib
+module github.com/greenstatic/openspa
 
 go 1.18
 
