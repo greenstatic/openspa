@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -549,4 +550,80 @@ func TestDurationDecode_Nil(t *testing.T) {
 	d, err := DurationDecode(nil)
 	assert.ErrorIs(t, err, ErrInvalidBytes)
 	assert.Equal(t, time.Duration(0), d)
+}
+
+func TestClientDeviceUUIDEncode(t *testing.T) {
+	u := uuid.NewV4()
+
+	b, err := ClientDeviceUUIDEncode(u.String())
+	assert.NoError(t, err)
+	assert.Equal(t, u.Bytes(), b)
+}
+
+func TestClientDeviceUUIDEncode_InvalidUUID(t *testing.T) {
+	b, err := ClientDeviceUUIDEncode("foo-bar")
+	assert.Error(t, err)
+	assert.Nil(t, b)
+}
+
+func TestClientDeviceUUIDEncode_WithDashes(t *testing.T) {
+	b, err := ClientDeviceUUIDEncode("54141264-9c0c-4e61-8825-bf19a736d527")
+	assert.NoError(t, err)
+
+	target := []byte{
+		0x54,
+		0x14,
+		0x12,
+		0x64,
+		0x9c,
+		0x0c,
+		0x4e,
+		0x61,
+		0x88,
+		0x25,
+		0xbf,
+		0x19,
+		0xa7,
+		0x36,
+		0xd5,
+		0x27,
+	}
+
+	assert.Equal(t, target, b)
+}
+
+func TestClientDeviceUUIDDecode(t *testing.T) {
+	b := []byte{
+		0x54,
+		0x14,
+		0x12,
+		0x64,
+		0x9c,
+		0x0c,
+		0x4e,
+		0x61,
+		0x88,
+		0x25,
+		0xbf,
+		0x19,
+		0xa7,
+		0x36,
+		0xd5,
+		0x27,
+	}
+	id, err := ClientDeviceUUIDDecode(b)
+	assert.NoError(t, err)
+	assert.Equal(t, "54141264-9c0c-4e61-8825-bf19a736d527", id)
+}
+
+func TestClientDeviceUUIDDecode_TooShort(t *testing.T) {
+	id, err := ClientDeviceUUIDDecode([]byte{0x02, 0x58})
+	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.Equal(t, "", id)
+}
+
+func TestClientDeviceUUIDDecode_Nil(t *testing.T) {
+	id, err := ClientDeviceUUIDDecode(nil)
+	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.Equal(t, "", id)
 }

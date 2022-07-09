@@ -262,3 +262,28 @@ func DurationToContainer(c Container, d time.Duration) error {
 
 	return nil
 }
+
+func ClientDeviceUUIDFromContainer(c Container) (string, error) {
+	b, ok := c.GetBytes(ClientDeviceUUIDKey)
+	if !ok {
+		return "", errors.Wrap(ErrMissingEntry, "no client device key in container")
+	}
+
+	id, err := ClientDeviceUUIDDecode(b)
+	if err != nil {
+		return "", errors.Wrap(err, "client device uuid decode")
+	}
+
+	return id, nil
+}
+
+func ClientDeviceUUIDToContainer(c Container, uuid string) error {
+	b, err := ClientDeviceUUIDEncode(uuid)
+	if err != nil {
+		return errors.Wrap(err, "client device uuid encode")
+	}
+
+	c.SetBytes(ClientDeviceUUIDKey, b)
+
+	return nil
+}

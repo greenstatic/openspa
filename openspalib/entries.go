@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
 )
 
 func TimestampEncode(t time.Time) ([]byte, error) {
@@ -210,4 +211,28 @@ func DurationDecode(b []byte) (time.Duration, error) {
 	i := binary.BigEndian.Uint32(bCpy)
 
 	return time.Second * time.Duration(i), nil
+}
+
+func ClientDeviceUUIDEncode(u string) ([]byte, error) {
+	id, err := uuid.FromString(u)
+	if err != nil {
+		return nil, errors.Wrap(err, "uuid decode")
+	}
+
+	return id.Bytes(), nil
+}
+
+func ClientDeviceUUIDDecode(b []byte) (string, error) {
+	const clientDeviceUUIDSize = 16 // bytes
+
+	if len(b) != clientDeviceUUIDSize {
+		return "", ErrInvalidBytes
+	}
+
+	u, err := uuid.FromBytes(b)
+	if err != nil {
+		return "", errors.Wrap(err, "uuid decode")
+	}
+
+	return u.String(), nil
 }

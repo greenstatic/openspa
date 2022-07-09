@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -278,7 +279,7 @@ func TestDurationFromContainer(t *testing.T) {
 
 	d, err := DurationFromContainer(c)
 	assert.NoError(t, err)
-	assert.Equal(t, d, time.Hour)
+	assert.Equal(t, time.Hour, d)
 
 	c.AssertExpectations(t)
 }
@@ -292,6 +293,32 @@ func TestDurationToContainer(t *testing.T) {
 	c.On("SetBytes", DurationKey, b).Once()
 
 	err = DurationToContainer(c, d)
+	assert.NoError(t, err)
+
+	c.AssertExpectations(t)
+}
+
+func TestClientDeviceUUIDFromContainer(t *testing.T) {
+	u := uuid.NewV4()
+	b := u.Bytes()
+
+	c := NewContainerMock()
+	c.On("GetBytes", ClientDeviceUUIDKey).Return(b, true).Once()
+
+	id, err := ClientDeviceUUIDFromContainer(c)
+	assert.NoError(t, err)
+	assert.Equal(t, u.String(), id)
+
+	c.AssertExpectations(t)
+}
+
+func TestClientDeviceUUIDToContainer(t *testing.T) {
+	u := uuid.NewV4()
+
+	c := NewContainerMock()
+	c.On("SetBytes", ClientDeviceUUIDKey, u.Bytes()).Once()
+
+	err := ClientDeviceUUIDToContainer(c, u.String())
 	assert.NoError(t, err)
 
 	c.AssertExpectations(t)
