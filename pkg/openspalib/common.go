@@ -11,6 +11,10 @@ var (
 )
 
 const (
+	MaxPDUSize = 1444
+)
+
+const (
 	ProtocolICMP   InternetProtocolNumber = 1
 	ProtocolIPV4   InternetProtocolNumber = 4
 	ProtocolTCP    InternetProtocolNumber = 6
