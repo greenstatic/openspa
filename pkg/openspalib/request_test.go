@@ -3,11 +3,12 @@ package openspalib
 import (
 	"testing"
 
+	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewRequest(t *testing.T) {
-	cs := NewCipherSuiteMock()
+	cs := crypto.NewCipherSuiteMock()
 	cs.On("CipherSuiteId").Return(0)
 
 	r, err := NewRequest(RequestData{

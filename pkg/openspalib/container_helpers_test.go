@@ -6,12 +6,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/greenstatic/openspa/pkg/openspalib/tlv"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTimestampFromContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", TimestampKey).Return([]byte{0x00, 0x00, 0x00, 0x00, 0x5B, 0x4B, 0x12, 0x5D}, true).Once()
 	expect := time.Date(2018, 7, 15, 9, 22, 37, 0, time.UTC)
 
@@ -23,7 +24,7 @@ func TestTimestampFromContainer(t *testing.T) {
 }
 
 func TestTimestampToContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("SetBytes", TimestampKey, []byte{0x00, 0x00, 0x00, 0x00, 0x5B, 0x4B, 0x12, 0x5D}).Once()
 
 	tm := time.Date(2018, 7, 15, 9, 22, 37, 0, time.UTC)
@@ -34,7 +35,7 @@ func TestTimestampToContainer(t *testing.T) {
 }
 
 func TestProtocolFromContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", ProtocolKey).Return([]byte{0x06}, true).Once()
 	expect := ProtocolTCP
 
@@ -46,7 +47,7 @@ func TestProtocolFromContainer(t *testing.T) {
 }
 
 func TestProtocolToContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("SetByte", ProtocolKey, byte(0x3A)).Once()
 
 	err := ProtocolToContainer(c, ProtocolICMPv6)
@@ -56,7 +57,7 @@ func TestProtocolToContainer(t *testing.T) {
 }
 
 func TestPortStartFromContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", PortStartKey).Return([]byte{0x1F, 0x90}, true).Once()
 
 	p, err := PortStartFromContainer(c)
@@ -67,7 +68,7 @@ func TestPortStartFromContainer(t *testing.T) {
 }
 
 func TestPortStartToContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("SetBytes", PortStartKey, []byte{0x1F, 0x90}).Once()
 
 	err := PortStartToContainer(c, 8080)
@@ -77,7 +78,7 @@ func TestPortStartToContainer(t *testing.T) {
 }
 
 func TestPortEndFromContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", PortEndKey).Return([]byte{0x1F, 0x90}, true).Once()
 
 	p, err := PortEndFromContainer(c)
@@ -88,7 +89,7 @@ func TestPortEndFromContainer(t *testing.T) {
 }
 
 func TestPortEndToContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("SetBytes", PortEndKey, []byte{0x1F, 0x90}).Once()
 
 	err := PortEndToContainer(c, 8080)
@@ -98,7 +99,7 @@ func TestPortEndToContainer(t *testing.T) {
 }
 
 func TestClientIPv4FromContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", ClientIPv4Key).Return([]byte{88, 200, 23, 9}, true).Once()
 	expect := net.IPv4(88, 200, 23, 9)
 
@@ -110,7 +111,7 @@ func TestClientIPv4FromContainer(t *testing.T) {
 }
 
 func TestClientIPv4ToContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("SetBytes", ClientIPv4Key, []byte{88, 200, 23, 9}).Once()
 
 	err := ClientIPv4ToContainer(c, net.IPv4(88, 200, 23, 9))
@@ -120,7 +121,7 @@ func TestClientIPv4ToContainer(t *testing.T) {
 }
 
 func TestServerIPv4FromContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", ServerIPv4Key).Return([]byte{88, 200, 23, 9}, true).Once()
 	expect := net.IPv4(88, 200, 23, 9)
 
@@ -132,7 +133,7 @@ func TestServerIPv4FromContainer(t *testing.T) {
 }
 
 func TestServerIPv4ToContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("SetBytes", ServerIPv4Key, []byte{88, 200, 23, 9}).Once()
 
 	err := ServerIPv4ToContainer(c, net.IPv4(88, 200, 23, 9))
@@ -142,7 +143,7 @@ func TestServerIPv4ToContainer(t *testing.T) {
 }
 
 func TestClientIPv6FromContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", ClientIPv6Key).Return([]byte(net.IPv6loopback), true).Once()
 	expect := net.IPv6loopback
 
@@ -154,7 +155,7 @@ func TestClientIPv6FromContainer(t *testing.T) {
 }
 
 func TestClientIPv6ToContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("SetBytes", ClientIPv6Key, []byte(net.IPv6loopback)).Once()
 
 	err := ClientIPv6ToContainer(c, net.IPv6loopback)
@@ -164,7 +165,7 @@ func TestClientIPv6ToContainer(t *testing.T) {
 }
 
 func TestServerIPv6FromContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", ServerIPv6Key).Return([]byte(net.IPv6loopback), true).Once()
 	expect := net.IPv6loopback
 
@@ -176,7 +177,7 @@ func TestServerIPv6FromContainer(t *testing.T) {
 }
 
 func TestServerIPv6ToContainer(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("SetBytes", ServerIPv6Key, []byte(net.IPv6loopback)).Once()
 
 	err := ServerIPv6ToContainer(c, net.IPv6loopback)
@@ -186,7 +187,7 @@ func TestServerIPv6ToContainer(t *testing.T) {
 }
 
 func TestClientIPFromContainer_IPv4(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	expect := net.IPv4(88, 200, 23, 9).To4()
 	c.On("GetBytes", ClientIPv4Key).Return([]byte(expect), true).Once()
 	c.On("GetBytes", ClientIPv6Key).Return([]byte{}, false).Once()
@@ -199,7 +200,7 @@ func TestClientIPFromContainer_IPv4(t *testing.T) {
 }
 
 func TestClientIPFromContainer_IPv6(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	expect := net.ParseIP("2001:1470:fffd:2073:250:56ff:fe81:741f")
 	c.On("GetBytes", ClientIPv6Key).Return([]byte(expect), true).Once()
 	c.On("GetBytes", ClientIPv4Key).Return([]byte{}, false).Once()
@@ -212,7 +213,7 @@ func TestClientIPFromContainer_IPv6(t *testing.T) {
 }
 
 func TestClientIPFromContainer_IPv4AndIPv6(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", ClientIPv4Key).Return([]byte(net.IPv4(88, 200, 23, 9).To4()), true).Once()
 	c.On("GetBytes", ClientIPv6Key).Return([]byte(net.ParseIP("2001:1470:fffd:2073:250:56ff:fe81:741f")), true).Once()
 
@@ -224,7 +225,7 @@ func TestClientIPFromContainer_IPv4AndIPv6(t *testing.T) {
 }
 
 func TestClientIPFromContainer_Empty(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", ClientIPv4Key).Return([]byte{}, false).Once()
 	c.On("GetBytes", ClientIPv6Key).Return([]byte{}, false).Once()
 
@@ -236,7 +237,7 @@ func TestClientIPFromContainer_Empty(t *testing.T) {
 }
 
 func TestServerIPFromContainer_IPv4(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	expect := net.IPv4(88, 200, 23, 9).To4()
 	c.On("GetBytes", ServerIPv4Key).Return([]byte(expect), true).Once()
 	c.On("GetBytes", ServerIPv6Key).Return([]byte{}, false).Once()
@@ -249,7 +250,7 @@ func TestServerIPFromContainer_IPv4(t *testing.T) {
 }
 
 func TestServerIPFromContainer_IPv6(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	expect := net.ParseIP("2001:1470:fffd:2073:250:56ff:fe81:741f")
 	c.On("GetBytes", ServerIPv6Key).Return([]byte(expect), true).Once()
 	c.On("GetBytes", ServerIPv4Key).Return([]byte{}, false).Once()
@@ -262,7 +263,7 @@ func TestServerIPFromContainer_IPv6(t *testing.T) {
 }
 
 func TestServerIPFromContainer_IPv4AndIPv6(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", ServerIPv4Key).Return([]byte(net.IPv4(88, 200, 23, 9).To4()), true).Once()
 	c.On("GetBytes", ServerIPv6Key).Return([]byte(net.ParseIP("2001:1470:fffd:2073:250:56ff:fe81:741f")), true).Once()
 
@@ -274,7 +275,7 @@ func TestServerIPFromContainer_IPv4AndIPv6(t *testing.T) {
 }
 
 func TestServerIPFromContainer_Empty(t *testing.T) {
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", ServerIPv4Key).Return([]byte{}, false).Once()
 	c.On("GetBytes", ServerIPv6Key).Return([]byte{}, false).Once()
 
@@ -289,7 +290,7 @@ func TestNonceFromContainer(t *testing.T) {
 	b := make([]byte, 3)
 	rand.Read(b)
 
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", NonceKey).Return(b, true).Once()
 
 	n, err := NonceFromContainer(c)
@@ -303,7 +304,7 @@ func TestNonceToContainer(t *testing.T) {
 	b := make([]byte, 3)
 	rand.Read(b)
 
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("SetBytes", NonceKey, b).Once()
 
 	err := NonceToContainer(c, b)
@@ -316,7 +317,7 @@ func TestDurationFromContainer(t *testing.T) {
 	b, err := DurationEncode(time.Hour)
 	assert.NoError(t, err)
 
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", DurationKey).Return(b, true).Once()
 
 	d, err := DurationFromContainer(c)
@@ -331,7 +332,7 @@ func TestDurationToContainer(t *testing.T) {
 	b, err := DurationEncode(d)
 	assert.NoError(t, err)
 
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("SetBytes", DurationKey, b).Once()
 
 	err = DurationToContainer(c, d)
@@ -344,7 +345,7 @@ func TestClientDeviceUUIDFromContainer(t *testing.T) {
 	u := uuid.NewV4()
 	b := u.Bytes()
 
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("GetBytes", ClientDeviceUUIDKey).Return(b, true).Once()
 
 	id, err := ClientDeviceUUIDFromContainer(c)
@@ -357,7 +358,7 @@ func TestClientDeviceUUIDFromContainer(t *testing.T) {
 func TestClientDeviceUUIDToContainer(t *testing.T) {
 	u := uuid.NewV4()
 
-	c := NewContainerMock()
+	c := tlv.NewContainerMock()
 	c.On("SetBytes", ClientDeviceUUIDKey, u.Bytes()).Once()
 
 	err := ClientDeviceUUIDToContainer(c, u.String())

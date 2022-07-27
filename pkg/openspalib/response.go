@@ -1,10 +1,12 @@
 package openspalib
 
+import "github.com/greenstatic/openspa/pkg/openspalib/tlv"
+
 type ResponseData struct {
 }
 
 type Response struct {
-	Body Container
+	Body tlv.Container
 }
 
 func NewResponse(ResponseData) (*Response, error) {

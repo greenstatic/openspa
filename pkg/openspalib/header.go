@@ -1,5 +1,7 @@
 package openspalib
 
+import "github.com/greenstatic/openspa/pkg/openspalib/crypto"
+
 const (
 	HeaderLength = 8
 	ADKLength    = 4
@@ -12,20 +14,14 @@ const (
 	ResponsePDU PDUType = "response"
 )
 
-type CipherSuiteId uint8
-
-const (
-	CipherNoSecurity CipherSuiteId = 0 // only to be used for development
-)
-
 type Header struct {
 	Type          PDUType
 	Version       int
 	TransactionId uint8
-	CipherSuiteId CipherSuiteId
+	CipherSuiteId crypto.CipherSuiteId
 }
 
-func NewHeader(t PDUType, c CipherSuiteId) Header {
+func NewHeader(t PDUType, c crypto.CipherSuiteId) Header {
 	return Header{
 		Type:          t,
 		Version:       1,

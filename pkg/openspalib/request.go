@@ -1,8 +1,12 @@
 package openspalib
 
 import (
+	"bytes"
 	"net"
 	"time"
+
+	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
+	"github.com/greenstatic/openspa/pkg/openspalib/tlv"
 )
 
 type RequestData struct {
@@ -18,13 +22,13 @@ type RequestData struct {
 }
 
 type Request struct {
-	c CipherSuite
+	c crypto.CipherSuite
 
 	Header Header
-	Body   Container
+	Body   tlv.Container
 }
 
-func NewRequest(d RequestData, c CipherSuite) (*Request, error) {
+func NewRequest(d RequestData, c crypto.CipherSuite) (*Request, error) {
 	if c == nil {
 		return nil, ErrCipherSuiteRequired
 	}
@@ -35,7 +39,7 @@ func NewRequest(d RequestData, c CipherSuite) (*Request, error) {
 	r.Header = NewHeader(RequestPDU, c.CipherSuiteId())
 	r.Header.TransactionId = d.TransactionId
 
-	r.Body = NewContainerStub()
+	r.Body = tlv.NewContainerStub()
 
 	return r, nil
 }
@@ -46,12 +50,16 @@ func (r *Request) Marshal() ([]byte, error) {
 		return nil, err
 	}
 
-	body, err := r.c.Secure(r.Body.Bytes())
+	ec, err := r.c.Secure(header, r.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	return append(header, body...), nil
+	b := bytes.Buffer{}
+	b.Write(header)
+	b.Write(ec.Bytes())
+
+	return b.Bytes(), nil
 }
 
 func RequestUnmarshal(b []byte) (*Request, error) {

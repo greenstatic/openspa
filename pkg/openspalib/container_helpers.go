@@ -4,10 +4,25 @@ import (
 	"net"
 	"time"
 
+	"github.com/greenstatic/openspa/pkg/openspalib/tlv"
 	"github.com/pkg/errors"
 )
 
-func TimestampFromContainer(c Container) (time.Time, error) {
+const (
+	TimestampKey        uint8 = 2
+	ClientDeviceUUIDKey uint8 = 3
+	ProtocolKey         uint8 = 4
+	PortStartKey        uint8 = 5
+	PortEndKey          uint8 = 6
+	ClientIPv4Key       uint8 = 7
+	ClientIPv6Key       uint8 = 8
+	ServerIPv4Key       uint8 = 9
+	ServerIPv6Key       uint8 = 10
+	NonceKey            uint8 = 11
+	DurationKey         uint8 = 12
+)
+
+func TimestampFromContainer(c tlv.Container) (time.Time, error) {
 	b, ok := c.GetBytes(TimestampKey)
 	if !ok {
 		return time.Time{}, errors.Wrap(ErrMissingEntry, "no timestamp key in container")
@@ -21,7 +36,7 @@ func TimestampFromContainer(c Container) (time.Time, error) {
 	return t, nil
 }
 
-func TimestampToContainer(c Container, t time.Time) error {
+func TimestampToContainer(c tlv.Container, t time.Time) error {
 	b, err := TimestampEncode(t)
 	if err != nil {
 		return errors.Wrap(err, "timestamp encode")
@@ -32,7 +47,7 @@ func TimestampToContainer(c Container, t time.Time) error {
 	return nil
 }
 
-func ProtocolFromContainer(c Container) (InternetProtocolNumber, error) {
+func ProtocolFromContainer(c tlv.Container) (InternetProtocolNumber, error) {
 	b, ok := c.GetBytes(ProtocolKey)
 	if !ok {
 		return InternetProtocolNumber(0), errors.Wrap(ErrMissingEntry, "no protocol key in container")
@@ -46,7 +61,7 @@ func ProtocolFromContainer(c Container) (InternetProtocolNumber, error) {
 	return p, nil
 }
 
-func ProtocolToContainer(c Container, p InternetProtocolNumber) error {
+func ProtocolToContainer(c tlv.Container, p InternetProtocolNumber) error {
 	b, err := ProtocolEncode(p)
 	if err != nil {
 		return errors.Wrap(err, "protocol encode")
@@ -57,7 +72,7 @@ func ProtocolToContainer(c Container, p InternetProtocolNumber) error {
 	return nil
 }
 
-func PortStartFromContainer(c Container) (int, error) {
+func PortStartFromContainer(c tlv.Container) (int, error) {
 	b, ok := c.GetBytes(PortStartKey)
 	if !ok {
 		return 0, errors.Wrap(ErrMissingEntry, "no port start key in container")
@@ -71,7 +86,7 @@ func PortStartFromContainer(c Container) (int, error) {
 	return p, nil
 }
 
-func PortStartToContainer(c Container, p int) error {
+func PortStartToContainer(c tlv.Container, p int) error {
 	b, err := PortStartEncode(p)
 	if err != nil {
 		return errors.Wrap(err, "port start encode")
@@ -82,7 +97,7 @@ func PortStartToContainer(c Container, p int) error {
 	return nil
 }
 
-func PortEndFromContainer(c Container) (int, error) {
+func PortEndFromContainer(c tlv.Container) (int, error) {
 	b, ok := c.GetBytes(PortEndKey)
 	if !ok {
 		return 0, errors.Wrap(ErrMissingEntry, "no port end key in container")
@@ -96,7 +111,7 @@ func PortEndFromContainer(c Container) (int, error) {
 	return p, nil
 }
 
-func PortEndToContainer(c Container, p int) error {
+func PortEndToContainer(c tlv.Container, p int) error {
 	b, err := PortEndEncode(p)
 	if err != nil {
 		return errors.Wrap(err, "port end encode")
@@ -107,7 +122,7 @@ func PortEndToContainer(c Container, p int) error {
 	return nil
 }
 
-func ClientIPv4FromContainer(c Container) (net.IP, error) {
+func ClientIPv4FromContainer(c tlv.Container) (net.IP, error) {
 	b, ok := c.GetBytes(ClientIPv4Key)
 	if !ok {
 		return nil, errors.Wrap(ErrMissingEntry, "no client ipv4 key in container")
@@ -121,7 +136,7 @@ func ClientIPv4FromContainer(c Container) (net.IP, error) {
 	return ip, nil
 }
 
-func ClientIPv4ToContainer(c Container, ip net.IP) error {
+func ClientIPv4ToContainer(c tlv.Container, ip net.IP) error {
 	b, err := IPv4Encode(ip)
 	if err != nil {
 		return errors.Wrap(err, "ipv4 encode")
@@ -132,7 +147,7 @@ func ClientIPv4ToContainer(c Container, ip net.IP) error {
 	return nil
 }
 
-func ServerIPv4FromContainer(c Container) (net.IP, error) {
+func ServerIPv4FromContainer(c tlv.Container) (net.IP, error) {
 	b, ok := c.GetBytes(ServerIPv4Key)
 	if !ok {
 		return nil, errors.Wrap(ErrMissingEntry, "no server ipv4 key in container")
@@ -146,7 +161,7 @@ func ServerIPv4FromContainer(c Container) (net.IP, error) {
 	return ip, nil
 }
 
-func ServerIPv4ToContainer(c Container, ip net.IP) error {
+func ServerIPv4ToContainer(c tlv.Container, ip net.IP) error {
 	b, err := IPv4Encode(ip)
 	if err != nil {
 		return errors.Wrap(err, "ipv4 encode")
@@ -157,7 +172,7 @@ func ServerIPv4ToContainer(c Container, ip net.IP) error {
 	return nil
 }
 
-func ClientIPv6FromContainer(c Container) (net.IP, error) {
+func ClientIPv6FromContainer(c tlv.Container) (net.IP, error) {
 	b, ok := c.GetBytes(ClientIPv6Key)
 	if !ok {
 		return nil, errors.Wrap(ErrMissingEntry, "no client ipv6 key in container")
@@ -171,7 +186,7 @@ func ClientIPv6FromContainer(c Container) (net.IP, error) {
 	return ip, nil
 }
 
-func ClientIPv6ToContainer(c Container, ip net.IP) error {
+func ClientIPv6ToContainer(c tlv.Container, ip net.IP) error {
 	b, err := IPv6Encode(ip)
 	if err != nil {
 		return errors.Wrap(err, "ipv6 encode")
@@ -182,7 +197,7 @@ func ClientIPv6ToContainer(c Container, ip net.IP) error {
 	return nil
 }
 
-func ServerIPv6FromContainer(c Container) (net.IP, error) {
+func ServerIPv6FromContainer(c tlv.Container) (net.IP, error) {
 	b, ok := c.GetBytes(ServerIPv6Key)
 	if !ok {
 		return nil, errors.Wrap(ErrMissingEntry, "no server ipv6 key in container")
@@ -196,7 +211,7 @@ func ServerIPv6FromContainer(c Container) (net.IP, error) {
 	return ip, nil
 }
 
-func ServerIPv6ToContainer(c Container, ip net.IP) error {
+func ServerIPv6ToContainer(c tlv.Container, ip net.IP) error {
 	b, err := IPv6Encode(ip)
 	if err != nil {
 		return errors.Wrap(err, "ipv6 encode")
@@ -207,7 +222,7 @@ func ServerIPv6ToContainer(c Container, ip net.IP) error {
 	return nil
 }
 
-func ClientIPFromContainer(c Container) (net.IP, error) {
+func ClientIPFromContainer(c tlv.Container) (net.IP, error) {
 	b4, ok4 := c.GetBytes(ClientIPv4Key)
 	b6, ok6 := c.GetBytes(ClientIPv6Key)
 
@@ -234,7 +249,7 @@ func ClientIPFromContainer(c Container) (net.IP, error) {
 	return ip, nil
 }
 
-func ServerIPFromContainer(c Container) (net.IP, error) {
+func ServerIPFromContainer(c tlv.Container) (net.IP, error) {
 	b4, ok4 := c.GetBytes(ServerIPv4Key)
 	b6, ok6 := c.GetBytes(ServerIPv6Key)
 
@@ -261,7 +276,7 @@ func ServerIPFromContainer(c Container) (net.IP, error) {
 	return ip, nil
 }
 
-func NonceFromContainer(c Container) ([]byte, error) {
+func NonceFromContainer(c tlv.Container) ([]byte, error) {
 	b, ok := c.GetBytes(NonceKey)
 	if !ok {
 		return nil, errors.Wrap(ErrMissingEntry, "no nonce key in container")
@@ -269,7 +284,7 @@ func NonceFromContainer(c Container) ([]byte, error) {
 	return b, nil
 }
 
-func NonceToContainer(c Container, n []byte) error {
+func NonceToContainer(c tlv.Container, n []byte) error {
 	b, err := NonceEncode(n)
 	if err != nil {
 		return errors.Wrap(err, "nonce encode")
@@ -280,7 +295,7 @@ func NonceToContainer(c Container, n []byte) error {
 	return nil
 }
 
-func DurationFromContainer(c Container) (time.Duration, error) {
+func DurationFromContainer(c tlv.Container) (time.Duration, error) {
 	b, ok := c.GetBytes(DurationKey)
 	if !ok {
 		return 0, errors.Wrap(ErrMissingEntry, "no duration key in container")
@@ -294,7 +309,7 @@ func DurationFromContainer(c Container) (time.Duration, error) {
 	return d, nil
 }
 
-func DurationToContainer(c Container, d time.Duration) error {
+func DurationToContainer(c tlv.Container, d time.Duration) error {
 	b, err := DurationEncode(d)
 	if err != nil {
 		return errors.Wrap(err, "duration encode")
@@ -305,7 +320,7 @@ func DurationToContainer(c Container, d time.Duration) error {
 	return nil
 }
 
-func ClientDeviceUUIDFromContainer(c Container) (string, error) {
+func ClientDeviceUUIDFromContainer(c tlv.Container) (string, error) {
 	b, ok := c.GetBytes(ClientDeviceUUIDKey)
 	if !ok {
 		return "", errors.Wrap(ErrMissingEntry, "no client device key in container")
@@ -319,7 +334,7 @@ func ClientDeviceUUIDFromContainer(c Container) (string, error) {
 	return id, nil
 }
 
-func ClientDeviceUUIDToContainer(c Container, uuid string) error {
+func ClientDeviceUUIDToContainer(c tlv.Container, uuid string) error {
 	b, err := ClientDeviceUUIDEncode(uuid)
 	if err != nil {
 		return errors.Wrap(err, "client device uuid encode")

@@ -3,11 +3,12 @@ package openspalib
 import (
 	"testing"
 
+	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestHeader_MarshalRequestType(t *testing.T) {
-	h := NewHeader(RequestPDU, CipherNoSecurity)
+	h := NewHeader(RequestPDU, crypto.CipherNoSecurity)
 	b, err := h.Marshal()
 
 	assert.NoError(t, err)
@@ -25,7 +26,7 @@ func TestHeader_MarshalRequestType(t *testing.T) {
 }
 
 func TestHeader_MarshalResponseTypeCipher24(t *testing.T) {
-	h := NewHeader(ResponsePDU, CipherSuiteId(24))
+	h := NewHeader(ResponsePDU, crypto.CipherSuiteId(24))
 	b, err := h.Marshal()
 
 	assert.NoError(t, err)
@@ -43,7 +44,7 @@ func TestHeader_MarshalResponseTypeCipher24(t *testing.T) {
 }
 
 func TestHeader_MarshalRequestTransaction123(t *testing.T) {
-	h := NewHeader(RequestPDU, CipherNoSecurity)
+	h := NewHeader(RequestPDU, crypto.CipherNoSecurity)
 	h.TransactionId = 123
 	b, err := h.Marshal()
 
@@ -62,7 +63,7 @@ func TestHeader_MarshalRequestTransaction123(t *testing.T) {
 }
 
 func TestHeader_MarshalRequestVersion2(t *testing.T) {
-	h := NewHeader(RequestPDU, CipherNoSecurity)
+	h := NewHeader(RequestPDU, crypto.CipherNoSecurity)
 	h.Version = 2
 	b, err := h.Marshal()
 
@@ -81,7 +82,7 @@ func TestHeader_MarshalRequestVersion2(t *testing.T) {
 }
 
 func TestHeaderMarshalControlField_RequestVersion1(t *testing.T) {
-	h := NewHeader(RequestPDU, CipherNoSecurity)
+	h := NewHeader(RequestPDU, crypto.CipherNoSecurity)
 	h.Version = 1
 	b := h.marshalControlField()
 
@@ -89,7 +90,7 @@ func TestHeaderMarshalControlField_RequestVersion1(t *testing.T) {
 }
 
 func TestHeaderMarshalControlField_RequestVersion2(t *testing.T) {
-	h := NewHeader(RequestPDU, CipherNoSecurity)
+	h := NewHeader(RequestPDU, crypto.CipherNoSecurity)
 	h.Version = 2
 	b := h.marshalControlField()
 
@@ -97,21 +98,21 @@ func TestHeaderMarshalControlField_RequestVersion2(t *testing.T) {
 }
 
 func TestHeaderMarshalControlField_ResponseVersion1(t *testing.T) {
-	h := NewHeader(ResponsePDU, CipherNoSecurity)
+	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
 	b := h.marshalControlField()
 
 	assert.Equal(t, byte(0x90), b)
 }
 
 func TestHeaderMarshalTransactionId_0(t *testing.T) {
-	h := NewHeader(ResponsePDU, CipherNoSecurity)
+	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
 	b := h.marshalTransactionId()
 
 	assert.Equal(t, byte(0x00), b)
 }
 
 func TestHeaderMarshalTransactionId_1(t *testing.T) {
-	h := NewHeader(ResponsePDU, CipherNoSecurity)
+	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
 	h.TransactionId = 1
 	b := h.marshalTransactionId()
 
@@ -119,7 +120,7 @@ func TestHeaderMarshalTransactionId_1(t *testing.T) {
 }
 
 func TestHeaderMarshalTransactionId_123(t *testing.T) {
-	h := NewHeader(ResponsePDU, CipherNoSecurity)
+	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
 	h.TransactionId = 123
 	b := h.marshalTransactionId()
 
@@ -127,7 +128,7 @@ func TestHeaderMarshalTransactionId_123(t *testing.T) {
 }
 
 func TestHeaderMarshalTransactionId_255(t *testing.T) {
-	h := NewHeader(ResponsePDU, CipherNoSecurity)
+	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
 	h.TransactionId = 255
 	b := h.marshalTransactionId()
 
@@ -135,28 +136,28 @@ func TestHeaderMarshalTransactionId_255(t *testing.T) {
 }
 
 func TestHeaderMarshalCipherSuite_NoSecurity(t *testing.T) {
-	h := NewHeader(ResponsePDU, CipherNoSecurity)
+	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
 	b := h.marshalCipherSuite()
 
 	assert.Equal(t, byte(0x00), b)
 }
 
 func TestHeaderMarshalCipherSuite_123(t *testing.T) {
-	h := NewHeader(ResponsePDU, CipherSuiteId(123))
+	h := NewHeader(ResponsePDU, crypto.CipherSuiteId(123))
 	b := h.marshalCipherSuite()
 
 	assert.Equal(t, byte(0x7B), b)
 }
 
 func TestHeaderMarshalCipherSuite_255(t *testing.T) {
-	h := NewHeader(ResponsePDU, CipherSuiteId(255))
+	h := NewHeader(ResponsePDU, crypto.CipherSuiteId(255))
 	b := h.marshalCipherSuite()
 
 	assert.Equal(t, byte(0xFF), b)
 }
 
 func TestHeaderMarshalADK_Length(t *testing.T) {
-	h := NewHeader(ResponsePDU, CipherSuiteId(255))
+	h := NewHeader(ResponsePDU, crypto.CipherSuiteId(255))
 	b := h.marshalADK()
 
 	assert.Len(t, b, 4)
