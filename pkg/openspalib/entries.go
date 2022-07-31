@@ -11,6 +11,17 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+const (
+	TimestampSize  = 8
+	ProtocolSize   = 1
+	PortSize       = 2
+	IPV4Size       = 4
+	IPV6Size       = 16
+	NonceSize      = 3
+	DurationSize   = 3
+	ClientUUIDSize = 16
+)
+
 func TimestampEncode(t time.Time) ([]byte, error) {
 	b := make([]byte, 8)
 	i := t.Unix()
@@ -19,9 +30,7 @@ func TimestampEncode(t time.Time) ([]byte, error) {
 }
 
 func TimestampDecode(b []byte) (time.Time, error) {
-	const timestampSize = 8 // bytes
-
-	if len(b) != timestampSize {
+	if len(b) != TimestampSize {
 		return time.Time{}, ErrInvalidBytes
 	}
 
@@ -36,9 +45,7 @@ func ProtocolEncode(p InternetProtocolNumber) (byte, error) {
 }
 
 func ProtocolDecode(b []byte) (InternetProtocolNumber, error) {
-	const protocolSize = 1
-
-	if len(b) != protocolSize {
+	if len(b) != ProtocolSize {
 		return InternetProtocolNumber(0), ErrInvalidBytes
 	}
 
@@ -108,9 +115,7 @@ func IPv4Encode(ip net.IP) ([]byte, error) {
 }
 
 func IPv4Decode(b []byte) (net.IP, error) {
-	const ipv4Size = 4 // bytes
-
-	if len(b) != ipv4Size {
+	if len(b) != IPV4Size {
 		return nil, ErrInvalidBytes
 	}
 
@@ -134,9 +139,7 @@ func IPv6Encode(ip net.IP) ([]byte, error) {
 }
 
 func IPv6Decode(b []byte) (net.IP, error) {
-	const ipv6Size = 16 // bytes
-
-	if len(b) != ipv6Size {
+	if len(b) != IPV6Size {
 		return nil, ErrInvalidBytes
 	}
 
@@ -158,9 +161,7 @@ func isIPv6(ip net.IP) bool {
 }
 
 func NonceEncode(n []byte) ([]byte, error) {
-	const nonceSize = 3 // bytes
-
-	if len(n) != nonceSize {
+	if len(n) != NonceSize {
 		return nil, ErrInvalidBytes
 	}
 
@@ -168,18 +169,14 @@ func NonceEncode(n []byte) ([]byte, error) {
 }
 
 func NonceDecode(b []byte) ([]byte, error) {
-	const nonceSize = 3 // bytes
-
-	if len(b) != nonceSize {
+	if len(b) != NonceSize {
 		return nil, ErrInvalidBytes
 	}
 
 	return b, nil
 }
 
-const durationSizeEncoded = 3
-
-var maxDuration = int(math.Pow(2, 8*durationSizeEncoded)) - 1
+var maxDuration = int(math.Pow(2, 8*DurationSize)) - 1
 
 func DurationEncode(d time.Duration) ([]byte, error) {
 	s := int(d.Seconds())
@@ -198,7 +195,7 @@ func DurationEncode(d time.Duration) ([]byte, error) {
 }
 
 func DurationDecode(b []byte) (time.Duration, error) {
-	if len(b) != durationSizeEncoded {
+	if len(b) != DurationSize {
 		return time.Duration(0), ErrInvalidBytes
 	}
 
@@ -223,9 +220,7 @@ func ClientDeviceUUIDEncode(u string) ([]byte, error) {
 }
 
 func ClientDeviceUUIDDecode(b []byte) (string, error) {
-	const clientDeviceUUIDSize = 16 // bytes
-
-	if len(b) != clientDeviceUUIDSize {
+	if len(b) != ClientUUIDSize {
 		return "", ErrInvalidBytes
 	}
 

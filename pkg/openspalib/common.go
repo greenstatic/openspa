@@ -1,6 +1,10 @@
 package openspalib
 
-import "errors"
+import (
+	"errors"
+
+	uuid "github.com/satori/go.uuid"
+)
 
 var (
 	ErrInvalidBytes            = errors.New("invalid bytes")
@@ -51,4 +55,8 @@ func portCanBeZero(protocol InternetProtocolNumber) bool {
 	default:
 		return true
 	}
+}
+
+func RandomUUID() string {
+	return uuid.NewV4().String()
 }

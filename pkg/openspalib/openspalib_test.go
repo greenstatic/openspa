@@ -1,49 +1,69 @@
 package openspalib
 
-// TODO
-//func TestOpenSpaLib_Usability(t *testing.T) {
-//	cs := NewCipherSuiteMock()
-//	cs.On("CipherSuiteId").Return(0)
-//	//cs.On("Secure")
-//
-//	// Client: Create request
-//	r, err := NewRequest(RequestData{}, cs)
-//	require.NoError(t, err)
-//	reqBytes, err := r.Marshal()
-//	require.NoError(t, err)
-//
-//	// Server: Receive request
-//	rS, err := RequestUnmarshal(reqBytes)
-//	require.NotNil(t, rS)
-//	assert.Equal(t, 1, rS.Header.Version)
-//	require.NoError(t, err)
-//
-//	portA, err := PortStartFromContainer(rS.Body)
-//	assert.NoError(t, err)
-//	portB, err := PortEndFromContainer(rS.Body)
-//	assert.NoError(t, err)
-//	cIP, err := ClientIPFromContainer(rS.Body)
-//	assert.NoError(t, err)
-//
-//	_ = cIP
-//	_ = portB
-//	_ = portA
-//
-//	// Server: Send response
-//	resp, err := NewResponse(ResponseData{
-//		// TODO
-//	})
-//	require.NotNil(t, resp)
-//	require.NoError(t, err)
-//	respBytes, err := resp.Marshal()
-//	assert.NoError(t, err)
-//
-//	// Client: Receive response
-//	respC, err := ResponseUnmarshal(respBytes)
-//	assert.NoError(t, err)
-//
-//	d, err := DurationFromContainer(respC.Body)
-//	assert.NoError(t, err)
-//
-//	_ = d
-//}
+import (
+	"net"
+	"testing"
+
+	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestOpenSpaLib_Usability(t *testing.T) {
+	cs := crypto.NewCipherSuiteStub()
+
+	// Client: Create request
+	r, err := NewRequest(RequestData{
+		TransactionId: 0,
+		ClientUUID:    RandomUUID(),
+		Protocol:      ProtocolIPV4,
+		PortStart:     80,
+		PortEnd:       80,
+		ClientIP:      net.IPv4(88, 200, 23, 30),
+		ServerIP:      net.IPv4(88, 200, 23, 40),
+	}, cs)
+	require.NoError(t, err)
+	reqBytes, err := r.Marshal()
+	require.NoError(t, err)
+
+	// Server: Receive request
+	rS, err := RequestUnmarshal(reqBytes, cs)
+	require.NotNil(t, rS)
+	assert.Equal(t, 1, rS.Header.Version)
+	require.NoError(t, err)
+
+	portA, err := PortStartFromContainer(rS.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, 80, portA)
+
+	portB, err := PortEndFromContainer(rS.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, 80, portB)
+
+	cIP, err := ClientIPFromContainer(rS.Body)
+	assert.NoError(t, err)
+	assert.True(t, net.IPv4(88, 200, 23, 30).Equal(cIP))
+
+	sIP, err := ServerIPFromContainer(rS.Body)
+	assert.NoError(t, err)
+	assert.True(t, net.IPv4(88, 200, 23, 40).Equal(sIP))
+
+	// Server: Send response
+	resp, err := NewResponse(ResponseData{
+		// TODO
+	})
+	require.NotNil(t, resp)
+	require.NoError(t, err)
+	respBytes, err := resp.Marshal()
+	assert.NoError(t, err)
+
+	// Client: Receive response
+	respC, err := ResponseUnmarshal(respBytes)
+	assert.NoError(t, err)
+	require.NotNil(t, respC)
+
+	d, err := DurationFromContainer(respC.Body)
+	assert.NoError(t, err)
+
+	_ = d
+}

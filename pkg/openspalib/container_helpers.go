@@ -9,17 +9,17 @@ import (
 )
 
 const (
-	TimestampKey        uint8 = 2
-	ClientDeviceUUIDKey uint8 = 3
-	ProtocolKey         uint8 = 4
-	PortStartKey        uint8 = 5
-	PortEndKey          uint8 = 6
-	ClientIPv4Key       uint8 = 7
-	ClientIPv6Key       uint8 = 8
-	ServerIPv4Key       uint8 = 9
-	ServerIPv6Key       uint8 = 10
-	NonceKey            uint8 = 11
-	DurationKey         uint8 = 12
+	TimestampKey        uint8 = 1
+	ClientDeviceUUIDKey uint8 = 2
+	ProtocolKey         uint8 = 3
+	PortStartKey        uint8 = 4
+	PortEndKey          uint8 = 5
+	ClientIPv4Key       uint8 = 6
+	ClientIPv6Key       uint8 = 7
+	ServerIPv4Key       uint8 = 8
+	ServerIPv6Key       uint8 = 9
+	NonceKey            uint8 = 10
+	DurationKey         uint8 = 11
 )
 
 func TimestampFromContainer(c tlv.Container) (time.Time, error) {
