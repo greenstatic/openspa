@@ -131,12 +131,12 @@ func (r *Request) bodyCreate(d RequestData, ed RequestExtendedData) (tlv.Contain
 func (r *Request) Marshal() ([]byte, error) {
 	header, err := r.Header.Marshal()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "header marshal")
 	}
 
 	ec, err := r.c.Secure(header, r.Body)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "secure")
 	}
 
 	b := bytes.Buffer{}
