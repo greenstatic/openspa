@@ -8,18 +8,18 @@ import (
 	"errors"
 )
 
-type RSA2048Encrypter struct {
+type RSAEncrypter struct {
 	pubkey *rsa.PublicKey
 }
 
-func NewRSA2048Encrypter(pubkey *rsa.PublicKey) *RSA2048Encrypter {
-	r := &RSA2048Encrypter{
+func NewRSAEncrypter(pubkey *rsa.PublicKey) *RSAEncrypter {
+	r := &RSAEncrypter{
 		pubkey: pubkey,
 	}
 	return r
 }
 
-func (r *RSA2048Encrypter) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
+func (r *RSAEncrypter) Encrypt(plaintext []byte) (ciphertext []byte, err error) {
 	if len(plaintext) == 0 {
 		return nil, errors.New("cannot encrypt empty byte slice")
 	}
@@ -32,18 +32,18 @@ func (r *RSA2048Encrypter) Encrypt(plaintext []byte) (ciphertext []byte, err err
 	return ciphertext, nil
 }
 
-type RSA2048Decrypter struct {
+type RSADecrypter struct {
 	privkey *rsa.PrivateKey
 }
 
-func NewRSA2048Decrypter(privkey *rsa.PrivateKey) *RSA2048Decrypter {
-	r := &RSA2048Decrypter{
+func NewRSADecrypter(privkey *rsa.PrivateKey) *RSADecrypter {
+	r := &RSADecrypter{
 		privkey: privkey,
 	}
 	return r
 }
 
-func (r *RSA2048Decrypter) Decrypt(ciphertext []byte) (plaintext []byte, err error) {
+func (r *RSADecrypter) Decrypt(ciphertext []byte) (plaintext []byte, err error) {
 	if len(ciphertext) == 0 {
 		return nil, errors.New("cannot decrypt empty byte slice")
 	}
@@ -55,18 +55,18 @@ func (r *RSA2048Decrypter) Decrypt(ciphertext []byte) (plaintext []byte, err err
 	return plaintext, nil
 }
 
-type RSA2048_SHA256Signer struct {
+type RSA_SHA256Signer struct {
 	privkey *rsa.PrivateKey
 }
 
-func NewRSA2048_SHA256Signer(privkey *rsa.PrivateKey) *RSA2048_SHA256Signer {
-	r := &RSA2048_SHA256Signer{
+func NewRSA_SHA256Signer(privkey *rsa.PrivateKey) *RSA_SHA256Signer {
+	r := &RSA_SHA256Signer{
 		privkey: privkey,
 	}
 	return r
 }
 
-func (r *RSA2048_SHA256Signer) Sign(data []byte) (signature []byte, err error) {
+func (r *RSA_SHA256Signer) Sign(data []byte) (signature []byte, err error) {
 	if len(data) == 0 {
 		return nil, errors.New("cannot sign empty byte slice")
 	}
@@ -80,18 +80,18 @@ func (r *RSA2048_SHA256Signer) Sign(data []byte) (signature []byte, err error) {
 	return signature, nil
 }
 
-type RSA2048_SHA256SignatureVerifier struct {
+type RSA_SHA256SignatureVerifier struct {
 	pubkey *rsa.PublicKey
 }
 
-func NewRSA2048_SHA256SignatureVerifier(pubkey *rsa.PublicKey) *RSA2048_SHA256SignatureVerifier {
-	r := &RSA2048_SHA256SignatureVerifier{
+func NewRSA_SHA256SignatureVerifier(pubkey *rsa.PublicKey) *RSA_SHA256SignatureVerifier {
+	r := &RSA_SHA256SignatureVerifier{
 		pubkey: pubkey,
 	}
 	return r
 }
 
-func (r *RSA2048_SHA256SignatureVerifier) Verify(text, signature []byte) (valid bool, err error) {
+func (r *RSA_SHA256SignatureVerifier) Verify(text, signature []byte) (valid bool, err error) {
 	hashed := sha256.Sum256(text)
 	err = rsa.VerifyPKCS1v15(r.pubkey, crypto.SHA256, hashed[:], signature)
 	if err != nil {
@@ -99,4 +99,17 @@ func (r *RSA2048_SHA256SignatureVerifier) Verify(text, signature []byte) (valid 
 	}
 
 	return true, nil
+}
+
+func RSAKeypair(bitSize int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
+	key, err := rsa.GenerateKey(rand.Reader, bitSize)
+	if err != nil {
+		return nil, nil, err
+	}
+	pub, ok := key.Public().(*rsa.PublicKey)
+	if !ok {
+		return nil, nil, errors.New("type assertion failed")
+	}
+
+	return key, pub, nil
 }

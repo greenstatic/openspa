@@ -58,8 +58,8 @@ func fromBase10(base10 string) *big.Int {
 	return i
 }
 
-func TestRSA2048Encryptor_Encrypt(t *testing.T) {
-	r := NewRSA2048Encrypter(test2048KeyPub)
+func TestRSAEncryptor_Encrypt(t *testing.T) {
+	r := NewRSAEncrypter(test2048KeyPub)
 
 	plaintext := []byte("Hello world!")
 
@@ -71,9 +71,9 @@ func TestRSA2048Encryptor_Encrypt(t *testing.T) {
 	assert.Len(t, cipher, 2048/8)
 }
 
-func TestRSA2048Encryptor_Decrypt(t *testing.T) {
-	re := NewRSA2048Encrypter(test2048KeyPub)
-	rd := NewRSA2048Decrypter(test2048Key)
+func TestRSAEncryptor_Decrypt(t *testing.T) {
+	re := NewRSAEncrypter(test2048KeyPub)
+	rd := NewRSADecrypter(test2048Key)
 
 	plaintext := []byte("Hello world!")
 
@@ -85,9 +85,9 @@ func TestRSA2048Encryptor_Decrypt(t *testing.T) {
 	assert.Equal(t, plaintext, plain)
 }
 
-func TestRSA2048Encryptor_Decrypt2(t *testing.T) {
-	re := NewRSA2048Encrypter(test2048KeyPub2)
-	rd := NewRSA2048Decrypter(test2048Key2)
+func TestRSAEncryptor_Decrypt2(t *testing.T) {
+	re := NewRSAEncrypter(test2048KeyPub2)
+	rd := NewRSADecrypter(test2048Key2)
 
 	plaintext := []byte("Hello world!")
 
@@ -99,8 +99,8 @@ func TestRSA2048Encryptor_Decrypt2(t *testing.T) {
 	assert.Equal(t, plaintext, plain)
 }
 
-func TestRSA2048_SHA256Signor(t *testing.T) {
-	s := NewRSA2048_SHA256Signer(test2048Key)
+func TestRSA_SHA256Signor(t *testing.T) {
+	s := NewRSA_SHA256Signer(test2048Key)
 
 	plaintext := []byte("Hello world!")
 	signature, err := s.Sign(plaintext)
@@ -112,9 +112,9 @@ func TestRSA2048_SHA256Signor(t *testing.T) {
 	assert.Len(t, signature, 2048/8)
 }
 
-func TestRSA2048_SHA256SignatureVerifier(t *testing.T) {
-	rs := NewRSA2048_SHA256Signer(test2048Key)
-	rv := NewRSA2048_SHA256SignatureVerifier(test2048KeyPub)
+func TestRSA_SHA256SignatureVerifier(t *testing.T) {
+	rs := NewRSA_SHA256Signer(test2048Key)
+	rv := NewRSA_SHA256SignatureVerifier(test2048KeyPub)
 
 	plaintext := []byte("Hello world!")
 	signature, err := rs.Sign(plaintext)
@@ -125,9 +125,9 @@ func TestRSA2048_SHA256SignatureVerifier(t *testing.T) {
 	assert.True(t, ok)
 }
 
-func TestRSA2048_SHA256SignatureVerifier_FalseSignature(t *testing.T) {
-	rs := NewRSA2048_SHA256Signer(test2048Key)
-	rv := NewRSA2048_SHA256SignatureVerifier(test2048KeyPub)
+func TestRSA_SHA256SignatureVerifier_FalseSignature(t *testing.T) {
+	rs := NewRSA_SHA256Signer(test2048Key)
+	rv := NewRSA_SHA256SignatureVerifier(test2048KeyPub)
 
 	plaintext := []byte("Hello world!")
 	signature, err := rs.Sign(plaintext)
@@ -138,9 +138,9 @@ func TestRSA2048_SHA256SignatureVerifier_FalseSignature(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestRSA2048_SHA256SignatureVerifier_DifferentPlaintext(t *testing.T) {
-	rs := NewRSA2048_SHA256Signer(test2048Key)
-	rv := NewRSA2048_SHA256SignatureVerifier(test2048KeyPub)
+func TestRSA_SHA256SignatureVerifier_DifferentPlaintext(t *testing.T) {
+	rs := NewRSA_SHA256Signer(test2048Key)
+	rv := NewRSA_SHA256SignatureVerifier(test2048KeyPub)
 
 	plaintext := []byte("Hello world!")
 	signature, err := rs.Sign(plaintext)

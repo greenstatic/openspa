@@ -7,36 +7,36 @@ import (
 	"github.com/pkg/errors"
 )
 
-var _ CipherSuite = &CipherSuite_RSA2048_SHA256_AES256CBC{}
+var _ CipherSuite = &CipherSuite_RSA_SHA256_AES256CBC{}
 
-type CipherSuite_RSA2048_SHA256_AES256CBC struct {
+type CipherSuite_RSA_SHA256_AES256CBC struct {
 	resolver PublicKeyResolver
 
-	dec *RSA2048Decrypter
-	sig *RSA2048_SHA256Signer
+	dec *RSADecrypter
+	sig *RSA_SHA256Signer
 }
 
-func NewCipherSuite_RSA2048_SHA256_AES256CBC(privKey *rsa.PrivateKey, pubResolve PublicKeyResolver) *CipherSuite_RSA2048_SHA256_AES256CBC {
-	r := &CipherSuite_RSA2048_SHA256_AES256CBC{
+func NewCipherSuite_RSA_SHA256_AES256CBC(privKey *rsa.PrivateKey, pubResolve PublicKeyResolver) *CipherSuite_RSA_SHA256_AES256CBC {
+	r := &CipherSuite_RSA_SHA256_AES256CBC{
 		resolver: pubResolve,
-		dec:      NewRSA2048Decrypter(privKey),
-		sig:      NewRSA2048_SHA256Signer(privKey),
+		dec:      NewRSADecrypter(privKey),
+		sig:      NewRSA_SHA256Signer(privKey),
 	}
 
 	return r
 }
 
-func (r *CipherSuite_RSA2048_SHA256_AES256CBC) CipherSuiteId() CipherSuiteId {
-	return CipherRSA2048_SHA256_AES256CBC_ID
+func (r *CipherSuite_RSA_SHA256_AES256CBC) CipherSuiteId() CipherSuiteId {
+	return CipherRSA_SHA256_AES256CBC_ID
 }
 
 // Secure
-//   1. Uses sender's RSA2048 private key + SHA-256 to sign the header+packet contents
+//   1. Uses sender's RSA private key + SHA-256 to sign the header+packet contents
 //   2. Generates a session key
 //   3. Uses session key to AES-256-CBC encrypt the packet and signature contents
-//   4. Encrypts the session key using the receiver's RSA2048 public key
+//   4. Encrypts the session key using the receiver's RSA public key
 // Returns a Container according to the Encrypted TLV definition
-func (r *CipherSuite_RSA2048_SHA256_AES256CBC) Secure(header []byte, packet tlv.Container) (tlv.Container, error) {
+func (r *CipherSuite_RSA_SHA256_AES256CBC) Secure(header []byte, packet tlv.Container) (tlv.Container, error) {
 	receiverPubKey, err := r.resolver.PublicKey(packet)
 	if err != nil {
 		return nil, errors.Wrap(err, "resolve receiver public key")
@@ -71,9 +71,9 @@ func (r *CipherSuite_RSA2048_SHA256_AES256CBC) Secure(header []byte, packet tlv.
 	copy(sessionKey, iv)
 	copy(sessionKey[len(iv):], key)
 
-	sessionKeyEnc, err := NewRSA2048Encrypter(receiverRSAPubKey).Encrypt(sessionKey)
+	sessionKeyEnc, err := NewRSAEncrypter(receiverRSAPubKey).Encrypt(sessionKey)
 	if err != nil {
-		return nil, errors.Wrap(err, "session key encrypt with rsa2048")
+		return nil, errors.Wrap(err, "session key encrypt with rsa")
 	}
 
 	enc.SetBytes(EncryptedSessionKey, sessionKeyEnc)
@@ -81,7 +81,7 @@ func (r *CipherSuite_RSA2048_SHA256_AES256CBC) Secure(header []byte, packet tlv.
 	return enc, nil
 }
 
-func (r *CipherSuite_RSA2048_SHA256_AES256CBC) Unlock(header []byte, ec tlv.Container) (tlv.Container, error) {
+func (r *CipherSuite_RSA_SHA256_AES256CBC) Unlock(header []byte, ec tlv.Container) (tlv.Container, error) {
 	sessionKeyEnc, ok := ec.GetBytes(EncryptedSessionKey)
 	if !ok {
 		return nil, errors.New("get encrypted session")
@@ -143,7 +143,7 @@ func (r *CipherSuite_RSA2048_SHA256_AES256CBC) Unlock(header []byte, ec tlv.Cont
 	copy(signatureContent, header)
 	copy(signatureContent[len(header):], packet)
 
-	sigValid, err := NewRSA2048_SHA256SignatureVerifier(sigRSAPubKey).Verify(signatureContent, signature)
+	sigValid, err := NewRSA_SHA256SignatureVerifier(sigRSAPubKey).Verify(signatureContent, signature)
 	if !sigValid || err != nil {
 		if err != nil {
 			return nil, errors.Wrap(err, "invalid signature")
@@ -154,7 +154,7 @@ func (r *CipherSuite_RSA2048_SHA256_AES256CBC) Unlock(header []byte, ec tlv.Cont
 	return packetContainer, nil
 }
 
-func (r *CipherSuite_RSA2048_SHA256_AES256CBC) sign(header, body []byte) ([]byte, error) {
+func (r *CipherSuite_RSA_SHA256_AES256CBC) sign(header, body []byte) ([]byte, error) {
 	content := make([]byte, len(header)+len(body))
 
 	copy(content, header)

@@ -5,8 +5,8 @@ import "github.com/greenstatic/openspa/pkg/openspalib/tlv"
 type CipherSuiteId uint8
 
 const (
-	CipherNoSecurity                  CipherSuiteId = 0 // only to be used for development
-	CipherRSA2048_SHA256_AES256CBC_ID CipherSuiteId = 1
+	CipherNoSecurity              CipherSuiteId = 0 // only to be used for development
+	CipherRSA_SHA256_AES256CBC_ID CipherSuiteId = 1
 )
 
 type CipherSuite interface {

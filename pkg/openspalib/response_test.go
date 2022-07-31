@@ -1,8 +1,6 @@
 package openspalib
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"testing"
 	"time"
 
@@ -67,19 +65,17 @@ func TestResponseSize_Stub(t *testing.T) {
 
 }
 
-func TestResponseSize_rsa2048_sha256_aes_256_cbc(t *testing.T) {
-	key1, err := rsa.GenerateKey(rand.Reader, 2048)
+func TestResponseSize_RSA_SHA256_AES_256_CBC_with2048Keypair(t *testing.T) {
+	key1, _, err := crypto.RSAKeypair(2048)
 	assert.NoError(t, err)
 
-	key2, err := rsa.GenerateKey(rand.Reader, 2048)
+	_, pub2, err := crypto.RSAKeypair(2048)
 	assert.NoError(t, err)
-	pub2, ok := key2.Public().(*rsa.PublicKey)
-	assert.True(t, ok)
 
 	res := crypto.NewPublicKeyResolverMock()
 	res.On("PublicKey", mock.Anything).Return(pub2, nil)
 
-	cs := crypto.NewCipherSuite_RSA2048_SHA256_AES256CBC(key1, res)
+	cs := crypto.NewCipherSuite_RSA_SHA256_AES256CBC(key1, res)
 
 	r, err := NewResponse(testResponseData(), cs)
 	assert.NoError(t, err)
@@ -89,7 +85,30 @@ func TestResponseSize_rsa2048_sha256_aes_256_cbc(t *testing.T) {
 	assert.Less(t, 0, len(b))
 	assert.NoError(t, err)
 
-	t.Logf("Cipher=RSA2048_SHA256_AES_256_CBC test Response marshaled size: %d", len(b))
+	t.Logf("Cipher=RSA_SHA256_AES_256_CBC (2048 client and server keypair) test Response marshaled size: %d", len(b))
+}
+
+func TestResponseSize_RSA_SHA256_AES_256_CBC_with4096Keypair(t *testing.T) {
+	key1, _, err := crypto.RSAKeypair(4096)
+	assert.NoError(t, err)
+
+	_, pub2, err := crypto.RSAKeypair(4096)
+	assert.NoError(t, err)
+
+	res := crypto.NewPublicKeyResolverMock()
+	res.On("PublicKey", mock.Anything).Return(pub2, nil)
+
+	cs := crypto.NewCipherSuite_RSA_SHA256_AES256CBC(key1, res)
+
+	r, err := NewResponse(testResponseData(), cs)
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+
+	b, err := r.Marshal()
+	assert.Less(t, 0, len(b))
+	assert.NoError(t, err)
+
+	t.Logf("Cipher=RSA_SHA256_AES_256_CBC (4096 client and server keypair) test Response marshaled size: %d", len(b))
 }
 
 func testResponseData() ResponseData {
