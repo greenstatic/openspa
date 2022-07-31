@@ -89,6 +89,16 @@ func TestContainerGetBytes_NonExistingKey(t *testing.T) {
 	assert.Nil(t, b)
 }
 
+func TestContainerGetBytes_DuplicateKeys(t *testing.T) {
+	c := newContainer()
+	c.SetBytes(0x01, []byte{1, 3, 2})
+	c.SetBytes(0x01, []byte{5, 1, 3})
+
+	b, exists := c.GetBytes(0x01)
+	assert.True(t, exists)
+	assert.Equal(t, []byte{1, 3, 2}, b)
+}
+
 func TestContainerSetByte(t *testing.T) {
 	c := newContainer()
 
