@@ -162,3 +162,55 @@ func TestHeaderMarshalADK_Length(t *testing.T) {
 
 	assert.Len(t, b, 4)
 }
+
+func TestHeaderUnmarshalControlField(t *testing.T) {
+	h := Header{}
+
+	ty, v := h.unmarshalControlField(0x90)
+	assert.Equal(t, 1, v)
+	assert.Equal(t, ResponsePDU, ty)
+
+	ty, v = h.unmarshalControlField(0x9F)
+	assert.Equal(t, 1, v)
+	assert.Equal(t, ResponsePDU, ty)
+
+	ty, v = h.unmarshalControlField(0x10)
+	assert.Equal(t, 1, v)
+	assert.Equal(t, RequestPDU, ty)
+
+	ty, v = h.unmarshalControlField(0x1F)
+	assert.Equal(t, 1, v)
+	assert.Equal(t, RequestPDU, ty)
+
+}
+
+func TestUnmarshalHeader_RequestPDU(t *testing.T) {
+	h := NewHeader(RequestPDU, crypto.CipherRSA2048_SHA256_AES256CBC_ID)
+	h.Version = 2
+	h.TransactionId = 123
+	b, err := h.Marshal()
+	assert.NoError(t, err)
+
+	header, err := UnmarshalHeader(b)
+	assert.NoError(t, err)
+
+	assert.Equal(t, RequestPDU, header.Type)
+	assert.Equal(t, uint8(123), header.TransactionId)
+	assert.Equal(t, crypto.CipherRSA2048_SHA256_AES256CBC_ID, header.CipherSuiteId)
+	assert.Equal(t, 2, header.Version)
+}
+
+func TestUnmarshalHeader_ResponsePDU(t *testing.T) {
+	h := NewHeader(ResponsePDU, crypto.CipherRSA2048_SHA256_AES256CBC_ID)
+	h.TransactionId = 123
+	b, err := h.Marshal()
+	assert.NoError(t, err)
+
+	header, err := UnmarshalHeader(b)
+	assert.NoError(t, err)
+
+	assert.Equal(t, ResponsePDU, header.Type)
+	assert.Equal(t, uint8(123), header.TransactionId)
+	assert.Equal(t, crypto.CipherRSA2048_SHA256_AES256CBC_ID, header.CipherSuiteId)
+	assert.Equal(t, 1, header.Version)
+}

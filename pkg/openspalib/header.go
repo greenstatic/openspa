@@ -1,6 +1,10 @@
 package openspalib
 
-import "github.com/greenstatic/openspa/pkg/openspalib/crypto"
+import (
+	"errors"
+
+	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
+)
 
 const (
 	HeaderLength = 8
@@ -42,6 +46,12 @@ func (h *Header) Marshal() ([]byte, error) {
 }
 
 func (h *Header) marshalControlField() byte {
+	// T | Version | Reserved
+	// T = PDU Type (1 bit)
+	// Version = Protocol version (3 bits)
+	// Reserved = Reserved for future use, should be all 0 (4 bits)
+
+	// higher nibble
 	b := uint8(h.Version) << 4
 
 	if h.Type == ResponsePDU {
@@ -50,6 +60,8 @@ func (h *Header) marshalControlField() byte {
 		// response, make sure bit 7 is 0
 		b &= 0b0111_1111
 	}
+
+	// lower nibble is reserved
 
 	return b
 }
@@ -69,4 +81,36 @@ func (h *Header) marshalADK() []byte {
 	b[2] = 0
 	b[3] = 0
 	return b
+}
+
+func (h *Header) unmarshalControlField(b byte) (t PDUType, version int) {
+	t = RequestPDU
+
+	if b>>7&0x01 == 1 {
+		t = ResponsePDU
+	}
+
+	version = int((b >> 4) & 0x03)
+	return
+}
+
+func (h *Header) unmarshalTransactionId(b byte) uint8 {
+	return uint8(b)
+}
+
+func (h *Header) unmarshalCipherSuite(b byte) crypto.CipherSuiteId {
+	return crypto.CipherSuiteId(b)
+}
+
+func UnmarshalHeader(b []byte) (Header, error) {
+	if len(b) != HeaderLength {
+		return Header{}, errors.New("invalid header length")
+	}
+
+	h := Header{}
+	h.Type, h.Version = h.unmarshalControlField(b[0])
+	h.TransactionId = h.unmarshalTransactionId(b[1])
+	h.CipherSuiteId = h.unmarshalCipherSuite(b[2])
+
+	return h, nil
 }
