@@ -29,7 +29,6 @@ type Signature interface {
 	SignatureVerifier
 }
 
-// TODO - should we remove these interfaces?
 type Encrypter interface {
 	Encrypt(plaintext []byte) (ciphertext []byte, err error)
 }

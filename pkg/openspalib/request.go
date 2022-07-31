@@ -83,7 +83,7 @@ func (r *Request) bodyCreate(d RequestData, ed RequestExtendedData) (tlv.Contain
 		return nil, errors.Wrap(err, "timestamp to container")
 	}
 
-	if err := ClientDeviceUUIDToContainer(c, d.ClientUUID); err != nil {
+	if err := ClientUUIDToContainer(c, d.ClientUUID); err != nil {
 		return nil, errors.Wrap(err, "client uuid to container")
 	}
 

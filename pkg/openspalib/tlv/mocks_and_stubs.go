@@ -129,7 +129,7 @@ func (c *ContainerStub) Remove(key uint8) {
 }
 
 func (c *ContainerStub) Bytes() []byte {
-	// TODO
+	panic("not implemented")
 	return nil
 }
 

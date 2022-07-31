@@ -341,27 +341,27 @@ func TestDurationToContainer(t *testing.T) {
 	c.AssertExpectations(t)
 }
 
-func TestClientDeviceUUIDFromContainer(t *testing.T) {
+func TestClientUUIDFromContainer(t *testing.T) {
 	u := uuid.NewV4()
 	b := u.Bytes()
 
 	c := tlv.NewContainerMock()
-	c.On("GetBytes", ClientDeviceUUIDKey).Return(b, true).Once()
+	c.On("GetBytes", ClientUUIDKey).Return(b, true).Once()
 
-	id, err := ClientDeviceUUIDFromContainer(c)
+	id, err := ClientUUIDFromContainer(c)
 	assert.NoError(t, err)
 	assert.Equal(t, u.String(), id)
 
 	c.AssertExpectations(t)
 }
 
-func TestClientDeviceUUIDToContainer(t *testing.T) {
+func TestClientUUIDToContainer(t *testing.T) {
 	u := uuid.NewV4()
 
 	c := tlv.NewContainerMock()
-	c.On("SetBytes", ClientDeviceUUIDKey, u.Bytes()).Once()
+	c.On("SetBytes", ClientUUIDKey, u.Bytes()).Once()
 
-	err := ClientDeviceUUIDToContainer(c, u.String())
+	err := ClientUUIDToContainer(c, u.String())
 	assert.NoError(t, err)
 
 	c.AssertExpectations(t)

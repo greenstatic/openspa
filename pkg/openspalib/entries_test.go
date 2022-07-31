@@ -552,22 +552,22 @@ func TestDurationDecode_Nil(t *testing.T) {
 	assert.Equal(t, time.Duration(0), d)
 }
 
-func TestClientDeviceUUIDEncode(t *testing.T) {
+func TestClientUUIDEncode(t *testing.T) {
 	u := uuid.NewV4()
 
-	b, err := ClientDeviceUUIDEncode(u.String())
+	b, err := ClientUUIDEncode(u.String())
 	assert.NoError(t, err)
 	assert.Equal(t, u.Bytes(), b)
 }
 
-func TestClientDeviceUUIDEncode_InvalidUUID(t *testing.T) {
-	b, err := ClientDeviceUUIDEncode("foo-bar")
+func TestClientUUIDEncode_InvalidUUID(t *testing.T) {
+	b, err := ClientUUIDEncode("foo-bar")
 	assert.Error(t, err)
 	assert.Nil(t, b)
 }
 
-func TestClientDeviceUUIDEncode_WithDashes(t *testing.T) {
-	b, err := ClientDeviceUUIDEncode("54141264-9c0c-4e61-8825-bf19a736d527")
+func TestClientUUIDEncode_WithDashes(t *testing.T) {
+	b, err := ClientUUIDEncode("54141264-9c0c-4e61-8825-bf19a736d527")
 	assert.NoError(t, err)
 
 	target := []byte{
@@ -592,7 +592,7 @@ func TestClientDeviceUUIDEncode_WithDashes(t *testing.T) {
 	assert.Equal(t, target, b)
 }
 
-func TestClientDeviceUUIDDecode(t *testing.T) {
+func TestClientUUIDDecode(t *testing.T) {
 	b := []byte{
 		0x54,
 		0x14,
@@ -611,19 +611,19 @@ func TestClientDeviceUUIDDecode(t *testing.T) {
 		0xd5,
 		0x27,
 	}
-	id, err := ClientDeviceUUIDDecode(b)
+	id, err := ClientUUIDDecode(b)
 	assert.NoError(t, err)
 	assert.Equal(t, "54141264-9c0c-4e61-8825-bf19a736d527", id)
 }
 
-func TestClientDeviceUUIDDecode_TooShort(t *testing.T) {
-	id, err := ClientDeviceUUIDDecode([]byte{0x02, 0x58})
+func TestClientUUIDDecode_TooShort(t *testing.T) {
+	id, err := ClientUUIDDecode([]byte{0x02, 0x58})
 	assert.ErrorIs(t, err, ErrInvalidBytes)
 	assert.Equal(t, "", id)
 }
 
-func TestClientDeviceUUIDDecode_Nil(t *testing.T) {
-	id, err := ClientDeviceUUIDDecode(nil)
+func TestClientUUIDDecode_Nil(t *testing.T) {
+	id, err := ClientUUIDDecode(nil)
 	assert.ErrorIs(t, err, ErrInvalidBytes)
 	assert.Equal(t, "", id)
 }

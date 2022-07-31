@@ -8,20 +8,6 @@ import (
 	"errors"
 )
 
-type RSA2048Encryption struct {
-	*RSA2048Encrypter
-	*RSA2048Decrypter
-}
-
-func NewRSA2048Encryption(privKey rsa.PrivateKey, pubKeyL PublicKeyLookuper) *RSA2048Encryption {
-	e := &RSA2048Encryption{}
-
-	//e.RSA2048Encrypter = NewRSA2048Encrypter()
-
-	// TODO
-	return e
-}
-
 type RSA2048Encrypter struct {
 	pubkey *rsa.PublicKey
 }

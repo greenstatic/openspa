@@ -35,7 +35,7 @@ func TestNewRequest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Greater(t, float64(1), time.Now().Sub(tstamp).Seconds())
 
-	cid, err := ClientDeviceUUIDFromContainer(r.Body)
+	cid, err := ClientUUIDFromContainer(r.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, clientUUID, cid)
 

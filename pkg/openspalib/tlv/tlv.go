@@ -16,9 +16,4 @@ type Container interface {
 
 	// NoEntries returns the number of nodes in the container
 	NoEntries() int
-
-	// Merge merges the input parameter container with the container on which it is called and returns the merged
-	// container. All data is copied, no modifications are made to either input containers.
-	// TODO - ?
-	//Merge(c Container) (Container, error)
 }

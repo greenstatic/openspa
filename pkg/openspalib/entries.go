@@ -210,7 +210,7 @@ func DurationDecode(b []byte) (time.Duration, error) {
 	return time.Second * time.Duration(i), nil
 }
 
-func ClientDeviceUUIDEncode(u string) ([]byte, error) {
+func ClientUUIDEncode(u string) ([]byte, error) {
 	id, err := uuid.FromString(u)
 	if err != nil {
 		return nil, errors.Wrap(err, "uuid decode")
@@ -219,7 +219,7 @@ func ClientDeviceUUIDEncode(u string) ([]byte, error) {
 	return id.Bytes(), nil
 }
 
-func ClientDeviceUUIDDecode(b []byte) (string, error) {
+func ClientUUIDDecode(b []byte) (string, error) {
 	if len(b) != ClientUUIDSize {
 		return "", ErrInvalidBytes
 	}

@@ -9,17 +9,17 @@ import (
 )
 
 const (
-	TimestampKey        uint8 = 1
-	ClientDeviceUUIDKey uint8 = 2
-	ProtocolKey         uint8 = 3
-	PortStartKey        uint8 = 4
-	PortEndKey          uint8 = 5
-	ClientIPv4Key       uint8 = 6
-	ClientIPv6Key       uint8 = 7
-	ServerIPv4Key       uint8 = 8
-	ServerIPv6Key       uint8 = 9
-	NonceKey            uint8 = 10
-	DurationKey         uint8 = 11
+	TimestampKey  uint8 = 1
+	ClientUUIDKey uint8 = 2
+	ProtocolKey   uint8 = 3
+	PortStartKey  uint8 = 4
+	PortEndKey    uint8 = 5
+	ClientIPv4Key uint8 = 6
+	ClientIPv6Key uint8 = 7
+	ServerIPv4Key uint8 = 8
+	ServerIPv6Key uint8 = 9
+	NonceKey      uint8 = 10
+	DurationKey   uint8 = 11
 )
 
 func TimestampFromContainer(c tlv.Container) (time.Time, error) {
@@ -320,27 +320,27 @@ func DurationToContainer(c tlv.Container, d time.Duration) error {
 	return nil
 }
 
-func ClientDeviceUUIDFromContainer(c tlv.Container) (string, error) {
-	b, ok := c.GetBytes(ClientDeviceUUIDKey)
+func ClientUUIDFromContainer(c tlv.Container) (string, error) {
+	b, ok := c.GetBytes(ClientUUIDKey)
 	if !ok {
-		return "", errors.Wrap(ErrMissingEntry, "no client device key in container")
+		return "", errors.Wrap(ErrMissingEntry, "no client uuid key in container")
 	}
 
-	id, err := ClientDeviceUUIDDecode(b)
+	id, err := ClientUUIDDecode(b)
 	if err != nil {
-		return "", errors.Wrap(err, "client device uuid decode")
+		return "", errors.Wrap(err, "client uuid decode")
 	}
 
 	return id, nil
 }
 
-func ClientDeviceUUIDToContainer(c tlv.Container, uuid string) error {
-	b, err := ClientDeviceUUIDEncode(uuid)
+func ClientUUIDToContainer(c tlv.Container, uuid string) error {
+	b, err := ClientUUIDEncode(uuid)
 	if err != nil {
-		return errors.Wrap(err, "client device uuid encode")
+		return errors.Wrap(err, "client uuid encode")
 	}
 
-	c.SetBytes(ClientDeviceUUIDKey, b)
+	c.SetBytes(ClientUUIDKey, b)
 
 	return nil
 }
