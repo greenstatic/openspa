@@ -12,6 +12,7 @@ var (
 	ErrBadInput                = errors.New("bad input")
 	ErrViolationOfProtocolSpec = errors.New("violation of protocol spec")
 	ErrCipherSuiteRequired     = errors.New("cipher suite required")
+	ErrPDUTooLarge             = errors.New("pdu too large")
 )
 
 const (

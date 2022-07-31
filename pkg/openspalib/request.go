@@ -139,11 +139,17 @@ func (r *Request) Marshal() ([]byte, error) {
 		return nil, errors.Wrap(err, "secure")
 	}
 
-	b := bytes.Buffer{}
-	b.Write(header)
-	b.Write(ec.Bytes())
+	buf := bytes.Buffer{}
+	buf.Write(header)
+	buf.Write(ec.Bytes())
 
-	return b.Bytes(), nil
+	b := buf.Bytes()
+
+	if len(b) > MaxPDUSize {
+		return b, ErrPDUTooLarge
+	}
+
+	return b, nil
 }
 
 func RequestUnmarshal(b []byte, cs crypto.CipherSuite) (*Request, error) {
