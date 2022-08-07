@@ -90,49 +90,49 @@ func TestTimestampDecode_TooManyBytes(t *testing.T) {
 }
 
 func TestProtocolEncode_ICMP(t *testing.T) {
-	b, err := ProtocolEncode(ProtocolICMP)
+	b, err := TargetProtocolEncode(ProtocolICMP)
 	assert.NoError(t, err)
 	assert.Equal(t, byte(0x01), b)
 }
 
 func TestProtocolEncode_TCP(t *testing.T) {
-	b, err := ProtocolEncode(ProtocolTCP)
+	b, err := TargetProtocolEncode(ProtocolTCP)
 	assert.NoError(t, err)
 	assert.Equal(t, byte(0x06), b)
 }
 
 func TestProtocolEncode_UDP(t *testing.T) {
-	b, err := ProtocolEncode(ProtocolUDP)
+	b, err := TargetProtocolEncode(ProtocolUDP)
 	assert.NoError(t, err)
 	assert.Equal(t, byte(0x11), b)
 }
 
 func TestProtocolEncode_ICMPv6(t *testing.T) {
-	b, err := ProtocolEncode(ProtocolICMPv6)
+	b, err := TargetProtocolEncode(ProtocolICMPv6)
 	assert.NoError(t, err)
 	assert.Equal(t, byte(0x3A), b)
 }
 
 func TestProtocolDecode_ICMP(t *testing.T) {
-	p, err := ProtocolDecode([]byte{0x01})
+	p, err := TargetProtocolDecode([]byte{0x01})
 	assert.NoError(t, err)
 	assert.Equal(t, InternetProtocolNumber(1), p)
 }
 
 func TestProtocolDecode_TCP(t *testing.T) {
-	p, err := ProtocolDecode([]byte{0x06})
+	p, err := TargetProtocolDecode([]byte{0x06})
 	assert.NoError(t, err)
 	assert.Equal(t, InternetProtocolNumber(6), p)
 }
 
 func TestProtocolDecode_UDP(t *testing.T) {
-	p, err := ProtocolDecode([]byte{0x11})
+	p, err := TargetProtocolDecode([]byte{0x11})
 	assert.NoError(t, err)
 	assert.Equal(t, InternetProtocolNumber(17), p)
 }
 
 func TestProtocolDecode_ICMPv6(t *testing.T) {
-	p, err := ProtocolDecode([]byte{0x3a})
+	p, err := TargetProtocolDecode([]byte{0x3a})
 	assert.NoError(t, err)
 	assert.Equal(t, InternetProtocolNumber(58), p)
 }
@@ -165,31 +165,31 @@ func TestPortStartEndEncode(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		b, err := PortStartEncode(test.input)
+		b, err := TargetPortStartEncode(test.input)
 		assert.NoError(t, err)
 		assert.Equal(t, test.expected, b)
 
-		b, err = PortEndEncode(test.input)
+		b, err = TargetPortEndEncode(test.input)
 		assert.NoError(t, err)
 		assert.Equal(t, test.expected, b)
 	}
 }
 
 func TestPortStartEndEncode_TooLargePort(t *testing.T) {
-	b, err := PortStartEncode(65_536)
+	b, err := TargetPortStartEncode(65_536)
 	assert.ErrorIs(t, err, ErrBadInput)
 	assert.Nil(t, b)
 
-	b, err = PortStartEncode(65_536)
+	b, err = TargetPortStartEncode(65_536)
 	assert.ErrorIs(t, err, ErrBadInput)
 	assert.Nil(t, b)
 }
 func TestPortStartEndEncode_TooLargePort2(t *testing.T) {
-	b, err := PortStartEncode(65_537)
+	b, err := TargetPortStartEncode(65_537)
 	assert.ErrorIs(t, err, ErrBadInput)
 	assert.Nil(t, b)
 
-	b, err = PortEndEncode(65_537)
+	b, err = TargetPortEndEncode(65_537)
 	assert.ErrorIs(t, err, ErrBadInput)
 	assert.Nil(t, b)
 }
@@ -226,22 +226,22 @@ func TestPortStartEndDecode(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		b, err := PortStartDecode(test.input)
+		b, err := TargetPortStartDecode(test.input)
 		assert.NoError(t, err)
 		assert.Equal(t, test.expected, b)
 
-		b, err = PortEndDecode(test.input)
+		b, err = TargetPortEndDecode(test.input)
 		assert.NoError(t, err)
 		assert.Equal(t, test.expected, b)
 	}
 }
 
 func TestPortStartEndDecode_TooLargePort(t *testing.T) {
-	i, err := PortStartDecode([]byte{0x01, 0xFF, 0xFF})
+	i, err := TargetPortStartDecode([]byte{0x01, 0xFF, 0xFF})
 	assert.ErrorIs(t, err, ErrInvalidBytes)
 	assert.Equal(t, 0, i)
 
-	i, err = PortEndDecode([]byte{0x01, 0xFF, 0xFF})
+	i, err = TargetPortEndDecode([]byte{0x01, 0xFF, 0xFF})
 	assert.ErrorIs(t, err, ErrInvalidBytes)
 	assert.Equal(t, 0, i)
 }

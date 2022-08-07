@@ -12,14 +12,14 @@ import (
 )
 
 const (
-	TimestampSize  = 8
-	ProtocolSize   = 1
-	PortSize       = 2
-	IPV4Size       = 4
-	IPV6Size       = 16
-	NonceSize      = 3
-	DurationSize   = 3
-	ClientUUIDSize = 16
+	TimestampSize      = 8
+	TargetProtocolSize = 1
+	TargetPortSize     = 2
+	IPV4Size           = 4
+	IPV6Size           = 16
+	NonceSize          = 3
+	DurationSize       = 3
+	ClientUUIDSize     = 16
 )
 
 func TimestampEncode(t time.Time) ([]byte, error) {
@@ -40,26 +40,26 @@ func TimestampDecode(b []byte) (time.Time, error) {
 	return t.UTC(), nil
 }
 
-func ProtocolEncode(p InternetProtocolNumber) (byte, error) {
+func TargetProtocolEncode(p InternetProtocolNumber) (byte, error) {
 	return p.ToBin(), nil
 }
 
-func ProtocolDecode(b []byte) (InternetProtocolNumber, error) {
-	if len(b) != ProtocolSize {
+func TargetProtocolDecode(b []byte) (InternetProtocolNumber, error) {
+	if len(b) != TargetProtocolSize {
 		return InternetProtocolNumber(0), ErrInvalidBytes
 	}
 
 	return InternetProtocolNumber(b[0]), nil
 }
 
-func PortStartEncode(p int) ([]byte, error) {
+func TargetPortStartEncode(p int) ([]byte, error) {
 	if err := convertableToUint16(p); err != nil {
 		return nil, errors.Wrap(err, "uint16 conversion")
 	}
 	return uint16Encode(uint16(p))
 }
-func PortEndEncode(p int) ([]byte, error) {
-	return PortStartEncode(p)
+func TargetPortEndEncode(p int) ([]byte, error) {
+	return TargetPortStartEncode(p)
 }
 
 func convertableToUint16(i int) error {
@@ -96,13 +96,13 @@ func uint16Decode(b []byte) (uint16, error) {
 	return binary.BigEndian.Uint16(b), nil
 }
 
-func PortStartDecode(b []byte) (int, error) {
+func TargetPortStartDecode(b []byte) (int, error) {
 	i, err := uint16Decode(b)
 	return int(i), err
 }
 
-func PortEndDecode(b []byte) (int, error) {
-	return PortStartDecode(b)
+func TargetPortEndDecode(b []byte) (int, error) {
+	return TargetPortStartDecode(b)
 }
 
 func IPv4Encode(ip net.IP) ([]byte, error) {

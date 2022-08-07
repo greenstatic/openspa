@@ -15,11 +15,11 @@ func TestNewResponse(t *testing.T) {
 	dur := 3 * time.Hour
 
 	r, err := NewResponse(ResponseData{
-		TransactionId: 123,
-		Protocol:      ProtocolIPV4,
-		PortStart:     80,
-		PortEnd:       120,
-		Duration:      dur,
+		TransactionId:   123,
+		TargetProtocol:  ProtocolIPV4,
+		TargetPortStart: 80,
+		TargetPortEnd:   120,
+		Duration:        dur,
 	}, cs)
 
 	assert.NoError(t, err)
@@ -27,15 +27,15 @@ func TestNewResponse(t *testing.T) {
 
 	assert.Equal(t, byte(123), r.Header.TransactionId)
 
-	p, err := ProtocolFromContainer(r.Body)
+	p, err := TargetProtocolFromContainer(r.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, ProtocolIPV4, p)
 
-	ps, err := PortStartFromContainer(r.Body)
+	ps, err := TargetPortStartFromContainer(r.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, 80, ps)
 
-	pe, err := PortEndFromContainer(r.Body)
+	pe, err := TargetPortEndFromContainer(r.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, 120, pe)
 
@@ -113,10 +113,10 @@ func TestResponseSize_RSA_SHA256_AES_256_CBC_with4096Keypair(t *testing.T) {
 
 func testResponseData() ResponseData {
 	return ResponseData{
-		TransactionId: 123,
-		Protocol:      ProtocolIPV4,
-		PortStart:     80,
-		PortEnd:       100,
-		Duration:      time.Hour,
+		TransactionId:   123,
+		TargetProtocol:  ProtocolIPV4,
+		TargetPortStart: 80,
+		TargetPortEnd:   100,
+		Duration:        time.Hour,
 	}
 }

@@ -15,13 +15,13 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 
 	// Client: Create request
 	r, err := NewRequest(RequestData{
-		TransactionId: 42,
-		ClientUUID:    RandomUUID(),
-		Protocol:      ProtocolIPV4,
-		PortStart:     80,
-		PortEnd:       100,
-		ClientIP:      net.IPv4(88, 200, 23, 30),
-		ServerIP:      net.IPv4(88, 200, 23, 40),
+		TransactionId:   42,
+		ClientUUID:      RandomUUID(),
+		ClientIP:        net.IPv4(88, 200, 23, 30),
+		TargetProtocol:  ProtocolIPV4,
+		TargetIP:        net.IPv4(88, 200, 23, 40),
+		TargetPortStart: 80,
+		TargetPortEnd:   100,
 	}, cs)
 	require.NoError(t, err)
 	reqBytes, err := r.Marshal()
@@ -34,15 +34,15 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 	assert.Equal(t, uint8(42), rS.Header.TransactionId)
 	require.NoError(t, err)
 
-	proto, err := ProtocolFromContainer(rS.Body)
+	proto, err := TargetProtocolFromContainer(rS.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, ProtocolIPV4, proto)
 
-	portA, err := PortStartFromContainer(rS.Body)
+	portA, err := TargetPortStartFromContainer(rS.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, 80, portA)
 
-	portB, err := PortEndFromContainer(rS.Body)
+	portB, err := TargetPortEndFromContainer(rS.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, 100, portB)
 
@@ -50,17 +50,17 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, net.IPv4(88, 200, 23, 30).Equal(cIP))
 
-	sIP, err := ServerIPFromContainer(rS.Body)
+	sIP, err := TargetIPFromContainer(rS.Body)
 	assert.NoError(t, err)
 	assert.True(t, net.IPv4(88, 200, 23, 40).Equal(sIP))
 
 	// Server: Send response
 	resp, err := NewResponse(ResponseData{
-		TransactionId: 42,
-		Protocol:      ProtocolIPV4,
-		PortStart:     80,
-		PortEnd:       100,
-		Duration:      3 * time.Second,
+		TransactionId:   42,
+		TargetProtocol:  ProtocolIPV4,
+		TargetPortStart: 80,
+		TargetPortEnd:   100,
+		Duration:        3 * time.Second,
 	}, cs)
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -74,15 +74,15 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 	assert.Equal(t, 1, respC.Header.Version)
 	assert.Equal(t, uint8(42), respC.Header.TransactionId)
 
-	proto, err = ProtocolFromContainer(respC.Body)
+	proto, err = TargetProtocolFromContainer(respC.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, ProtocolIPV4, proto)
 
-	portA, err = PortStartFromContainer(respC.Body)
+	portA, err = TargetPortStartFromContainer(respC.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, 80, portA)
 
-	portB, err = PortEndFromContainer(respC.Body)
+	portB, err = TargetPortEndFromContainer(respC.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, 100, portB)
 

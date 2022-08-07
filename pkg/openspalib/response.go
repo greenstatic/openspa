@@ -13,9 +13,9 @@ import (
 type ResponseData struct {
 	TransactionId uint8
 
-	Protocol  InternetProtocolNumber
-	PortStart int
-	PortEnd   int
+	TargetProtocol  InternetProtocolNumber
+	TargetPortStart int
+	TargetPortEnd   int
 
 	Duration time.Duration
 }
@@ -98,15 +98,15 @@ func (r *Response) generateExtendedData() (ResponseExtendedData, error) {
 func (r *Response) bodyCreate(d ResponseData, ed ResponseExtendedData) (tlv.Container, error) {
 	c := tlv.NewContainer()
 
-	if err := ProtocolToContainer(c, d.Protocol); err != nil {
+	if err := TargetProtocolToContainer(c, d.TargetProtocol); err != nil {
 		return nil, errors.Wrap(err, "protocol to container")
 	}
 
-	if err := PortStartToContainer(c, d.PortStart); err != nil {
+	if err := TargetPortStartToContainer(c, d.TargetPortStart); err != nil {
 		return nil, errors.Wrap(err, "port start to container")
 	}
 
-	if err := PortEndToContainer(c, d.PortEnd); err != nil {
+	if err := TargetPortEndToContainer(c, d.TargetPortEnd); err != nil {
 		return nil, errors.Wrap(err, "port end to container")
 	}
 

@@ -15,12 +15,12 @@ type RequestData struct {
 	TransactionId uint8
 	ClientUUID    string
 
-	Protocol  InternetProtocolNumber
-	PortStart int
-	PortEnd   int
-
 	ClientIP net.IP
-	ServerIP net.IP
+
+	TargetProtocol  InternetProtocolNumber
+	TargetIP        net.IP
+	TargetPortStart int
+	TargetPortEnd   int
 }
 
 type RequestExtendedData struct {
@@ -87,16 +87,16 @@ func (r *Request) bodyCreate(d RequestData, ed RequestExtendedData) (tlv.Contain
 		return nil, errors.Wrap(err, "client uuid to container")
 	}
 
-	if err := ProtocolToContainer(c, d.Protocol); err != nil {
-		return nil, errors.Wrap(err, "protocol to container")
+	if err := TargetProtocolToContainer(c, d.TargetProtocol); err != nil {
+		return nil, errors.Wrap(err, "target protocol to container")
 	}
 
-	if err := PortStartToContainer(c, d.PortStart); err != nil {
-		return nil, errors.Wrap(err, "port start to container")
+	if err := TargetPortStartToContainer(c, d.TargetPortStart); err != nil {
+		return nil, errors.Wrap(err, "target port start to container")
 	}
 
-	if err := PortEndToContainer(c, d.PortEnd); err != nil {
-		return nil, errors.Wrap(err, "port end to container")
+	if err := TargetPortEndToContainer(c, d.TargetPortEnd); err != nil {
+		return nil, errors.Wrap(err, "target port end to container")
 	}
 
 	if isIPv4(d.ClientIP) {
@@ -110,14 +110,14 @@ func (r *Request) bodyCreate(d RequestData, ed RequestExtendedData) (tlv.Contain
 		}
 	}
 
-	if isIPv4(d.ServerIP) {
-		if err := ServerIPv4ToContainer(c, d.ServerIP); err != nil {
-			return nil, errors.Wrap(err, "server ipv4 to container")
+	if isIPv4(d.TargetIP) {
+		if err := TargetIPv4ToContainer(c, d.TargetIP); err != nil {
+			return nil, errors.Wrap(err, "target ipv4 to container")
 		}
 
 	} else {
-		if err := ServerIPv6ToContainer(c, d.ServerIP); err != nil {
-			return nil, errors.Wrap(err, "server ipv6 to container")
+		if err := TargetIPv6ToContainer(c, d.TargetIP); err != nil {
+			return nil, errors.Wrap(err, "target ipv6 to container")
 		}
 	}
 

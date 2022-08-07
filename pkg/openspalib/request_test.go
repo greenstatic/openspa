@@ -18,13 +18,13 @@ func TestNewRequest(t *testing.T) {
 	serverIP := net.IPv4(88, 200, 23, 200)
 
 	r, err := NewRequest(RequestData{
-		TransactionId: 123,
-		ClientUUID:    clientUUID,
-		Protocol:      ProtocolIPV4,
-		PortStart:     80,
-		PortEnd:       120,
-		ClientIP:      clientIP,
-		ServerIP:      serverIP,
+		TransactionId:   123,
+		ClientUUID:      clientUUID,
+		TargetProtocol:  ProtocolIPV4,
+		TargetPortStart: 80,
+		TargetPortEnd:   120,
+		ClientIP:        clientIP,
+		TargetIP:        serverIP,
 	}, cs)
 
 	assert.NoError(t, err)
@@ -40,15 +40,15 @@ func TestNewRequest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, clientUUID, cid)
 
-	p, err := ProtocolFromContainer(r.Body)
+	p, err := TargetProtocolFromContainer(r.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, ProtocolIPV4, p)
 
-	ps, err := PortStartFromContainer(r.Body)
+	ps, err := TargetPortStartFromContainer(r.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, 80, ps)
 
-	pe, err := PortEndFromContainer(r.Body)
+	pe, err := TargetPortEndFromContainer(r.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, 120, pe)
 
@@ -56,7 +56,7 @@ func TestNewRequest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, clientIP.Equal(cip))
 
-	sip, err := ServerIPFromContainer(r.Body)
+	sip, err := TargetIPFromContainer(r.Body)
 	assert.NoError(t, err)
 	assert.True(t, serverIP.Equal(sip))
 
@@ -129,12 +129,12 @@ func TestRequestSize_RSA_SHA256_AES_256_CBC_with4096Keypair(t *testing.T) {
 
 func testRequestData() RequestData {
 	return RequestData{
-		TransactionId: 123,
-		ClientUUID:    RandomUUID(),
-		Protocol:      ProtocolIPV4,
-		PortStart:     80,
-		PortEnd:       120,
-		ClientIP:      net.IPv4(88, 200, 23, 100),
-		ServerIP:      net.IPv4(88, 200, 23, 200),
+		TransactionId:   123,
+		ClientUUID:      RandomUUID(),
+		TargetProtocol:  ProtocolIPV4,
+		TargetPortStart: 80,
+		TargetPortEnd:   120,
+		ClientIP:        net.IPv4(88, 200, 23, 100),
+		TargetIP:        net.IPv4(88, 200, 23, 200),
 	}
 }

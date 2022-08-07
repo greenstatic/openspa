@@ -9,17 +9,17 @@ import (
 )
 
 const (
-	TimestampKey  uint8 = 1
-	ClientUUIDKey uint8 = 2
-	ProtocolKey   uint8 = 3
-	PortStartKey  uint8 = 4
-	PortEndKey    uint8 = 5
-	ClientIPv4Key uint8 = 6
-	ClientIPv6Key uint8 = 7
-	ServerIPv4Key uint8 = 8
-	ServerIPv6Key uint8 = 9
-	NonceKey      uint8 = 10
-	DurationKey   uint8 = 11
+	TimestampKey       uint8 = 1
+	ClientUUIDKey      uint8 = 2
+	TargetProtocolKey  uint8 = 3
+	TargetPortStartKey uint8 = 4
+	TargetPortEndKey   uint8 = 5
+	ClientIPv4Key      uint8 = 6
+	ClientIPv6Key      uint8 = 7
+	TargetIPv4Key      uint8 = 8
+	TargetIPv6Key      uint8 = 9
+	NonceKey           uint8 = 10
+	DurationKey        uint8 = 11
 )
 
 func TimestampFromContainer(c tlv.Container) (time.Time, error) {
@@ -47,77 +47,77 @@ func TimestampToContainer(c tlv.Container, t time.Time) error {
 	return nil
 }
 
-func ProtocolFromContainer(c tlv.Container) (InternetProtocolNumber, error) {
-	b, ok := c.GetBytes(ProtocolKey)
+func TargetProtocolFromContainer(c tlv.Container) (InternetProtocolNumber, error) {
+	b, ok := c.GetBytes(TargetProtocolKey)
 	if !ok {
-		return InternetProtocolNumber(0), errors.Wrap(ErrMissingEntry, "no protocol key in container")
+		return InternetProtocolNumber(0), errors.Wrap(ErrMissingEntry, "no target protocol key in container")
 	}
 
-	p, err := ProtocolDecode(b)
+	p, err := TargetProtocolDecode(b)
 	if err != nil {
-		return InternetProtocolNumber(0), errors.Wrap(err, "protocol decode")
+		return InternetProtocolNumber(0), errors.Wrap(err, "target protocol decode")
 	}
 
 	return p, nil
 }
 
-func ProtocolToContainer(c tlv.Container, p InternetProtocolNumber) error {
-	b, err := ProtocolEncode(p)
+func TargetProtocolToContainer(c tlv.Container, p InternetProtocolNumber) error {
+	b, err := TargetProtocolEncode(p)
 	if err != nil {
-		return errors.Wrap(err, "protocol encode")
+		return errors.Wrap(err, "target protocol encode")
 	}
 
-	c.SetByte(ProtocolKey, b)
+	c.SetByte(TargetProtocolKey, b)
 
 	return nil
 }
 
-func PortStartFromContainer(c tlv.Container) (int, error) {
-	b, ok := c.GetBytes(PortStartKey)
+func TargetPortStartFromContainer(c tlv.Container) (int, error) {
+	b, ok := c.GetBytes(TargetPortStartKey)
 	if !ok {
-		return 0, errors.Wrap(ErrMissingEntry, "no port start key in container")
+		return 0, errors.Wrap(ErrMissingEntry, "no target port start key in container")
 	}
 
-	p, err := PortStartDecode(b)
+	p, err := TargetPortStartDecode(b)
 	if err != nil {
-		return 0, errors.Wrap(err, "port start decode")
+		return 0, errors.Wrap(err, "target port start decode")
 	}
 
 	return p, nil
 }
 
-func PortStartToContainer(c tlv.Container, p int) error {
-	b, err := PortStartEncode(p)
+func TargetPortStartToContainer(c tlv.Container, p int) error {
+	b, err := TargetPortStartEncode(p)
 	if err != nil {
-		return errors.Wrap(err, "port start encode")
+		return errors.Wrap(err, "target port start encode")
 	}
 
-	c.SetBytes(PortStartKey, b)
+	c.SetBytes(TargetPortStartKey, b)
 
 	return nil
 }
 
-func PortEndFromContainer(c tlv.Container) (int, error) {
-	b, ok := c.GetBytes(PortEndKey)
+func TargetPortEndFromContainer(c tlv.Container) (int, error) {
+	b, ok := c.GetBytes(TargetPortEndKey)
 	if !ok {
-		return 0, errors.Wrap(ErrMissingEntry, "no port end key in container")
+		return 0, errors.Wrap(ErrMissingEntry, "no target port end key in container")
 	}
 
-	p, err := PortEndDecode(b)
+	p, err := TargetPortEndDecode(b)
 	if err != nil {
-		return 0, errors.Wrap(err, "port end decode")
+		return 0, errors.Wrap(err, "target port end decode")
 	}
 
 	return p, nil
 }
 
-func PortEndToContainer(c tlv.Container, p int) error {
-	b, err := PortEndEncode(p)
+func TargetPortEndToContainer(c tlv.Container, p int) error {
+	b, err := TargetPortEndEncode(p)
 	if err != nil {
-		return errors.Wrap(err, "port end encode")
+		return errors.Wrap(err, "target port end encode")
 	}
 
-	c.SetBytes(PortEndKey, b)
+	c.SetBytes(TargetPortEndKey, b)
 
 	return nil
 }
@@ -147,10 +147,10 @@ func ClientIPv4ToContainer(c tlv.Container, ip net.IP) error {
 	return nil
 }
 
-func ServerIPv4FromContainer(c tlv.Container) (net.IP, error) {
-	b, ok := c.GetBytes(ServerIPv4Key)
+func TargetIPv4FromContainer(c tlv.Container) (net.IP, error) {
+	b, ok := c.GetBytes(TargetIPv4Key)
 	if !ok {
-		return nil, errors.Wrap(ErrMissingEntry, "no server ipv4 key in container")
+		return nil, errors.Wrap(ErrMissingEntry, "no target ipv4 key in container")
 	}
 
 	ip, err := IPv4Decode(b)
@@ -161,13 +161,13 @@ func ServerIPv4FromContainer(c tlv.Container) (net.IP, error) {
 	return ip, nil
 }
 
-func ServerIPv4ToContainer(c tlv.Container, ip net.IP) error {
+func TargetIPv4ToContainer(c tlv.Container, ip net.IP) error {
 	b, err := IPv4Encode(ip)
 	if err != nil {
 		return errors.Wrap(err, "ipv4 encode")
 	}
 
-	c.SetBytes(ServerIPv4Key, b)
+	c.SetBytes(TargetIPv4Key, b)
 
 	return nil
 }
@@ -197,10 +197,10 @@ func ClientIPv6ToContainer(c tlv.Container, ip net.IP) error {
 	return nil
 }
 
-func ServerIPv6FromContainer(c tlv.Container) (net.IP, error) {
-	b, ok := c.GetBytes(ServerIPv6Key)
+func TargetIPv6FromContainer(c tlv.Container) (net.IP, error) {
+	b, ok := c.GetBytes(TargetIPv6Key)
 	if !ok {
-		return nil, errors.Wrap(ErrMissingEntry, "no server ipv6 key in container")
+		return nil, errors.Wrap(ErrMissingEntry, "no target ipv6 key in container")
 	}
 
 	ip, err := IPv6Decode(b)
@@ -211,13 +211,13 @@ func ServerIPv6FromContainer(c tlv.Container) (net.IP, error) {
 	return ip, nil
 }
 
-func ServerIPv6ToContainer(c tlv.Container, ip net.IP) error {
+func TargetIPv6ToContainer(c tlv.Container, ip net.IP) error {
 	b, err := IPv6Encode(ip)
 	if err != nil {
 		return errors.Wrap(err, "ipv6 encode")
 	}
 
-	c.SetBytes(ServerIPv6Key, b)
+	c.SetBytes(TargetIPv6Key, b)
 
 	return nil
 }
@@ -249,16 +249,16 @@ func ClientIPFromContainer(c tlv.Container) (net.IP, error) {
 	return ip, nil
 }
 
-func ServerIPFromContainer(c tlv.Container) (net.IP, error) {
-	b4, ok4 := c.GetBytes(ServerIPv4Key)
-	b6, ok6 := c.GetBytes(ServerIPv6Key)
+func TargetIPFromContainer(c tlv.Container) (net.IP, error) {
+	b4, ok4 := c.GetBytes(TargetIPv4Key)
+	b6, ok6 := c.GetBytes(TargetIPv6Key)
 
 	if !ok4 && !ok6 {
-		return nil, errors.Wrap(ErrMissingEntry, "no server ipv4 or ipv6 key in container")
+		return nil, errors.Wrap(ErrMissingEntry, "no target ipv4 or ipv6 key in container")
 	}
 
 	if ok4 && ok6 {
-		return nil, errors.Wrap(ErrViolationOfProtocolSpec, "cannot have both server ipv4 and ipv6 in container")
+		return nil, errors.Wrap(ErrViolationOfProtocolSpec, "cannot have both target ipv4 and ipv6 in container")
 	}
 
 	if ok4 {
