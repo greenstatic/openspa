@@ -3,6 +3,7 @@ package openspalib
 import (
 	"bytes"
 	"crypto/rand"
+	"net"
 	"time"
 
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
@@ -14,6 +15,7 @@ type ResponseData struct {
 	TransactionId uint8
 
 	TargetProtocol  InternetProtocolNumber
+	TargetIP        net.IP
 	TargetPortStart int
 	TargetPortEnd   int
 
@@ -100,6 +102,17 @@ func (r *Response) bodyCreate(d ResponseData, ed ResponseExtendedData) (tlv.Cont
 
 	if err := TargetProtocolToContainer(c, d.TargetProtocol); err != nil {
 		return nil, errors.Wrap(err, "protocol to container")
+	}
+
+	if isIPv4(d.TargetIP) {
+		if err := TargetIPv4ToContainer(c, d.TargetIP); err != nil {
+			return nil, errors.Wrap(err, "target ipv4 to container")
+		}
+
+	} else {
+		if err := TargetIPv6ToContainer(c, d.TargetIP); err != nil {
+			return nil, errors.Wrap(err, "target ipv6 to container")
+		}
 	}
 
 	if err := TargetPortStartToContainer(c, d.TargetPortStart); err != nil {

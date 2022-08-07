@@ -58,6 +58,7 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 	resp, err := NewResponse(ResponseData{
 		TransactionId:   42,
 		TargetProtocol:  ProtocolIPV4,
+		TargetIP:        net.IPv4(88, 200, 23, 8),
 		TargetPortStart: 80,
 		TargetPortEnd:   100,
 		Duration:        3 * time.Second,
@@ -77,6 +78,10 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 	proto, err = TargetProtocolFromContainer(respC.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, ProtocolIPV4, proto)
+
+	tIP, err := TargetIPFromContainer(respC.Body)
+	assert.NoError(t, err)
+	assert.True(t, net.IPv4(88, 200, 23, 8).Equal(tIP))
 
 	portA, err = TargetPortStartFromContainer(respC.Body)
 	assert.NoError(t, err)

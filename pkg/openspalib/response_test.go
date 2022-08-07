@@ -1,6 +1,7 @@
 package openspalib
 
 import (
+	"net"
 	"testing"
 	"time"
 
@@ -14,9 +15,11 @@ func TestNewResponse(t *testing.T) {
 
 	dur := 3 * time.Hour
 
+	tIP := net.IPv4(88, 200, 23, 19)
 	r, err := NewResponse(ResponseData{
 		TransactionId:   123,
 		TargetProtocol:  ProtocolIPV4,
+		TargetIP:        tIP,
 		TargetPortStart: 80,
 		TargetPortEnd:   120,
 		Duration:        dur,
@@ -30,6 +33,10 @@ func TestNewResponse(t *testing.T) {
 	p, err := TargetProtocolFromContainer(r.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, ProtocolIPV4, p)
+
+	ip, err := TargetIPFromContainer(r.Body)
+	assert.NoError(t, err)
+	assert.True(t, tIP.Equal(ip))
 
 	ps, err := TargetPortStartFromContainer(r.Body)
 	assert.NoError(t, err)
@@ -115,6 +122,7 @@ func testResponseData() ResponseData {
 	return ResponseData{
 		TransactionId:   123,
 		TargetProtocol:  ProtocolIPV4,
+		TargetIP:        net.ParseIP("2001:1470:fffd:66::23:19"),
 		TargetPortStart: 80,
 		TargetPortEnd:   100,
 		Duration:        time.Hour,
