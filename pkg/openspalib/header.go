@@ -1,6 +1,7 @@
 package openspalib
 
 import (
+	"crypto/rand"
 	"errors"
 
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
@@ -27,7 +28,8 @@ type Header struct {
 
 func NewHeader(t PDUType, c crypto.CipherSuiteId) Header {
 	return Header{
-		Type:          t,
+		Type: t,
+		// TODO - replace this with 2
 		Version:       1,
 		TransactionId: 0,
 		CipherSuiteId: c,
@@ -113,4 +115,10 @@ func UnmarshalHeader(b []byte) (Header, error) {
 	h.CipherSuiteId = h.unmarshalCipherSuite(b[2])
 
 	return h, nil
+}
+
+func RandomTransactionId() uint8 {
+	b := make([]byte, 1)
+	rand.Read(b)
+	return b[0]
 }
