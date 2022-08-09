@@ -46,10 +46,10 @@ func TargetProtocolEncode(p InternetProtocolNumber) (byte, error) {
 
 func TargetProtocolDecode(b []byte) (InternetProtocolNumber, error) {
 	if len(b) != TargetProtocolSize {
-		return InternetProtocolNumber(0), ErrInvalidBytes
+		return ProtocolUndefined, ErrInvalidBytes
 	}
 
-	return InternetProtocolNumber(b[0]), nil
+	return InternetProtocolFromNumber(b[0])
 }
 
 func TargetPortStartEncode(p int) ([]byte, error) {

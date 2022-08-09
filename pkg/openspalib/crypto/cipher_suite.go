@@ -5,7 +5,8 @@ import "github.com/greenstatic/openspa/pkg/openspalib/tlv"
 type CipherSuiteId uint8
 
 const (
-	CipherNoSecurity              CipherSuiteId = 0 // only to be used for development
+	CipherUnknown                 CipherSuiteId = 0   // only to be used for development
+	CipherNoSecurity              CipherSuiteId = 255 // only to be used for development
 	CipherRSA_SHA256_AES256CBC_ID CipherSuiteId = 1
 )
 
@@ -43,4 +44,15 @@ type SignatureSignor interface {
 
 type SignatureVerifier interface {
 	Verify(text, signature []byte) (valid bool, err error)
+}
+
+func CipherSuiteStringToId(s string) CipherSuiteId {
+	switch s {
+	case "CipherNoSecurity":
+		return CipherNoSecurity
+	case "CipherSuite_RSA_SHA256_AES256CBC":
+		return CipherRSA_SHA256_AES256CBC_ID
+	default:
+		return CipherUnknown
+	}
 }

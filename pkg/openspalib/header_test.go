@@ -16,7 +16,7 @@ func TestHeader_MarshalRequestType(t *testing.T) {
 	assert.Equal(t, []byte{
 		0x10, // Control field: type: request, version: 1
 		0x00, // Transaction ID: 0
-		0x00, // Cipher Suite: No Security
+		0xff, // Cipher Suite: No Security
 		0x00, // reserved field
 		0x00, // ADK0
 		0x00, // ADK1
@@ -53,7 +53,7 @@ func TestHeader_MarshalRequestTransaction123(t *testing.T) {
 	assert.Equal(t, []byte{
 		0x10, // Control field: type: request, version: 1
 		0x7B, // Transaction ID: 123
-		0x00, // Cipher Suite: No Security
+		0xff, // Cipher Suite: No Security
 		0x00, // reserved field
 		0x00, // ADK0
 		0x00, // ADK1
@@ -72,7 +72,7 @@ func TestHeader_MarshalRequestVersion2(t *testing.T) {
 	assert.Equal(t, []byte{
 		0x20, // Control field: type: request, version: 2
 		0x00, // Transaction ID: 00
-		0x00, // Cipher Suite: No Security
+		0xff, // Cipher Suite: No Security
 		0x00, // reserved field
 		0x00, // ADK0
 		0x00, // ADK1
@@ -139,7 +139,7 @@ func TestHeaderMarshalCipherSuite_NoSecurity(t *testing.T) {
 	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
 	b := h.marshalCipherSuite()
 
-	assert.Equal(t, byte(0x00), b)
+	assert.Equal(t, byte(0xff), b)
 }
 
 func TestHeaderMarshalCipherSuite_123(t *testing.T) {

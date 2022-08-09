@@ -116,25 +116,25 @@ func TestProtocolEncode_ICMPv6(t *testing.T) {
 func TestProtocolDecode_ICMP(t *testing.T) {
 	p, err := TargetProtocolDecode([]byte{0x01})
 	assert.NoError(t, err)
-	assert.Equal(t, InternetProtocolNumber(1), p)
+	assert.Equal(t, ProtocolICMP, p)
 }
 
 func TestProtocolDecode_TCP(t *testing.T) {
 	p, err := TargetProtocolDecode([]byte{0x06})
 	assert.NoError(t, err)
-	assert.Equal(t, InternetProtocolNumber(6), p)
+	assert.Equal(t, ProtocolTCP, p)
 }
 
 func TestProtocolDecode_UDP(t *testing.T) {
 	p, err := TargetProtocolDecode([]byte{0x11})
 	assert.NoError(t, err)
-	assert.Equal(t, InternetProtocolNumber(17), p)
+	assert.Equal(t, ProtocolUDP, p)
 }
 
 func TestProtocolDecode_ICMPv6(t *testing.T) {
 	p, err := TargetProtocolDecode([]byte{0x3a})
 	assert.NoError(t, err)
-	assert.Equal(t, InternetProtocolNumber(58), p)
+	assert.Equal(t, ProtocolICMPv6, p)
 }
 
 func TestPortStartEndEncode(t *testing.T) {

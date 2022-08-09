@@ -50,12 +50,12 @@ func TimestampToContainer(c tlv.Container, t time.Time) error {
 func TargetProtocolFromContainer(c tlv.Container) (InternetProtocolNumber, error) {
 	b, ok := c.GetBytes(TargetProtocolKey)
 	if !ok {
-		return InternetProtocolNumber(0), errors.Wrap(ErrMissingEntry, "no target protocol key in container")
+		return ProtocolUndefined, errors.Wrap(ErrMissingEntry, "no target protocol key in container")
 	}
 
 	p, err := TargetProtocolDecode(b)
 	if err != nil {
-		return InternetProtocolNumber(0), errors.Wrap(err, "target protocol decode")
+		return ProtocolUndefined, errors.Wrap(err, "target protocol decode")
 	}
 
 	return p, nil
