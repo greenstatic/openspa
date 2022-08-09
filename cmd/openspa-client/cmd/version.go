@@ -15,4 +15,5 @@ var versionCmd = &cobra.Command{
 		fmt.Printf("OpenSPA Client version: %s\n", client.Version())
 		fmt.Printf("OpenSPA Protocol version: %s\n", lib.Version())
 	},
+	PreRun: preRunLogSetupFun,
 }
