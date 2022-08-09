@@ -12,6 +12,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Return's the client version",
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("THIS IS PROTOTYPE SOFTWARE")
 		fmt.Printf("OpenSPA Client version: %s\n", client.Version())
 		fmt.Printf("OpenSPA Protocol version: %s\n", lib.Version())
 	},
