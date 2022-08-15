@@ -17,8 +17,9 @@ var (
 )
 
 const (
-	MaxPDUSize    = 1444
-	maxTCPUDPPort = 65535
+	DefaultServerPort = 22211
+	MaxPDUSize        = 1444
+	maxTCPUDPPort     = 65535
 )
 
 var (
@@ -57,6 +58,10 @@ type InternetProtocolNumber struct {
 
 func (i InternetProtocolNumber) ToBin() byte {
 	return i.Number
+}
+
+func (i InternetProtocolNumber) String() string {
+	return i.Protocol
 }
 
 // InternetProtocolNumberSupported returns a slice of InternetProtocolNumber that are supported.
