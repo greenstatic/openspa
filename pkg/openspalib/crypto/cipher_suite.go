@@ -1,6 +1,10 @@
 package crypto
 
-import "github.com/greenstatic/openspa/pkg/openspalib/tlv"
+import (
+	"errors"
+
+	"github.com/greenstatic/openspa/pkg/openspalib/tlv"
+)
 
 type CipherSuiteId uint8
 
@@ -55,4 +59,23 @@ func CipherSuiteStringToId(s string) CipherSuiteId {
 	default:
 		return CipherUnknown
 	}
+}
+
+func CipherSuiteIdToString(c CipherSuiteId) (string, error) {
+	switch c {
+	case CipherNoSecurity:
+		return "CipherNoSecurity", nil
+	case CipherRSA_SHA256_AES256CBC_ID:
+		return "CipherSuite_RSA_SHA256_AES256CBC", nil
+	}
+
+	return "", errors.New("unsupported cipher suite id")
+}
+
+func MustCipherSuiteIdToString(c CipherSuiteId) string {
+	s, err := CipherSuiteIdToString(c)
+	if err != nil {
+		panic(err)
+	}
+	return s
 }

@@ -115,3 +115,44 @@ func TestCipherSuite_RSA_SHA256_AES256CBC(t *testing.T) {
 		assert.True(t, resolverServer.AssertExpectations(t), desc)
 	}
 }
+
+func TestCipherSuite_RSA_SHA256_AES256CBC_UnlockDoesNotModifyContainer(t *testing.T) {
+	clientPriv, clientPub, err := RSAKeypair(2048)
+	assert.NoError(t, err)
+
+	serverPriv, serverPub, err := RSAKeypair(2048)
+	assert.NoError(t, err)
+
+	header := []byte{4, 8, 15, 16, 23, 42}
+
+	// Packet Container
+	pc := tlv.NewContainer()
+	pc.SetBytes(2, []byte{1, 2, 3, 4, 5})
+	pc.SetBytes(5, []byte{5, 4, 3, 2, 1})
+
+	resolverClient := NewPublicKeyResolverMock()
+	resolverClient.On("PublicKey", mock.Anything).Return(serverPub, nil).Once()
+
+	csClient := NewCipherSuite_RSA_SHA256_AES256CBC(clientPriv, resolverClient)
+	ec, err := csClient.Secure(header, pc)
+	assert.NoError(t, err)
+	assert.NotNil(t, ec)
+
+	resolverServer := NewPublicKeyResolverMock()
+	resolverServer.On("PublicKey", mock.Anything).Return(clientPub, nil).Twice()
+
+	csServer := NewCipherSuite_RSA_SHA256_AES256CBC(serverPriv, resolverServer)
+
+	ec1 := ec.Bytes()
+
+	pcServer, err := csServer.Unlock(header, ec)
+	assert.NoError(t, err)
+	assert.NotNil(t, pcServer)
+
+	pcServer, err = csServer.Unlock(header, ec)
+	assert.NoError(t, err)
+	assert.NotNil(t, pcServer)
+
+	ec2 := ec.Bytes()
+	assert.Equal(t, ec1, ec2)
+}

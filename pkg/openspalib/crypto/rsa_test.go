@@ -150,3 +150,25 @@ func TestRSA_SHA256SignatureVerifier_DifferentPlaintext(t *testing.T) {
 	assert.Error(t, err)
 	assert.False(t, ok)
 }
+
+func TestRSAEncodeDecode(t *testing.T) {
+	priv, pub, err := RSAKeypair(2048)
+	assert.NoError(t, err)
+
+	privEnc, err := RSAEncodePrivateKey(priv)
+	assert.NoError(t, err)
+
+	privDec, err := RSADecodePrivateKey(privEnc)
+	assert.NoError(t, err)
+	require.NotNil(t, privDec)
+
+	assert.True(t, privDec.Equal(priv))
+
+	pubEnc, err := RSAEncodePublicKey(pub)
+	assert.NoError(t, err)
+	pubDec, err := RSADecodePublicKey(pubEnc)
+	assert.NoError(t, err)
+	require.NotNil(t, pubDec)
+
+	assert.True(t, pubDec.Equal(pub))
+}

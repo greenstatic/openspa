@@ -1,11 +1,17 @@
 package crypto
 
 import (
+	"bytes"
 	"crypto"
+	"crypto/dsa"
+	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
-	"errors"
+	"crypto/x509"
+	"encoding/pem"
+
+	"github.com/pkg/errors"
 )
 
 type RSAEncrypter struct {
@@ -112,4 +118,96 @@ func RSAKeypair(bitSize int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	}
 
 	return key, pub, nil
+}
+
+func RSAEncodePrivateKey(key *rsa.PrivateKey) (string, error) {
+	p := pem.Block{
+		Type:    "RSA PRIVATE KEY",
+		Headers: nil,
+		Bytes:   x509.MarshalPKCS1PrivateKey(key),
+	}
+
+	var buf bytes.Buffer
+	if err := pem.Encode(&buf, &p); err != nil {
+		return "", errors.Wrap(err, "pem encode")
+	}
+
+	return buf.String(), nil
+}
+
+func RSAEncodePublicKey(key *rsa.PublicKey) (string, error) {
+	pubKeyBytes, err := x509.MarshalPKIXPublicKey(key)
+	if err != nil {
+		return "", errors.Wrap(err, "extract key to DER format")
+	}
+
+	p := pem.Block{
+		Type:    "PUBLIC KEY",
+		Headers: nil,
+		Bytes:   pubKeyBytes,
+	}
+
+	var buf bytes.Buffer
+	if err := pem.Encode(&buf, &p); err != nil {
+		return "", errors.Wrap(err, "pem encode")
+	}
+
+	return buf.String(), nil
+}
+
+func RSADecodePrivateKey(key string) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode([]byte(key))
+	if block == nil {
+		return nil, errors.New("pem decode")
+	}
+
+	if block.Type != "RSA PRIVATE KEY" {
+		return nil, errors.New("header is not RSA PRIVATE KEY")
+	}
+
+	pub, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse pkcs1 private key")
+	}
+
+	return pub, nil
+}
+
+func RSADecodePublicKey(key string) (*rsa.PublicKey, error) {
+	block, _ := pem.Decode([]byte(key))
+
+	if block == nil {
+		return nil, errors.New("pem decode")
+	}
+
+	if block.Type == "PUBLIC KEY" {
+		pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+		if err != nil {
+			return nil, errors.Wrap(err, "x509 parse pkix public key")
+		}
+
+		switch pub := pub.(type) {
+		case *rsa.PublicKey:
+			return pub, nil // This is what we are after
+
+		case *dsa.PublicKey:
+			return nil, errors.New("dsa public key")
+
+		case *ecdsa.PublicKey:
+			return nil, errors.New("ecdsa public key")
+		}
+
+		return nil, errors.New("unknown public key")
+	}
+
+	if block.Type == "RSA PUBLIC KEY" {
+		pub, err := x509.ParsePKCS1PublicKey(block.Bytes)
+		if err != nil {
+			return nil, errors.Wrap(err, "x509 parse pkcs1 public key")
+		}
+
+		return pub, nil
+
+	}
+	return nil, errors.New("decode error")
 }
