@@ -236,9 +236,12 @@ func parse(b []byte) ([]Item, error) {
 			items = append(items, item)
 		} else {
 			// careful, this item is a fragmented item
+			vb := make([]byte, itemLength)
+			copy(vb, b[i+2:i+2+itemLength])
+
 			item = Item{
 				Type:  itemType,
-				Value: b[i+2 : i+2+itemLength],
+				Value: vb,
 			}
 
 			if isFragment {

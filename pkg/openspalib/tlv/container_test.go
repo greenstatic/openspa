@@ -2,7 +2,7 @@ package tlv
 
 import (
 	"bytes"
-	"math/rand"
+	"crypto/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -462,7 +462,8 @@ func TestParse_Fragmentation3(t *testing.T) {
 
 func TestBytesWithFragmentation(t *testing.T) {
 	dataB := make([]byte, 300)
-	rand.Read(dataB)
+	_, err := rand.Read(dataB)
+	require.NoError(t, err)
 
 	c := NewContainer()
 	c.SetBytes(0x01, dataB)
@@ -478,4 +479,25 @@ func TestBytesWithFragmentation(t *testing.T) {
 	correctOutB := correctOut.Bytes()
 	out := c.Bytes()
 	assert.Equal(t, correctOutB, out)
+}
+
+func TestUnmarshalTLVContainer_ShouldNotMutateInputBytes(t *testing.T) {
+	c := NewContainer()
+
+	b := make([]byte, 300) // length must be large enough so that fragmentation occurs
+	_, err := rand.Read(b)
+	require.NoError(t, err)
+	c.SetBytes(1, b)
+
+	cBytes := c.Bytes()
+
+	cBytesCpy := make([]byte, len(cBytes))
+	copy(cBytesCpy, cBytes)
+
+	c2, err := UnmarshalTLVContainer(cBytes)
+	assert.NoError(t, err)
+	assert.NotNil(t, c2)
+
+	assert.Equal(t, len(cBytesCpy), len(cBytes))
+	assert.Equal(t, cBytesCpy, cBytes)
 }
