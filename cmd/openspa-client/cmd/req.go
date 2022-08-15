@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/greenstatic/openspa/internal/client"
 	lib "github.com/greenstatic/openspa/pkg/openspalib"
+	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -31,6 +33,7 @@ func reqCmdInit() {
 	reqCmd.Flags().Uint16P("target-port-start", "p", 22, "Target (start) port that you wish to access")
 	reqCmd.Flags().Uint16("target-port-end", 0, "Along with --target-port-start range of target ports that you wish to access")
 	reqCmd.Flags().Uint("retry-count", 3, "")
+	reqCmd.Flags().Uint("timeout", 3, "Timeout to wait for response in seconds")
 }
 
 func reqHandle(cmd *cobra.Command, ospaFilePath string) {
@@ -49,6 +52,8 @@ func reqHandle(cmd *cobra.Command, ospaFilePath string) {
 
 	tProto, err := cmd.Flags().GetString("target-protocol")
 	fatalOnErr(err, "target-protocol")
+	tProtocol, err := lib.InternetProtocolFromString(tProto)
+	fatalOnErr(err, "Invalid internet protocol (ICMP,IPv4,TCP,UDP,ICMPv6")
 
 	tIP, err := cmd.Flags().GetIP("target-ip")
 	if err != nil {
@@ -67,14 +72,32 @@ func reqHandle(cmd *cobra.Command, ospaFilePath string) {
 	retryCount, err := cmd.Flags().GetUint("retry-count")
 	fatalOnErr(err, "retryCount")
 
-	// TODO
-	_ = ospa
-	_ = tProto
-	_ = tIP
-	_ = autoMode
-	_ = clientIP
-	_ = tPortStart
-	_ = retryCount
+	timeoutSec, err := cmd.Flags().GetUint("timeout")
+	fatalOnErr(err, "timeout")
+
+	reqRoutineParam := client.RequestRoutineParameters{
+		OSPA: ospa,
+		ReqParams: client.RequestRoutineReqParameters{
+			ClientUUID:      "",
+			ServerHost:      ospa.ServerHost,
+			ServerPort:      ospa.ServerPort,
+			TargetProto:     tProtocol,
+			ClientIP:        clientIP,
+			TargetIP:        tIP,
+			TargetPortStart: int(tPortStart),
+			TargetPortEnd:   int(tPortEnd),
+		},
+		AutoMode:   autoMode,
+		RetryCount: int(retryCount),
+		Timeout:    time.Duration(timeoutSec) * time.Second,
+	}
+
+	cs := crypto.NewCipherSuiteStub() // TODO - implement
+
+	err = client.RequestRoutine(reqRoutineParam, cs, client.RequestRoutineOptDefault)
+	if err != nil {
+		log.Error().Err(err).Msgf("Request routine failed")
+	}
 }
 
 func fatalOnErr(err error, str string) {
