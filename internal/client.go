@@ -2,9 +2,9 @@ package internal
 
 import (
 	cryptography "crypto"
-	"crypto/rand"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	lib "github.com/greenstatic/openspa/pkg/openspalib"
@@ -15,7 +15,6 @@ import (
 )
 
 type RequestRoutineParameters struct {
-	OSPA       OSPA
 	ReqParams  RequestRoutineReqParameters
 	AutoMode   bool
 	RetryCount int
@@ -24,7 +23,7 @@ type RequestRoutineParameters struct {
 type RequestRoutineReqParameters struct {
 	ClientUUID      string
 	ClientIP        net.IP
-	ServerHost      string
+	ServerIP        net.IP
 	ServerPort      int
 	TargetProto     lib.InternetProtocolNumber
 	TargetIP        net.IP
@@ -42,7 +41,7 @@ var RequestRoutineOptDefault = RequestRoutineOpt{
 
 func RequestRoutine(p RequestRoutineParameters, cs crypto.CipherSuite, opt RequestRoutineOpt) error {
 	rd := lib.RequestData{
-		TransactionId:   transactionIDGenerate(),
+		TransactionId:   lib.RandomTransactionId(),
 		ClientUUID:      p.ReqParams.ClientUUID,
 		ClientIP:        p.ReqParams.ClientIP,
 		TargetProtocol:  p.ReqParams.TargetProto,
@@ -51,19 +50,12 @@ func RequestRoutine(p RequestRoutineParameters, cs crypto.CipherSuite, opt Reque
 		TargetPortEnd:   p.ReqParams.TargetPortEnd,
 	}
 
-	ip, err := net.ResolveIPAddr("ip", p.ReqParams.ServerHost)
-	if err != nil {
-		return errors.Wrap(err, "resolve server host")
-	}
-
-	if ip == nil || ip.IP == nil {
-		return errors.New("server host not resolved")
-	}
-
 	sAddr := net.UDPAddr{
-		IP:   ip.IP,
+		IP:   p.ReqParams.ServerIP,
 		Port: p.ReqParams.ServerPort,
 	}
+
+	// TODO: implement auto-mode
 
 	log.Debug().Msgf("OpenSPA sending request for access to target (%s %s/%d-%d)",
 		rd.TargetIP, rd.TargetProtocol, rd.TargetPortStart, rd.TargetPortEnd)
@@ -89,6 +81,10 @@ func RequestRoutine(p RequestRoutineParameters, cs crypto.CipherSuite, opt Reque
 		rd.TargetIP, rd.TargetProtocol, rd.TargetPortStart, rd.TargetPortEnd, dur.String(), int(dur.Seconds()))
 
 	return nil
+}
+
+func SetupClientCipherSuite(ospa OSPA) (crypto.CipherSuite, error) {
+	return clientCipherSuiteFromOSPA(ospa)
 }
 
 func clientCipherSuiteFromOSPA(ospa OSPA) (crypto.CipherSuite, error) {
@@ -179,6 +175,8 @@ func NewUDPSend() UDPSend {
 	return UDPSend{}
 }
 
+var errSocketRead = errors.New("socket read")
+
 func (_ UDPSend) SendUDPRequest(req []byte, dest net.UDPAddr, timeout time.Duration) ([]byte, error) {
 	c, err := net.DialUDP("udp", nil, &dest)
 	if err != nil {
@@ -214,10 +212,24 @@ func (_ UDPSend) SendUDPRequest(req []byte, dest net.UDPAddr, timeout time.Durat
 	return respB[:n], errors.Wrap(err, "close")
 }
 
-var errSocketRead = errors.New("socket read")
+func ResolveClientsIPAndVersionBasedOnTargetIP(ipv4ResolverServer, ipv6ResolverServer string, target net.IP) (net.IP, error) {
+	serverURL := ipv4ResolverServer
 
-func transactionIDGenerate() uint8 {
-	b := make([]byte, 1)
-	_, _ = rand.Read(b)
-	return uint8(b[0])
+	if isIPv6(target) {
+		serverURL = ipv6ResolverServer
+	}
+
+	resolver := PublicIPResolver{
+		ServerURL: serverURL,
+	}
+
+	ip, err := resolver.GetPublicIP()
+	if err != nil {
+		return nil, errors.Wrap(err, "get public ip")
+	}
+	return ip, nil
+}
+
+func isIPv6(ip net.IP) bool {
+	return strings.Contains(ip.String(), ":")
 }

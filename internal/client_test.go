@@ -17,10 +17,9 @@ import (
 func TestRequestRoutine(t *testing.T) {
 	tEnv := getTestEnv()
 	params := RequestRoutineParameters{
-		OSPA: tEnv.ospa,
 		ReqParams: RequestRoutineReqParameters{
 			ClientUUID:      tEnv.ospa.ClientUUID,
-			ServerHost:      tEnv.ospa.ServerHost,
+			ServerIP:        net.ParseIP(tEnv.ospa.ServerHost),
 			ServerPort:      tEnv.ospa.ServerPort,
 			TargetProto:     lib.ProtocolTCP,
 			ClientIP:        net.IPv4(88, 200, 23, 10),
@@ -49,7 +48,7 @@ func TestRequestRoutine(t *testing.T) {
 		cs: cipherServer,
 		preHook: func(reqB []byte, dest net.UDPAddr, _ time.Duration) {
 			destTarget := net.UDPAddr{
-				IP:   net.ParseIP(params.ReqParams.ServerHost),
+				IP:   params.ReqParams.ServerIP,
 				Port: params.ReqParams.ServerPort,
 			}
 			assert.Equal(t, dest.String(), destTarget.String())

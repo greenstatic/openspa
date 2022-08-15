@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/greenstatic/openspa/internal"
 	lib "github.com/greenstatic/openspa/pkg/openspalib"
-	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -34,6 +34,11 @@ func reqCmdInit() {
 	reqCmd.Flags().Uint16("target-port-end", 0, "Along with --target-port-start range of target ports that you wish to access")
 	reqCmd.Flags().Uint("retry-count", 3, "")
 	reqCmd.Flags().Uint("timeout", 3, "Timeout to wait for response in seconds")
+
+	reqCmd.Flags().String("ipv4-resolver-server", internal.IPv4ServerDefault,
+		"The server to use to resolve client's public IPv4 address (needs to be a URL)")
+	reqCmd.Flags().String("ipv6-resolver-server", internal.IPv6ServerDefault,
+		"The server to use to resolve client's public IPv6 address (needs to be a URL)")
 }
 
 func reqHandle(cmd *cobra.Command, ospaFilePath string) {
@@ -42,13 +47,20 @@ func reqHandle(cmd *cobra.Command, ospaFilePath string) {
 		log.Fatal().Msgf("Failed to read OSPA file error: %s", err.Error())
 	}
 
+	log.Info().Msgf("Resolving server host: %s", ospa.ServerHost)
+	serverIPAddr, err := net.ResolveIPAddr("ip", ospa.ServerHost)
+	if err != nil {
+		log.Fatal().Err(err).Msgf("Failed to resolve server host: %s", ospa.ServerHost)
+	}
+
+	if serverIPAddr == nil || serverIPAddr.IP == nil {
+		log.Fatal().Msgf("Server host: %s resolved with no IP", ospa.ServerHost)
+	}
+
+	serverIP := serverIPAddr.IP
+
 	autoMode, err := cmd.Flags().GetBool("auto-mode")
 	fatalOnErr(err, "auto-mode")
-
-	clientIP, err := cmd.Flags().GetIP("client-ip")
-	if err != nil {
-		log.Info().Msgf("Client's IP will be determined by the use of public resolver")
-	}
 
 	tProto, err := cmd.Flags().GetString("target-protocol")
 	fatalOnErr(err, "target-protocol")
@@ -57,7 +69,8 @@ func reqHandle(cmd *cobra.Command, ospaFilePath string) {
 
 	tIP, err := cmd.Flags().GetIP("target-ip")
 	if err != nil {
-		log.Info().Msgf("Target IP defaulting to server's IP")
+		log.Info().Msgf("Target IP defaulting to server's IP: %s", serverIP)
+		tIP = serverIP
 	}
 
 	tPortStart, err := cmd.Flags().GetUint16("target-port-start")
@@ -69,6 +82,26 @@ func reqHandle(cmd *cobra.Command, ospaFilePath string) {
 		tPortEnd = tPortStart
 	}
 
+	clientIP, err := cmd.Flags().GetIP("client-ip")
+	if err != nil {
+		log.Info().Msgf("Client's IP will be determined by the use of public resolver")
+		ip4, err := cmd.Flags().GetString("ipv4-resolver-server")
+		if err != nil {
+			log.Fatal().Err(err).Msgf("ipv4-resolver-server flag failed to get")
+		}
+		ip6, err := cmd.Flags().GetString("ipv6-resolver-server")
+		if err != nil {
+			log.Fatal().Err(err).Msgf("ipv6-resolver-server flag failed to get")
+		}
+
+		ip, err := internal.ResolveClientsIPAndVersionBasedOnTargetIP(ip4, ip6, tIP)
+		if err != nil {
+			log.Fatal().Err(err).Msgf("Failed to resolve client's IP")
+		}
+		log.Info().Msgf("Resolved client's IP: %s", ip.String())
+		clientIP = ip
+	}
+
 	retryCount, err := cmd.Flags().GetUint("retry-count")
 	fatalOnErr(err, "retryCount")
 
@@ -76,10 +109,9 @@ func reqHandle(cmd *cobra.Command, ospaFilePath string) {
 	fatalOnErr(err, "timeout")
 
 	reqRoutineParam := internal.RequestRoutineParameters{
-		OSPA: ospa,
 		ReqParams: internal.RequestRoutineReqParameters{
-			ClientUUID:      "",
-			ServerHost:      ospa.ServerHost,
+			ClientUUID:      ospa.ClientUUID,
+			ServerIP:        serverIP,
 			ServerPort:      ospa.ServerPort,
 			TargetProto:     tProtocol,
 			ClientIP:        clientIP,
@@ -92,7 +124,10 @@ func reqHandle(cmd *cobra.Command, ospaFilePath string) {
 		Timeout:    time.Duration(timeoutSec) * time.Second,
 	}
 
-	cs := crypto.NewCipherSuiteStub() // TODO - implement
+	cs, err := internal.SetupClientCipherSuite(ospa)
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to setup client cipher suite")
+	}
 
 	err = internal.RequestRoutine(reqRoutineParam, cs, internal.RequestRoutineOptDefault)
 	if err != nil {
