@@ -1,4 +1,4 @@
-package client
+package internal
 
 import (
 	"crypto/rsa"
@@ -20,7 +20,7 @@ func TestRequestRoutine(t *testing.T) {
 		OSPA: tEnv.ospa,
 		ReqParams: RequestRoutineReqParameters{
 			ClientUUID:      tEnv.ospa.ClientUUID,
-			ServerIP:        net.ParseIP(tEnv.ospa.ServerHost),
+			ServerHost:      tEnv.ospa.ServerHost,
 			ServerPort:      tEnv.ospa.ServerPort,
 			TargetProto:     lib.ProtocolTCP,
 			ClientIP:        net.IPv4(88, 200, 23, 10),
@@ -49,7 +49,7 @@ func TestRequestRoutine(t *testing.T) {
 		cs: cipherServer,
 		preHook: func(reqB []byte, dest net.UDPAddr, _ time.Duration) {
 			destTarget := net.UDPAddr{
-				IP:   params.ReqParams.ServerIP,
+				IP:   net.ParseIP(params.ReqParams.ServerHost),
 				Port: params.ReqParams.ServerPort,
 			}
 			assert.Equal(t, dest.String(), destTarget.String())

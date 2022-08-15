@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/greenstatic/openspa/internal/client"
+	"github.com/greenstatic/openspa/internal"
 	"github.com/spf13/cobra"
 )
 
@@ -24,15 +24,15 @@ var ipCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		client.GetIP(v4, v6)
+		internal.GetIP(v4, v6)
 	},
 	PreRun: preRunLogSetupFun,
 }
 
 func ipCmdInit() {
-	ipCmd.Flags().StringP("ipv4-server", "4", client.IPv4ServerDefault,
+	ipCmd.Flags().StringP("ipv4-server", "4", internal.IPv4ServerDefault,
 		"The server to use to resolve client's public IPv4 address (needs to be a URL)")
 
-	ipCmd.Flags().StringP("ipv6-server", "6", client.IPv6ServerDefault,
+	ipCmd.Flags().StringP("ipv6-server", "6", internal.IPv6ServerDefault,
 		"The server to use to resolve client's public IPv6 address (needs to be a URL)")
 }

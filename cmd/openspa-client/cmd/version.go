@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/greenstatic/openspa/internal/client"
+	"github.com/greenstatic/openspa/internal"
 	lib "github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/spf13/cobra"
 )
@@ -13,7 +13,7 @@ var versionCmd = &cobra.Command{
 	Short: "Return's the client version",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("THIS IS PROTOTYPE SOFTWARE")
-		fmt.Printf("OpenSPA Client version: %s\n", client.Version())
+		fmt.Printf("OpenSPA Client version: %s\n", internal.Version())
 		fmt.Printf("OpenSPA Protocol version: %s\n", lib.Version())
 	},
 	PreRun: preRunLogSetupFun,

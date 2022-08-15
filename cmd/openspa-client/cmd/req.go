@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/greenstatic/openspa/internal/client"
+	"github.com/greenstatic/openspa/internal"
 	lib "github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
 	"github.com/rs/zerolog/log"
@@ -37,7 +37,7 @@ func reqCmdInit() {
 }
 
 func reqHandle(cmd *cobra.Command, ospaFilePath string) {
-	ospa, err := client.OSPAFromFile(ospaFilePath)
+	ospa, err := internal.OSPAFromFile(ospaFilePath)
 	if err != nil {
 		log.Fatal().Msgf("Failed to read OSPA file error: %s", err.Error())
 	}
@@ -75,9 +75,9 @@ func reqHandle(cmd *cobra.Command, ospaFilePath string) {
 	timeoutSec, err := cmd.Flags().GetUint("timeout")
 	fatalOnErr(err, "timeout")
 
-	reqRoutineParam := client.RequestRoutineParameters{
+	reqRoutineParam := internal.RequestRoutineParameters{
 		OSPA: ospa,
-		ReqParams: client.RequestRoutineReqParameters{
+		ReqParams: internal.RequestRoutineReqParameters{
 			ClientUUID:      "",
 			ServerHost:      ospa.ServerHost,
 			ServerPort:      ospa.ServerPort,
@@ -94,7 +94,7 @@ func reqHandle(cmd *cobra.Command, ospaFilePath string) {
 
 	cs := crypto.NewCipherSuiteStub() // TODO - implement
 
-	err = client.RequestRoutine(reqRoutineParam, cs, client.RequestRoutineOptDefault)
+	err = internal.RequestRoutine(reqRoutineParam, cs, internal.RequestRoutineOptDefault)
 	if err != nil {
 		log.Error().Err(err).Msgf("Request routine failed")
 	}
