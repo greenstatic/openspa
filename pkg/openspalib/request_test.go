@@ -65,6 +65,28 @@ func TestNewRequest(t *testing.T) {
 	assert.NotNil(t, non)
 	assert.NotEqual(t, []byte{0, 0, 0}, non)
 	assert.Len(t, non, NonceSize)
+
+	b, err := r.Marshal()
+	assert.NoError(t, err)
+
+	// Multiple unmarshals should be ok
+	r2, err := RequestUnmarshal(b, cs)
+	assert.NoError(t, err)
+	r3, err := RequestUnmarshal(b, cs)
+	assert.NoError(t, err)
+
+	assert.Equal(t, r.Header.TransactionId, r2.Header.TransactionId)
+	assert.Equal(t, r.Header.TransactionId, r3.Header.TransactionId)
+}
+
+func TestRequestUnmarshal(t *testing.T) {
+	h := NewHeader(RequestPDU, crypto.CipherNoSecurity)
+	b, err := h.Marshal()
+	assert.NoError(t, err)
+
+	r, err := RequestUnmarshal(b, crypto.NewCipherSuiteStub())
+	assert.Error(t, err)
+	assert.Nil(t, r)
 }
 
 func TestRequestSize_Stub(t *testing.T) {

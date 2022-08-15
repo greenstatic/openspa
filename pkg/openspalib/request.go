@@ -157,19 +157,24 @@ func RequestUnmarshal(b []byte, cs crypto.CipherSuite) (*Request, error) {
 		return nil, errors.New("too short to be request")
 	}
 
-	headerB := b[:HeaderLength]
+	if len(b) == HeaderLength {
+		return nil, errors.New("body is empty")
+	}
 
-	header, err := UnmarshalHeader(headerB)
+	headerBytes := b[:HeaderLength]
+	bodyBytes := b[HeaderLength:]
+
+	header, err := UnmarshalHeader(headerBytes)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal header")
 	}
 
-	c, err := tlv.UnmarshalTLVContainer(b[HeaderLength:])
+	c, err := tlv.UnmarshalTLVContainer(bodyBytes)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal tlv container")
 	}
 
-	body, err := cs.Unlock(headerB, c)
+	body, err := cs.Unlock(headerBytes, c)
 	if err != nil {
 		return nil, errors.Wrap(err, "crypto unlock")
 	}
