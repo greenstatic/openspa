@@ -30,6 +30,9 @@ func rootCmdSetup(c *cobra.Command) {
 	c.AddCommand(clientCmd)
 	clientCmdSetup(clientCmd)
 
+	c.AddCommand(cmd.ServerCmd)
+	cmd.ServerCmdSetup(cmd.ServerCmd)
+
 	c.AddCommand(cmd.VersionCmd)
 }
 

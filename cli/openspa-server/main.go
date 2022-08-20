@@ -28,5 +28,8 @@ var rootCmd = &cobra.Command{
 func rootCmdSetup(c *cobra.Command) {
 	cmd.RootCmdSetupFlags(c)
 
-	rootCmd.AddCommand(cmd.VersionCmd)
+	c.AddCommand(cmd.ServerCmd)
+	cmd.ServerCmdSetup(cmd.ServerCmd)
+
+	c.AddCommand(cmd.VersionCmd)
 }
