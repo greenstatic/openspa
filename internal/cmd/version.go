@@ -8,13 +8,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Return's the client version",
+var VersionCmd = &cobra.Command{
+	Use: "version",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("THIS IS PROTOTYPE SOFTWARE")
-		fmt.Printf("OpenSPA Client version: %s\n", internal.Version())
+		fmt.Printf("OpenSPA version: %s\n", internal.Version())
 		fmt.Printf("OpenSPA Protocol version: %s\n", lib.Version())
 	},
-	PreRun: preRunLogSetupFun,
+	PreRun: PreRunLogSetupFn,
 }
