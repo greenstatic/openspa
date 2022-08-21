@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"net"
+	"time"
 
 	"github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
@@ -13,13 +14,15 @@ import (
 var _ UDPDatagramRequestHandler = &ServerHandler{}
 
 type ServerHandler struct {
-	// TODO
-	cs crypto.CipherSuite
 	fw Firewall
+	cs crypto.CipherSuite
 }
 
-func NewServerHandler() *ServerHandler {
-	o := &ServerHandler{}
+func NewServerHandler(fw Firewall, cs crypto.CipherSuite) *ServerHandler {
+	o := &ServerHandler{
+		cs: cs,
+		fw: fw,
+	}
 	return o
 }
 
@@ -32,16 +35,31 @@ func (o *ServerHandler) DatagramRequestHandler(_ context.Context, resp UDPRespon
 		return
 	}
 
-	// TODO
+	// TODO - Start: replace this with proper business logic
+	tIP, err := openspalib.TargetIPFromContainer(request.Body)
+	if err != nil {
+		return
+	}
+
+	tPortStart, err := openspalib.TargetPortStartFromContainer(request.Body)
+	if err != nil {
+		return
+	}
+
+	tPortEnd, err := openspalib.TargetPortEndFromContainer(request.Body)
+	if err != nil {
+		return
+	}
 
 	rd := openspalib.ResponseData{
 		TransactionId:   request.Header.TransactionId,
 		TargetProtocol:  openspalib.InternetProtocolNumber{},
-		TargetIP:        nil,
-		TargetPortStart: 0,
-		TargetPortEnd:   0,
-		Duration:        0,
+		TargetIP:        tIP,
+		TargetPortStart: tPortStart,
+		TargetPortEnd:   tPortEnd,
+		Duration:        time.Hour,
 	}
+	// TODO - End
 
 	response, err := openspalib.NewResponse(rd, o.cs)
 	if err != nil {

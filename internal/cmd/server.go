@@ -46,10 +46,17 @@ func server(cmd *cobra.Command, config internal.ServerConfig) {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	done := make(chan bool, 1)
 
+	cs, err := internal.NewServerCipherSuite(config.Crypto)
+	if err != nil {
+		log.Fatal().Err(err).Msgf("Failed to setup server cipher suite")
+	}
+
 	s := internal.NewServer(internal.ServerSettings{
 		IP:                net.ParseIP(config.Server.IP),
 		Port:              config.Server.Port,
 		NoRequestHandlers: internal.NoRequestHandlersDefault,
+		FW:                nil, // TODO
+		CS:                cs,
 	})
 
 	go func() {

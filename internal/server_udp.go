@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/greenstatic/openspa/pkg/openspalib"
+	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -24,10 +25,12 @@ type ServerSettings struct {
 	IP                net.IP
 	Port              int
 	NoRequestHandlers int
+	FW                Firewall
+	CS                crypto.CipherSuite
 }
 
 func NewServer(set ServerSettings) *Server {
-	h := NewServerHandler()
+	h := NewServerHandler(set.FW, set.CS)
 	rc := NewRequestCoordinator(h, set.NoRequestHandlers)
 
 	udpServer := NewUDPServer(set.IP, set.Port, rc)
