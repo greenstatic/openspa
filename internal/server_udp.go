@@ -3,12 +3,55 @@ package internal
 import (
 	"context"
 	"net"
+	"strconv"
 
 	"github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 const readRequestBufferSize = openspalib.MaxPDUSize
+
+type Server struct {
+	udpServer *UDPServer
+	reqCoord  *RequestCoordinator
+	settings  ServerSettings
+}
+
+const NoRequestHandlersDefault = 100
+
+type ServerSettings struct {
+	IP                net.IP
+	Port              int
+	NoRequestHandlers int
+}
+
+func NewServer(set ServerSettings) *Server {
+	h := NewServerHandler()
+	rc := NewRequestCoordinator(h, set.NoRequestHandlers)
+
+	udpServer := NewUDPServer(set.IP, set.Port, rc)
+
+	s := &Server{
+		udpServer: udpServer,
+		reqCoord:  rc,
+		settings:  set,
+	}
+	return s
+}
+
+func (s *Server) Start() error {
+	bind := net.JoinHostPort(s.settings.IP.String(), strconv.Itoa(s.settings.Port))
+	log.Info().Msgf("Starting UDP server: %s", bind)
+	s.reqCoord.Start()
+
+	return s.udpServer.Start()
+}
+func (s *Server) Stop() error {
+	//s.reqCoord.Stop() // TODO
+
+	return s.udpServer.Stop()
+}
 
 type UDPServer struct {
 	IP      net.IP
@@ -43,6 +86,7 @@ func (u *UDPServer) start() error {
 	}
 
 	u.c = c
+	responder := NewUDPResponse(c)
 
 	defer c.Close()
 
@@ -51,7 +95,7 @@ func (u *UDPServer) start() error {
 		n, rAddr, err := c.ReadFromUDP(b)
 		if err != nil {
 			if errors.Is(err, net.ErrClosed) {
-				return nil
+				break
 			}
 
 			return errors.Wrap(err, "failed to read from udp con")
@@ -61,7 +105,7 @@ func (u *UDPServer) start() error {
 		copy(bCpy, b)
 
 		ctx := context.Background()
-		u.handler.DatagramRequestHandler(ctx, DatagramRequest{
+		u.handler.DatagramRequestHandler(ctx, responder, DatagramRequest{
 			data:  bCpy,
 			rAddr: *rAddr,
 		})
@@ -90,8 +134,10 @@ type DatagramRequest struct {
 }
 
 type UDPDatagramRequestHandler interface {
-	DatagramRequestHandler(ctx context.Context, r DatagramRequest)
+	DatagramRequestHandler(ctx context.Context, resp UDPResponser, r DatagramRequest)
 }
+
+var _ UDPDatagramRequestHandler = &RequestCoordinator{}
 
 type RequestCoordinator struct {
 	reqHandler UDPDatagramRequestHandler
@@ -103,7 +149,8 @@ type RequestCoordinator struct {
 
 type QueuedDatagramRequest struct {
 	DatagramRequest
-	ctx context.Context
+	resp UDPResponser
+	ctx  context.Context
 }
 
 func NewRequestCoordinator(h UDPDatagramRequestHandler, handlers int) *RequestCoordinator {
@@ -122,8 +169,8 @@ func (d *RequestCoordinator) Start() {
 	}
 }
 
-func (d *RequestCoordinator) DatagramRequestHandler(ctx context.Context, r DatagramRequest) {
-	d.queue <- QueuedDatagramRequest{ctx: ctx, DatagramRequest: r}
+func (d *RequestCoordinator) DatagramRequestHandler(ctx context.Context, resp UDPResponser, r DatagramRequest) {
+	d.queue <- QueuedDatagramRequest{ctx: ctx, DatagramRequest: r, resp: resp}
 }
 
 // startHandlers spawns size handler(), each in a goroutine.
@@ -136,7 +183,7 @@ func (d *RequestCoordinator) startHandlers(queue chan QueuedDatagramRequest, siz
 func (d *RequestCoordinator) handler(queue chan QueuedDatagramRequest) {
 	for r := range queue {
 		if d.reqHandler != nil {
-			d.reqHandler.DatagramRequestHandler(r.ctx, r.DatagramRequest)
+			d.reqHandler.DatagramRequestHandler(r.ctx, r.resp, r.DatagramRequest)
 		}
 	}
 }

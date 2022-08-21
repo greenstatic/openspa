@@ -15,7 +15,7 @@ func TestUDPServer(t *testing.T) {
 	localhost := net.IPv4(127, 0, 0, 1).To4()
 
 	h := NewDatagramRequestHandlerMock()
-	h.On("DatagramRequestHandler", DatagramRequest{
+	h.On("DatagramRequestHandler", mock.Anything, DatagramRequest{
 		data: []byte("hello world!"),
 		rAddr: net.UDPAddr{
 			IP:   localhost,
@@ -68,7 +68,7 @@ func TestRequestCoordinator_Size0ShouldBlock(t *testing.T) {
 
 	done := make(chan bool)
 	go func() {
-		r.DatagramRequestHandler(context.TODO(), DatagramRequest{
+		r.DatagramRequestHandler(context.TODO(), nil, DatagramRequest{
 			data: []byte{0x01},
 			rAddr: net.UDPAddr{
 				IP:   net.IPv4(127, 0, 0, 1),
@@ -94,7 +94,7 @@ func TestRequestCoordinator_Size1ShouldNotBlock(t *testing.T) {
 
 	done := make(chan bool)
 	go func() {
-		r.DatagramRequestHandler(context.TODO(), DatagramRequest{
+		r.DatagramRequestHandler(context.TODO(), nil, DatagramRequest{
 			data: []byte{0x01},
 			rAddr: net.UDPAddr{
 				IP:   net.IPv4(127, 0, 0, 1),
@@ -113,7 +113,7 @@ func TestRequestCoordinator_Size1ShouldNotBlock(t *testing.T) {
 
 func TestRequestCoordinator_ShouldCoordinate(t *testing.T) {
 	h := NewDatagramRequestHandlerMock()
-	h.On("DatagramRequestHandler", mock.Anything)
+	h.On("DatagramRequestHandler", mock.Anything, mock.Anything)
 
 	r := NewRequestCoordinator(h, 1)
 	r.Start()
@@ -121,7 +121,7 @@ func TestRequestCoordinator_ShouldCoordinate(t *testing.T) {
 	done := make(chan bool)
 	go func() {
 		for i := 0; i < 100; i++ {
-			r.DatagramRequestHandler(context.TODO(), DatagramRequest{
+			r.DatagramRequestHandler(context.TODO(), nil, DatagramRequest{
 				data: []byte{byte(i)},
 				rAddr: net.UDPAddr{
 					IP:   net.IPv4(127, 0, 0, 1),
@@ -148,7 +148,7 @@ func TestRequestCoordinator_WorkAllocation(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(15)
 
-	h := NewDatagramRequestHandlerStub(func(ctx context.Context, r DatagramRequest) {
+	h := NewDatagramRequestHandlerStub(func(ctx context.Context, resp UDPResponser, r DatagramRequest) {
 		time.Sleep(time.Second)
 		wg.Done()
 	})
@@ -159,7 +159,7 @@ func TestRequestCoordinator_WorkAllocation(t *testing.T) {
 	timeStart := time.Now()
 
 	for i := 0; i < 15; i++ {
-		go r.DatagramRequestHandler(context.TODO(), DatagramRequest{
+		go r.DatagramRequestHandler(context.TODO(), nil, DatagramRequest{
 			data: []byte{byte(i)},
 			rAddr: net.UDPAddr{
 				IP:   net.IPv4(127, 0, 0, 1),

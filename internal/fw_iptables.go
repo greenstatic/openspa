@@ -1,11 +1,9 @@
-package firewall
+package internal
 
 import (
-	"net"
 	"os"
 	"os/exec"
 	"strconv"
-	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -81,7 +79,7 @@ func (ipt *IPTables) FirewallSetup() error {
 	return nil
 }
 
-func (ipt *IPTables) RuleAdd(r Rule) error {
+func (ipt *IPTables) RuleAdd(r FirewallRule) error {
 	cmd := iptablesCommand()
 	src6 := isIPv6(r.SrcIP)
 	dst6 := isIPv6(r.DstIP)
@@ -106,7 +104,7 @@ func (ipt *IPTables) RuleAdd(r Rule) error {
 	return nil
 }
 
-func (ipt *IPTables) RuleRemove(r Rule) error {
+func (ipt *IPTables) RuleRemove(r FirewallRule) error {
 	cmd := iptablesCommand()
 	src6 := isIPv6(r.SrcIP)
 	dst6 := isIPv6(r.DstIP)
@@ -186,8 +184,4 @@ func (c *CommandExecute) Execute(cmd string, args ...string) ([]byte, error) {
 	}
 
 	return out, nil
-}
-
-func isIPv6(ip net.IP) bool {
-	return strings.Contains(ip.String(), ":")
 }

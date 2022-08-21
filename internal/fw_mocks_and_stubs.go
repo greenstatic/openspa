@@ -1,4 +1,4 @@
-package firewall
+package internal
 
 import (
 	"github.com/stretchr/testify/mock"
@@ -10,12 +10,12 @@ type FirewallMock struct {
 	mock.Mock
 }
 
-func (fw *FirewallMock) RuleAdd(r Rule) error {
+func (fw *FirewallMock) RuleAdd(r FirewallRule) error {
 	args := fw.Called(r)
 	return args.Error(0)
 }
 
-func (fw *FirewallMock) RuleRemove(r Rule) error {
+func (fw *FirewallMock) RuleRemove(r FirewallRule) error {
 	args := fw.Called(r)
 	return args.Error(0)
 }
@@ -29,11 +29,11 @@ var _ Firewall = FirewallStub{}
 
 type FirewallStub struct{}
 
-func (_ FirewallStub) RuleAdd(r Rule) error {
+func (_ FirewallStub) RuleAdd(r FirewallRule) error {
 	return nil
 }
 
-func (_ FirewallStub) RuleRemove(r Rule) error {
+func (_ FirewallStub) RuleRemove(r FirewallRule) error {
 	return nil
 }
 

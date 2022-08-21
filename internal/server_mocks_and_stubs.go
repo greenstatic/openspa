@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"net"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -12,8 +13,8 @@ type DatagramRequestHandlerMock struct {
 	mock.Mock
 }
 
-func (d *DatagramRequestHandlerMock) DatagramRequestHandler(ctx context.Context, r DatagramRequest) {
-	d.Called(r)
+func (d *DatagramRequestHandlerMock) DatagramRequestHandler(ctx context.Context, resp UDPResponser, r DatagramRequest) {
+	d.Called(resp, r)
 }
 
 func NewDatagramRequestHandlerMock() *DatagramRequestHandlerMock {
@@ -24,16 +25,27 @@ func NewDatagramRequestHandlerMock() *DatagramRequestHandlerMock {
 var _ UDPDatagramRequestHandler = &DatagramRequestHandlerStub{}
 
 type DatagramRequestHandlerStub struct {
-	f func(ctx context.Context, r DatagramRequest)
+	f func(ctx context.Context, resp UDPResponser, r DatagramRequest)
 }
 
-func (d *DatagramRequestHandlerStub) DatagramRequestHandler(ctx context.Context, r DatagramRequest) {
-	d.f(ctx, r)
+func (d *DatagramRequestHandlerStub) DatagramRequestHandler(ctx context.Context, resp UDPResponser, r DatagramRequest) {
+	d.f(ctx, resp, r)
 }
 
-func NewDatagramRequestHandlerStub(f func(ctx context.Context, r DatagramRequest)) *DatagramRequestHandlerStub {
+func NewDatagramRequestHandlerStub(f func(ctx context.Context, resp UDPResponser, r DatagramRequest)) *DatagramRequestHandlerStub {
 	d := &DatagramRequestHandlerStub{
 		f: f,
 	}
 	return d
+}
+
+var _ UDPResponser = &UDPResponseMock{}
+
+type UDPResponseMock struct {
+	mock.Mock
+}
+
+func (u *UDPResponseMock) SendUDPResponse(dst net.UDPAddr, body []byte) error {
+	args := u.Called(dst, body)
+	return args.Error(0)
 }

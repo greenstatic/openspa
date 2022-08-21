@@ -1,4 +1,4 @@
-package firewall
+package internal
 
 import (
 	"fmt"
@@ -6,11 +6,11 @@ import (
 )
 
 var (
-	ProtoTCP = "TCP"
-	ProtoUDP = "UDP"
+	FirewallProtoTCP = "TCP"
+	FirewallProtoUDP = "UDP"
 )
 
-type Rule struct {
+type FirewallRule struct {
 	Proto   string
 	SrcIP   net.IP
 	DstIP   net.IP
@@ -19,10 +19,10 @@ type Rule struct {
 
 type Firewall interface {
 	FirewallSetup() error
-	RuleAdd(r Rule) error
-	RuleRemove(r Rule) error
+	RuleAdd(r FirewallRule) error
+	RuleRemove(r FirewallRule) error
 }
 
-func (r *Rule) String() string {
+func (r *FirewallRule) String() string {
 	return fmt.Sprintf("%s -> %s %s/%d", r.SrcIP.String(), r.DstIP.String(), r.Proto, r.DstPort)
 }

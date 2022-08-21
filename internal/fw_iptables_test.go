@@ -1,4 +1,4 @@
-package firewall
+package internal
 
 import (
 	"net"
@@ -32,8 +32,8 @@ func TestIPTables_IPv4RuleAddAndRemove(t *testing.T) {
 		"-d", "88.200.23.3",
 		"--dport", "443",
 		"-j", "ACCEPT"}).Return([]byte{}, nil).Once()
-	r := Rule{
-		Proto:   ProtoTCP,
+	r := FirewallRule{
+		Proto:   FirewallProtoTCP,
 		SrcIP:   net.IPv4(88, 200, 23, 12),
 		DstIP:   net.IPv4(88, 200, 23, 3),
 		DstPort: 443,
@@ -70,8 +70,8 @@ func TestIPTables_IPv6RuleAddAndRemove(t *testing.T) {
 		"-d", "2001:1470:fffd:66::23:3",
 		"--dport", "443",
 		"-j", "ACCEPT"}).Return([]byte{}, nil).Once()
-	r := Rule{
-		Proto:   ProtoTCP,
+	r := FirewallRule{
+		Proto:   FirewallProtoTCP,
 		SrcIP:   net.ParseIP("2001:1470:fffd:66::23:12"),
 		DstIP:   net.ParseIP("2001:1470:fffd:66::23:3"),
 		DstPort: 443,
