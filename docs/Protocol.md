@@ -2,7 +2,10 @@
 Version: **1.0.0 ALPHA**
 
 ## Status
-This protocol is currently a draft for the final specification.
+This protocol in the OpenSPA version 1 protocol. Since version 1 was a PoC, it is not being actively developed.
+Please use OpenSPA version 2 for new installations and usage.
+OpenSPA version 2 inherits the basic concept of version 1 of the protocol, but instead of the well-defined binary
+offsets that version 1 used, uses TLVs which are must more flexible and easier to extend.
 
 ## Introduction
 OpenSPA is an open-source software application that implements Single Packet Authorization (SPA).
