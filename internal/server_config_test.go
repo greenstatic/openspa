@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//nolint:dupl
 func TestServerConfig_Verify(t *testing.T) {
 	content := `
 server:
@@ -53,6 +54,7 @@ crypto:
 	assert.Equal(t, "/home/openspa/server/server_public.key", sc.Crypto.RSA.Server.PublicKeyPath)
 }
 
+//nolint:dupl
 func TestServerConfig_ParseWithDefaults(t *testing.T) {
 	content := `
 crypto:

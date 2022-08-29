@@ -51,7 +51,7 @@ func (s *Server) Start() error {
 	return s.udpServer.Start()
 }
 func (s *Server) Stop() error {
-	//s.reqCoord.Stop() // TODO
+	// s.reqCoord.Stop() // TODO
 
 	return s.udpServer.Stop()
 }

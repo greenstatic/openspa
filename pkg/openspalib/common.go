@@ -19,7 +19,6 @@ var (
 const (
 	DefaultServerPort = 22211
 	MaxPDUSize        = 1444
-	maxTCPUDPPort     = 65535
 )
 
 var (
@@ -77,7 +76,7 @@ func InternetProtocolNumberSupported() []InternetProtocolNumber {
 
 func InternetProtocolFromString(s string) (InternetProtocolNumber, error) {
 	for _, p := range InternetProtocolNumberSupported() {
-		if strings.ToUpper(p.Protocol) == strings.ToUpper(s) {
+		if strings.EqualFold(p.Protocol, s) {
 			proto := p
 			return proto, nil
 		}

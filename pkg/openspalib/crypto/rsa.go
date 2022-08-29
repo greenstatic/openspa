@@ -3,7 +3,6 @@ package crypto
 import (
 	"bytes"
 	"crypto"
-	"crypto/dsa"
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
@@ -61,10 +60,12 @@ func (r *RSADecrypter) Decrypt(ciphertext []byte) (plaintext []byte, err error) 
 	return plaintext, nil
 }
 
+//nolint:revive,stylecheck
 type RSA_SHA256Signer struct {
 	privkey *rsa.PrivateKey
 }
 
+//nolint:revive,stylecheck
 func NewRSA_SHA256Signer(privkey *rsa.PrivateKey) *RSA_SHA256Signer {
 	r := &RSA_SHA256Signer{
 		privkey: privkey,
@@ -86,10 +87,12 @@ func (r *RSA_SHA256Signer) Sign(data []byte) (signature []byte, err error) {
 	return signature, nil
 }
 
+//nolint:revive,stylecheck
 type RSA_SHA256SignatureVerifier struct {
 	pubkey *rsa.PublicKey
 }
 
+//nolint:revive,stylecheck
 func NewRSA_SHA256SignatureVerifier(pubkey *rsa.PublicKey) *RSA_SHA256SignatureVerifier {
 	r := &RSA_SHA256SignatureVerifier{
 		pubkey: pubkey,
@@ -190,8 +193,8 @@ func RSADecodePublicKey(key string) (*rsa.PublicKey, error) {
 		case *rsa.PublicKey:
 			return pub, nil // This is what we are after
 
-		case *dsa.PublicKey:
-			return nil, errors.New("dsa public key")
+		// case *dsa.PublicKey:
+		//	return nil, errors.New("dsa public key")
 
 		case *ecdsa.PublicKey:
 			return nil, errors.New("ecdsa public key")
@@ -207,7 +210,7 @@ func RSADecodePublicKey(key string) (*rsa.PublicKey, error) {
 		}
 
 		return pub, nil
-
 	}
+
 	return nil, errors.New("decode error")
 }

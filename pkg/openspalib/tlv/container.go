@@ -102,7 +102,6 @@ func (c *container) Remove(key uint8) {
 		}
 		done = true
 	}
-
 }
 
 func (c *container) Bytes() []byte {
@@ -209,10 +208,8 @@ func parse(b []byte) ([]Item, error) {
 				// We have entered into a fragmented item
 				isFragment = true
 			}
-		} else {
-			if isFragment {
-				isFragment = false
-			}
+		} else if isFragment {
+			isFragment = false
 		}
 
 		itemLength := int(uint(b[i+1]))

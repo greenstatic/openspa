@@ -1,7 +1,7 @@
 package openspalib
 
 import (
-	"math/rand"
+	"crypto/rand"
 	"net"
 	"testing"
 	"time"
@@ -288,7 +288,10 @@ func TestTargetIPFromContainer_Empty(t *testing.T) {
 
 func TestNonceFromContainer(t *testing.T) {
 	b := make([]byte, 3)
-	rand.Read(b)
+	_, err := rand.Read(b)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	c := tlv.NewContainerMock()
 	c.On("GetBytes", NonceKey).Return(b, true).Once()
@@ -302,12 +305,15 @@ func TestNonceFromContainer(t *testing.T) {
 
 func TestNonceToContainer(t *testing.T) {
 	b := make([]byte, 3)
-	rand.Read(b)
+	_, err := rand.Read(b)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	c := tlv.NewContainerMock()
 	c.On("SetBytes", NonceKey, b).Once()
 
-	err := NonceToContainer(c, b)
+	err = NonceToContainer(c, b)
 	assert.NoError(t, err)
 
 	c.AssertExpectations(t)

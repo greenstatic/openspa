@@ -118,6 +118,7 @@ func rsaPrivateKeyFromFile(privateKeyPath string) (*rsa.PrivateKey, error) {
 	return key, nil
 }
 
+//nolint:unused
 func rsaPublicKeyFromFile(publicKeyPath string) (*rsa.PublicKey, error) {
 	content, err := os.ReadFile(publicKeyPath)
 	if err != nil {

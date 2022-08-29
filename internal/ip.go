@@ -24,7 +24,7 @@ func GetIP(ipv4Server, ipv6Server string) {
 	}
 
 	s := getIP(v4, v6)
-	fmt.Printf(s)
+	fmt.Print(s)
 }
 
 type IPResolver interface {
@@ -81,6 +81,8 @@ func (r *PublicIPResolver) GetPublicIP() (net.IP, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "get request failed")
 	}
+
+	defer resp.Body.Close()
 
 	b := publicIPResolverResponseBody{}
 

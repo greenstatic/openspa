@@ -52,7 +52,7 @@ func (o *ServerHandler) DatagramRequestHandler(_ context.Context, resp UDPRespon
 	}
 
 	rd := openspalib.ResponseData{
-		TransactionId:   request.Header.TransactionId,
+		TransactionID:   request.Header.TransactionID,
 		TargetProtocol:  openspalib.InternetProtocolNumber{},
 		TargetIP:        tIP,
 		TargetPortStart: tPortStart,
@@ -77,7 +77,6 @@ func (o *ServerHandler) DatagramRequestHandler(_ context.Context, resp UDPRespon
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to send OpenSPA response")
 	}
-
 }
 
 type UDPResponser interface {

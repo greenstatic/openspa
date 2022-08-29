@@ -6,16 +6,17 @@ import (
 	"github.com/greenstatic/openspa/pkg/openspalib/tlv"
 )
 
-type CipherSuiteId uint8
+type CipherSuiteID uint8
 
+//nolint:revive,stylecheck
 const (
-	CipherUnknown                 CipherSuiteId = 0   // only to be used for development
-	CipherNoSecurity              CipherSuiteId = 255 // only to be used for development
-	CipherRSA_SHA256_AES256CBC_ID CipherSuiteId = 1
+	CipherUnknown                 CipherSuiteID = 0   // only to be used for development
+	CipherNoSecurity              CipherSuiteID = 255 // only to be used for development
+	CipherRSA_SHA256_AES256CBC_ID CipherSuiteID = 1
 )
 
 type CipherSuite interface {
-	CipherSuiteId() CipherSuiteId
+	CipherSuiteID() CipherSuiteID
 
 	// Secure performs Encryption (body) and SignatureSignor (header+body) and returns an Encrypted TLV container
 	Secure(header []byte, packet tlv.Container) (tlv.Container, error)
@@ -50,7 +51,7 @@ type SignatureVerifier interface {
 	Verify(text, signature []byte) (valid bool, err error)
 }
 
-func CipherSuiteStringToId(s string) CipherSuiteId {
+func CipherSuiteStringToID(s string) CipherSuiteID {
 	switch s {
 	case "CipherNoSecurity":
 		return CipherNoSecurity
@@ -61,19 +62,21 @@ func CipherSuiteStringToId(s string) CipherSuiteId {
 	}
 }
 
-func CipherSuiteIdToString(c CipherSuiteId) (string, error) {
+func CipherSuiteIDToString(c CipherSuiteID) (string, error) {
 	switch c {
 	case CipherNoSecurity:
 		return "CipherNoSecurity", nil
 	case CipherRSA_SHA256_AES256CBC_ID:
 		return "CipherSuite_RSA_SHA256_AES256CBC", nil
+	case CipherUnknown:
+		return "", errors.New("unknown cipher suite id")
+	default:
+		return "", errors.New("unsupported cipher suite id")
 	}
-
-	return "", errors.New("unsupported cipher suite id")
 }
 
-func MustCipherSuiteIdToString(c CipherSuiteId) string {
-	s, err := CipherSuiteIdToString(c)
+func MustCipherSuiteIDToString(c CipherSuiteID) string {
+	s, err := CipherSuiteIDToString(c)
 	if err != nil {
 		panic(err)
 	}

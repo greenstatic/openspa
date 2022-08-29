@@ -9,6 +9,7 @@ import (
 
 var _ CipherSuite = &CipherSuite_RSA_SHA256_AES256CBC{}
 
+//nolint:revive,stylecheck
 type CipherSuite_RSA_SHA256_AES256CBC struct {
 	resolver PublicKeyResolver
 
@@ -16,9 +17,10 @@ type CipherSuite_RSA_SHA256_AES256CBC struct {
 	sig *RSA_SHA256Signer
 }
 
-func NewCipherSuite_RSA_SHA256_AES256CBC(privKey *rsa.PrivateKey, pubResolve PublicKeyResolver) *CipherSuite_RSA_SHA256_AES256CBC {
+//nolint:revive,stylecheck,lll
+func NewCipherSuite_RSA_SHA256_AES256CBC(privKey *rsa.PrivateKey, rs PublicKeyResolver) *CipherSuite_RSA_SHA256_AES256CBC {
 	r := &CipherSuite_RSA_SHA256_AES256CBC{
-		resolver: pubResolve,
+		resolver: rs,
 		dec:      NewRSADecrypter(privKey),
 		sig:      NewRSA_SHA256Signer(privKey),
 	}
@@ -26,15 +28,16 @@ func NewCipherSuite_RSA_SHA256_AES256CBC(privKey *rsa.PrivateKey, pubResolve Pub
 	return r
 }
 
-func (r *CipherSuite_RSA_SHA256_AES256CBC) CipherSuiteId() CipherSuiteId {
+func (r *CipherSuite_RSA_SHA256_AES256CBC) CipherSuiteID() CipherSuiteID {
 	return CipherRSA_SHA256_AES256CBC_ID
 }
 
 // Secure
-//   1. Uses sender's RSA private key + SHA-256 to sign the header+packet contents
-//   2. Generates a session key
-//   3. Uses session key to AES-256-CBC encrypt the packet and signature contents
-//   4. Encrypts the session key using the receiver's RSA public key
+//  1. Uses sender's RSA private key + SHA-256 to sign the header+packet contents
+//  2. Generates a session key
+//  3. Uses session key to AES-256-CBC encrypt the packet and signature contents
+//  4. Encrypts the session key using the receiver's RSA public key
+//
 // Returns a Container according to the Encrypted TLV definition
 func (r *CipherSuite_RSA_SHA256_AES256CBC) Secure(header []byte, packet tlv.Container) (tlv.Container, error) {
 	receiverPubKey, err := r.resolver.PublicKey(packet)

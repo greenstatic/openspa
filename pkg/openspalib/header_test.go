@@ -26,7 +26,7 @@ func TestHeader_MarshalRequestType(t *testing.T) {
 }
 
 func TestHeader_MarshalResponseTypeCipher24(t *testing.T) {
-	h := NewHeader(ResponsePDU, crypto.CipherSuiteId(24))
+	h := NewHeader(ResponsePDU, crypto.CipherSuiteID(24))
 	b, err := h.Marshal()
 
 	assert.NoError(t, err)
@@ -45,7 +45,7 @@ func TestHeader_MarshalResponseTypeCipher24(t *testing.T) {
 
 func TestHeader_MarshalRequestTransaction123(t *testing.T) {
 	h := NewHeader(RequestPDU, crypto.CipherNoSecurity)
-	h.TransactionId = 123
+	h.TransactionID = 123
 	b, err := h.Marshal()
 
 	assert.NoError(t, err)
@@ -106,31 +106,31 @@ func TestHeaderMarshalControlField_ResponseVersion1(t *testing.T) {
 
 func TestHeaderMarshalTransactionId_0(t *testing.T) {
 	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
-	b := h.marshalTransactionId()
+	b := h.marshalTransactionID()
 
 	assert.Equal(t, byte(0x00), b)
 }
 
 func TestHeaderMarshalTransactionId_1(t *testing.T) {
 	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
-	h.TransactionId = 1
-	b := h.marshalTransactionId()
+	h.TransactionID = 1
+	b := h.marshalTransactionID()
 
 	assert.Equal(t, byte(0x01), b)
 }
 
 func TestHeaderMarshalTransactionId_123(t *testing.T) {
 	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
-	h.TransactionId = 123
-	b := h.marshalTransactionId()
+	h.TransactionID = 123
+	b := h.marshalTransactionID()
 
 	assert.Equal(t, byte(0x7B), b)
 }
 
 func TestHeaderMarshalTransactionId_255(t *testing.T) {
 	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
-	h.TransactionId = 255
-	b := h.marshalTransactionId()
+	h.TransactionID = 255
+	b := h.marshalTransactionID()
 
 	assert.Equal(t, byte(0xFF), b)
 }
@@ -143,21 +143,21 @@ func TestHeaderMarshalCipherSuite_NoSecurity(t *testing.T) {
 }
 
 func TestHeaderMarshalCipherSuite_123(t *testing.T) {
-	h := NewHeader(ResponsePDU, crypto.CipherSuiteId(123))
+	h := NewHeader(ResponsePDU, crypto.CipherSuiteID(123))
 	b := h.marshalCipherSuite()
 
 	assert.Equal(t, byte(0x7B), b)
 }
 
 func TestHeaderMarshalCipherSuite_255(t *testing.T) {
-	h := NewHeader(ResponsePDU, crypto.CipherSuiteId(255))
+	h := NewHeader(ResponsePDU, crypto.CipherSuiteID(255))
 	b := h.marshalCipherSuite()
 
 	assert.Equal(t, byte(0xFF), b)
 }
 
 func TestHeaderMarshalADK_Length(t *testing.T) {
-	h := NewHeader(ResponsePDU, crypto.CipherSuiteId(255))
+	h := NewHeader(ResponsePDU, crypto.CipherSuiteID(255))
 	b := h.marshalADK()
 
 	assert.Len(t, b, 4)
@@ -181,13 +181,12 @@ func TestHeaderUnmarshalControlField(t *testing.T) {
 	ty, v = h.unmarshalControlField(0x1F)
 	assert.Equal(t, 1, v)
 	assert.Equal(t, RequestPDU, ty)
-
 }
 
 func TestUnmarshalHeader_RequestPDU(t *testing.T) {
 	h := NewHeader(RequestPDU, crypto.CipherRSA_SHA256_AES256CBC_ID)
 	h.Version = 2
-	h.TransactionId = 123
+	h.TransactionID = 123
 	b, err := h.Marshal()
 	assert.NoError(t, err)
 
@@ -195,14 +194,14 @@ func TestUnmarshalHeader_RequestPDU(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, RequestPDU, header.Type)
-	assert.Equal(t, uint8(123), header.TransactionId)
-	assert.Equal(t, crypto.CipherRSA_SHA256_AES256CBC_ID, header.CipherSuiteId)
+	assert.Equal(t, uint8(123), header.TransactionID)
+	assert.Equal(t, crypto.CipherRSA_SHA256_AES256CBC_ID, header.CipherSuiteID)
 	assert.Equal(t, 2, header.Version)
 }
 
 func TestUnmarshalHeader_ResponsePDU(t *testing.T) {
 	h := NewHeader(ResponsePDU, crypto.CipherRSA_SHA256_AES256CBC_ID)
-	h.TransactionId = 123
+	h.TransactionID = 123
 	b, err := h.Marshal()
 	assert.NoError(t, err)
 
@@ -210,7 +209,7 @@ func TestUnmarshalHeader_ResponsePDU(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, ResponsePDU, header.Type)
-	assert.Equal(t, uint8(123), header.TransactionId)
-	assert.Equal(t, crypto.CipherRSA_SHA256_AES256CBC_ID, header.CipherSuiteId)
+	assert.Equal(t, uint8(123), header.TransactionID)
+	assert.Equal(t, crypto.CipherRSA_SHA256_AES256CBC_ID, header.CipherSuiteID)
 	assert.Equal(t, 1, header.Version)
 }

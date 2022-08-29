@@ -32,6 +32,7 @@ func (d *DatagramRequestHandlerStub) DatagramRequestHandler(ctx context.Context,
 	d.f(ctx, resp, r)
 }
 
+//nolint:lll
 func NewDatagramRequestHandlerStub(f func(ctx context.Context, resp UDPResponser, r DatagramRequest)) *DatagramRequestHandlerStub {
 	d := &DatagramRequestHandlerStub{
 		f: f,

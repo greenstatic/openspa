@@ -123,7 +123,7 @@ func (s ServerConfigFirewall) Verify() error {
 
 func (s ServerConfigIPTables) Verify() error {
 	if len(s.Chain) == 0 {
-		return errors.New("chain parameter is emtpy")
+		return errors.New("chain parameter is empty")
 	}
 	return nil
 }
@@ -134,7 +134,7 @@ func (s ServerConfigCrypto) Verify() error {
 	}
 
 	for _, cs := range s.CipherSuitePriority {
-		if crypto.CipherSuiteStringToId(cs) == crypto.CipherUnknown {
+		if crypto.CipherSuiteStringToID(cs) == crypto.CipherUnknown {
 			return errors.New("cipherSuitePriority unsupported/unknown cipher: " + cs)
 		}
 	}

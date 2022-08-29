@@ -18,7 +18,7 @@ func TestNewRequest(t *testing.T) {
 	serverIP := net.IPv4(88, 200, 23, 200)
 
 	r, err := NewRequest(RequestData{
-		TransactionId:   123,
+		TransactionID:   123,
 		ClientUUID:      clientUUID,
 		TargetProtocol:  ProtocolIPV4,
 		TargetPortStart: 80,
@@ -30,11 +30,11 @@ func TestNewRequest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 
-	assert.Equal(t, byte(123), r.Header.TransactionId)
+	assert.Equal(t, byte(123), r.Header.TransactionID)
 
 	tstamp, err := TimestampFromContainer(r.Body)
 	assert.NoError(t, err)
-	assert.Greater(t, float64(1), time.Now().Sub(tstamp).Seconds())
+	assert.Greater(t, float64(1), time.Since(tstamp).Seconds())
 
 	cid, err := ClientUUIDFromContainer(r.Body)
 	assert.NoError(t, err)
@@ -75,8 +75,8 @@ func TestNewRequest(t *testing.T) {
 	r3, err := RequestUnmarshal(b, cs)
 	assert.NoError(t, err)
 
-	assert.Equal(t, r.Header.TransactionId, r2.Header.TransactionId)
-	assert.Equal(t, r.Header.TransactionId, r3.Header.TransactionId)
+	assert.Equal(t, r.Header.TransactionID, r2.Header.TransactionID)
+	assert.Equal(t, r.Header.TransactionID, r3.Header.TransactionID)
 }
 
 func TestRequestUnmarshal(t *testing.T) {
@@ -151,7 +151,7 @@ func TestRequestSize_RSA_SHA256_AES_256_CBC_with4096Keypair(t *testing.T) {
 
 func testRequestData() RequestData {
 	return RequestData{
-		TransactionId:   123,
+		TransactionID:   123,
 		ClientUUID:      RandomUUID(),
 		TargetProtocol:  ProtocolIPV4,
 		TargetPortStart: 80,

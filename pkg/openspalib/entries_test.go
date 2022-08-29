@@ -1,7 +1,7 @@
 package openspalib
 
 import (
-	"math/rand"
+	"crypto/rand"
 	"net"
 	"testing"
 	"time"
@@ -327,7 +327,6 @@ func TestIPv4Decode_Nil(t *testing.T) {
 }
 
 func TestIPv6Encode(t *testing.T) {
-
 	tests := []struct {
 		input    net.IP
 		expected []byte
@@ -461,7 +460,10 @@ func TestIsIPv6(t *testing.T) {
 
 func TestNonceEncode(t *testing.T) {
 	n := make([]byte, 3)
-	rand.Read(n)
+	_, err := rand.Read(n)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	b, err := NonceEncode(n)
 	assert.NoError(t, err)

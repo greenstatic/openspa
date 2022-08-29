@@ -41,7 +41,7 @@ var RequestRoutineOptDefault = RequestRoutineOpt{
 
 func RequestRoutine(p RequestRoutineParameters, cs crypto.CipherSuite, opt RequestRoutineOpt) error {
 	rd := lib.RequestData{
-		TransactionId:   lib.RandomTransactionId(),
+		TransactionID:   lib.RandomTransactionID(),
 		ClientUUID:      p.ReqParams.ClientUUID,
 		ClientIP:        p.ReqParams.ClientIP,
 		TargetProtocol:  p.ReqParams.TargetProto,
@@ -68,8 +68,8 @@ func RequestRoutine(p RequestRoutineParameters, cs crypto.CipherSuite, opt Reque
 		return errors.Wrap(err, "request failure")
 	}
 
-	if !(resp.Header.TransactionId == rd.TransactionId) {
-		return fmt.Errorf("transaction id mismatch in response (%d != %d)", rd.TransactionId, resp.Header.TransactionId)
+	if !(resp.Header.TransactionID == rd.TransactionID) {
+		return fmt.Errorf("transaction id mismatch in response (%d != %d)", rd.TransactionID, resp.Header.TransactionID)
 	}
 
 	dur, err := lib.DurationFromContainer(resp.Body)
@@ -119,7 +119,8 @@ type performRequestParameters struct {
 	timeout    time.Duration
 }
 
-func performRequest(u UDPSender, c crypto.CipherSuite, d lib.RequestData, server net.UDPAddr, params performRequestParameters) (*lib.Response, error) {
+func performRequest(u UDPSender, c crypto.CipherSuite, d lib.RequestData, server net.UDPAddr,
+	params performRequestParameters) (*lib.Response, error) {
 	r, err := lib.NewRequest(d, c)
 	if err != nil {
 		return nil, errors.Wrap(err, "new request")
@@ -177,7 +178,7 @@ func NewUDPSend() UDPSend {
 
 var errSocketRead = errors.New("socket read")
 
-func (_ UDPSend) SendUDPRequest(req []byte, dest net.UDPAddr, timeout time.Duration) ([]byte, error) {
+func (UDPSend) SendUDPRequest(req []byte, dest net.UDPAddr, timeout time.Duration) ([]byte, error) {
 	c, err := net.DialUDP("udp", nil, &dest)
 	if err != nil {
 		return nil, errors.Wrap(err, "dial udp")
@@ -212,11 +213,11 @@ func (_ UDPSend) SendUDPRequest(req []byte, dest net.UDPAddr, timeout time.Durat
 	return respB[:n], errors.Wrap(err, "close")
 }
 
-func ResolveClientsIPAndVersionBasedOnTargetIP(ipv4ResolverServer, ipv6ResolverServer string, target net.IP) (net.IP, error) {
-	serverURL := ipv4ResolverServer
+func ResolveClientsIPAndVersionBasedOnTargetIP(ipv4ResServer, ipv6ResServer string, target net.IP) (net.IP, error) {
+	serverURL := ipv4ResServer
 
 	if isIPv6(target) {
-		serverURL = ipv6ResolverServer
+		serverURL = ipv6ResServer
 	}
 
 	resolver := PublicIPResolver{

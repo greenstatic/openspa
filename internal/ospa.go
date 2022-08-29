@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
 	"github.com/pkg/errors"
@@ -45,7 +45,7 @@ func OSPAFromFile(path string) (OSPA, error) {
 }
 
 func ospaFromFile(path string) (OSPA, error) {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return OSPA{}, errors.Wrap(err, "file read")
 	}
@@ -92,7 +92,7 @@ func (o OSPACrypto) Verify() error {
 	}
 
 	for _, cs := range o.CipherSuitePriority {
-		if crypto.CipherSuiteStringToId(cs) == crypto.CipherUnknown {
+		if crypto.CipherSuiteStringToID(cs) == crypto.CipherUnknown {
 			return errors.New("cipherSuitePriority unsupported/unknown cipher: " + cs)
 		}
 	}

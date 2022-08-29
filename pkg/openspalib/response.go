@@ -12,7 +12,7 @@ import (
 )
 
 type ResponseData struct {
-	TransactionId uint8
+	TransactionID uint8
 
 	TargetProtocol  InternetProtocolNumber
 	TargetIP        net.IP
@@ -41,8 +41,8 @@ func NewResponse(d ResponseData, c crypto.CipherSuite) (*Response, error) {
 	r := &Response{}
 	r.c = c
 
-	r.Header = NewHeader(ResponsePDU, c.CipherSuiteId())
-	r.Header.TransactionId = d.TransactionId
+	r.Header = NewHeader(ResponsePDU, c.CipherSuiteID())
+	r.Header.TransactionID = d.TransactionID
 
 	ed, err := r.generateExtendedData()
 	if err != nil {
@@ -108,7 +108,6 @@ func (r *Response) bodyCreate(d ResponseData, ed ResponseExtendedData) (tlv.Cont
 		if err := TargetIPv4ToContainer(c, d.TargetIP); err != nil {
 			return nil, errors.Wrap(err, "target ipv4 to container")
 		}
-
 	} else {
 		if err := TargetIPv6ToContainer(c, d.TargetIP); err != nil {
 			return nil, errors.Wrap(err, "target ipv6 to container")

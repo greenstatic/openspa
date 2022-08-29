@@ -22,24 +22,24 @@ const (
 type Header struct {
 	Type          PDUType
 	Version       int
-	TransactionId uint8
-	CipherSuiteId crypto.CipherSuiteId
+	TransactionID uint8
+	CipherSuiteID crypto.CipherSuiteID
 }
 
-func NewHeader(t PDUType, c crypto.CipherSuiteId) Header {
+func NewHeader(t PDUType, c crypto.CipherSuiteID) Header {
 	return Header{
 		Type: t,
 		// TODO - replace this with 2
 		Version:       1,
-		TransactionId: 0,
-		CipherSuiteId: c,
+		TransactionID: 0,
+		CipherSuiteID: c,
 	}
 }
 
 func (h *Header) Marshal() ([]byte, error) {
 	b := make([]byte, HeaderLength-ADKLength, HeaderLength)
 	b[0x00] = h.marshalControlField()
-	b[0x01] = h.marshalTransactionId()
+	b[0x01] = h.marshalTransactionID()
 	b[0x02] = h.marshalCipherSuite()
 	b[0x03] = 0
 
@@ -68,12 +68,12 @@ func (h *Header) marshalControlField() byte {
 	return b
 }
 
-func (h *Header) marshalTransactionId() byte {
-	return h.TransactionId
+func (h *Header) marshalTransactionID() byte {
+	return h.TransactionID
 }
 
 func (h *Header) marshalCipherSuite() byte {
-	return byte(h.CipherSuiteId)
+	return byte(h.CipherSuiteID)
 }
 
 func (h *Header) marshalADK() []byte {
@@ -96,12 +96,12 @@ func (h *Header) unmarshalControlField(b byte) (t PDUType, version int) {
 	return
 }
 
-func (h *Header) unmarshalTransactionId(b byte) uint8 {
-	return uint8(b)
+func (h *Header) unmarshalTransactionID(b byte) uint8 {
+	return b
 }
 
-func (h *Header) unmarshalCipherSuite(b byte) crypto.CipherSuiteId {
-	return crypto.CipherSuiteId(b)
+func (h *Header) unmarshalCipherSuite(b byte) crypto.CipherSuiteID {
+	return crypto.CipherSuiteID(b)
 }
 
 func UnmarshalHeader(b []byte) (Header, error) {
@@ -111,14 +111,17 @@ func UnmarshalHeader(b []byte) (Header, error) {
 
 	h := Header{}
 	h.Type, h.Version = h.unmarshalControlField(b[0])
-	h.TransactionId = h.unmarshalTransactionId(b[1])
-	h.CipherSuiteId = h.unmarshalCipherSuite(b[2])
+	h.TransactionID = h.unmarshalTransactionID(b[1])
+	h.CipherSuiteID = h.unmarshalCipherSuite(b[2])
 
 	return h, nil
 }
 
-func RandomTransactionId() uint8 {
+func RandomTransactionID() uint8 {
 	b := make([]byte, 1)
-	rand.Read(b)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(err)
+	}
 	return b[0]
 }

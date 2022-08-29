@@ -19,12 +19,18 @@ var ReqCmd = &cobra.Command{
 }
 
 func ReqCmdSetup(c *cobra.Command) {
-	c.Flags().Bool("auto-mode", false, "Automatically send request packet when the duration from the previous request is nearing 50% before termination")
-	c.Flags().IP("client-ip", nil, "Client IP (v4 or v6) that will be requested for access to target (if empty, will be resolved)")
-	c.Flags().String("target-protocol", lib.ProtocolTCP.Protocol, fmt.Sprintf("Target protocol you wish to access (%s)", internetProtocolSupportedHelpString()))
-	c.Flags().IPP("target-ip", "t", nil, "Target IP (v4 or v6) that you wish to access (if empty, will use server's IP)")
-	c.Flags().Uint16P("target-port-start", "p", 22, "Target (start) port that you wish to access")
-	c.Flags().Uint16("target-port-end", 0, "Along with --target-port-start range of target ports that you wish to access")
+	c.Flags().Bool("auto-mode", false,
+		"Automatically send request packet when the duration from the previous request is nearing 50% before termination")
+	c.Flags().IP("client-ip", nil,
+		"Client IP (v4 or v6) that will be requested for access to target (if empty, will be resolved)")
+	c.Flags().String("target-protocol", lib.ProtocolTCP.Protocol,
+		fmt.Sprintf("Target protocol you wish to access (%s)", internetProtocolSupportedHelpString()))
+	c.Flags().IPP("target-ip", "t", nil,
+		"Target IP (v4 or v6) that you wish to access (if empty, will use server's IP)")
+	c.Flags().Uint16P("target-port-start", "p", 22,
+		"Target (start) port that you wish to access")
+	c.Flags().Uint16("target-port-end", 0,
+		"Along with --target-port-start range of target ports that you wish to access")
 	c.Flags().Uint("retry-count", 3, "")
 	c.Flags().Uint("timeout", 3, "Timeout to wait for response in seconds")
 

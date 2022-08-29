@@ -56,7 +56,7 @@ func TestRequestRoutine(t *testing.T) {
 			req, err := lib.RequestUnmarshal(reqB, cipherServer)
 			require.NoError(t, err)
 
-			assert.NotEqual(t, uint8(0), req.Header.TransactionId)
+			assert.NotEqual(t, uint8(0), req.Header.TransactionID)
 
 			targetIP, err := lib.TargetIPFromContainer(req.Body)
 			require.NoError(t, err)
@@ -105,7 +105,7 @@ func getTestEnv() testEnv {
 		ServerPort: lib.DefaultServerPort,
 		Crypto: OSPACrypto{
 			CipherSuitePriority: []string{
-				crypto.MustCipherSuiteIdToString(crypto.CipherRSA_SHA256_AES256CBC_ID),
+				crypto.MustCipherSuiteIDToString(crypto.CipherRSA_SHA256_AES256CBC_ID),
 			},
 			RSA: OSPACryptoRSA{
 				Client: OSPACryptoRSAClient{
@@ -132,7 +132,7 @@ func TestPerformRequest(t *testing.T) {
 	sender := &udpSenderMock{}
 	cs := crypto.NewCipherSuiteStub()
 	reqD := lib.RequestData{
-		TransactionId:   42,
+		TransactionID:   42,
 		ClientUUID:      "c3b66a05-9098-4100-8141-be5695ada0e7",
 		ClientIP:        net.IPv4(88, 200, 23, 10),
 		TargetProtocol:  lib.ProtocolTCP,
@@ -142,7 +142,7 @@ func TestPerformRequest(t *testing.T) {
 	}
 
 	respD := lib.ResponseData{
-		TransactionId:   42,
+		TransactionID:   42,
 		TargetProtocol:  lib.ProtocolTCP,
 		TargetIP:        reqD.TargetIP,
 		TargetPortStart: reqD.TargetPortStart,
@@ -181,7 +181,7 @@ func TestPerformRequest_Failure(t *testing.T) {
 	sender := &udpSenderMock{}
 	cs := crypto.NewCipherSuiteStub()
 	reqD := lib.RequestData{
-		TransactionId:   42,
+		TransactionID:   42,
 		ClientUUID:      "c3b66a05-9098-4100-8141-be5695ada0e7",
 		ClientIP:        net.IPv4(88, 200, 23, 10),
 		TargetProtocol:  lib.ProtocolTCP,

@@ -29,15 +29,15 @@ var _ Firewall = FirewallStub{}
 
 type FirewallStub struct{}
 
-func (_ FirewallStub) RuleAdd(r FirewallRule) error {
+func (FirewallStub) RuleAdd(r FirewallRule) error {
 	return nil
 }
 
-func (_ FirewallStub) RuleRemove(r FirewallRule) error {
+func (FirewallStub) RuleRemove(r FirewallRule) error {
 	return nil
 }
 
-func (_ FirewallStub) FirewallSetup() error {
+func (FirewallStub) FirewallSetup() error {
 	return nil
 }
 

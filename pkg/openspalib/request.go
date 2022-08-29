@@ -12,7 +12,7 @@ import (
 )
 
 type RequestData struct {
-	TransactionId uint8
+	TransactionID uint8
 	ClientUUID    string
 
 	ClientIP net.IP
@@ -43,8 +43,8 @@ func NewRequest(d RequestData, c crypto.CipherSuite) (*Request, error) {
 	r := &Request{}
 	r.c = c
 
-	r.Header = NewHeader(RequestPDU, c.CipherSuiteId())
-	r.Header.TransactionId = d.TransactionId
+	r.Header = NewHeader(RequestPDU, c.CipherSuiteID())
+	r.Header.TransactionID = d.TransactionID
 
 	ed, err := r.generateRequestExtendedData()
 	if err != nil {
@@ -103,7 +103,6 @@ func (r *Request) bodyCreate(d RequestData, ed RequestExtendedData) (tlv.Contain
 		if err := ClientIPv4ToContainer(c, d.ClientIP); err != nil {
 			return nil, errors.Wrap(err, "client ipv4 to container")
 		}
-
 	} else {
 		if err := ClientIPv6ToContainer(c, d.ClientIP); err != nil {
 			return nil, errors.Wrap(err, "client ipv6 to container")
@@ -114,7 +113,6 @@ func (r *Request) bodyCreate(d RequestData, ed RequestExtendedData) (tlv.Contain
 		if err := TargetIPv4ToContainer(c, d.TargetIP); err != nil {
 			return nil, errors.Wrap(err, "target ipv4 to container")
 		}
-
 	} else {
 		if err := TargetIPv6ToContainer(c, d.TargetIP); err != nil {
 			return nil, errors.Wrap(err, "target ipv6 to container")

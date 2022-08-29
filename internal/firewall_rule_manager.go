@@ -86,7 +86,6 @@ mainloop:
 				break mainloop
 			}
 		}
-
 	}
 
 	return nil

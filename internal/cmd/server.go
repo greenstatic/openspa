@@ -41,7 +41,7 @@ func serverCmdRunFn(cmd *cobra.Command, args []string) {
 	server(cmd, sc)
 }
 
-func server(cmd *cobra.Command, config internal.ServerConfig) {
+func server(_ *cobra.Command, config internal.ServerConfig) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	done := make(chan bool, 1)

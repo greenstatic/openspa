@@ -15,7 +15,7 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 
 	// Client: Create request
 	r, err := NewRequest(RequestData{
-		TransactionId:   42,
+		TransactionID:   42,
 		ClientUUID:      RandomUUID(),
 		ClientIP:        net.IPv4(88, 200, 23, 30),
 		TargetProtocol:  ProtocolIPV4,
@@ -31,7 +31,7 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 	rS, err := RequestUnmarshal(reqBytes, cs)
 	require.NotNil(t, rS)
 	assert.Equal(t, 1, rS.Header.Version)
-	assert.Equal(t, uint8(42), rS.Header.TransactionId)
+	assert.Equal(t, uint8(42), rS.Header.TransactionID)
 	require.NoError(t, err)
 
 	proto, err := TargetProtocolFromContainer(rS.Body)
@@ -56,7 +56,7 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 
 	// Server: Send response
 	resp, err := NewResponse(ResponseData{
-		TransactionId:   42,
+		TransactionID:   42,
 		TargetProtocol:  ProtocolIPV4,
 		TargetIP:        net.IPv4(88, 200, 23, 8),
 		TargetPortStart: 80,
@@ -73,7 +73,7 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 	assert.NoError(t, err)
 	require.NotNil(t, respC)
 	assert.Equal(t, 1, respC.Header.Version)
-	assert.Equal(t, uint8(42), respC.Header.TransactionId)
+	assert.Equal(t, uint8(42), respC.Header.TransactionID)
 
 	proto, err = TargetProtocolFromContainer(respC.Body)
 	assert.NoError(t, err)

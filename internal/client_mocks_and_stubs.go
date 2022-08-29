@@ -74,7 +74,7 @@ func stubServerResponder(reqB []byte, cs crypto.CipherSuite, params stubServerRe
 	}
 
 	resp, err := lib.NewResponse(lib.ResponseData{
-		TransactionId:   req.Header.TransactionId,
+		TransactionID:   req.Header.TransactionID,
 		TargetProtocol:  targetProto,
 		TargetIP:        targetIP,
 		TargetPortStart: targetPortStart,

@@ -12,11 +12,13 @@ func AES256CBCEncrypt(plaintext []byte) (ciphertext, iv, key []byte, err error) 
 	iv = make([]byte, 16)
 	if _, err2 := rand.Read(iv); err2 != nil {
 		err = errors.Wrap(err2, "random iv generation")
+		return
 	}
 
 	key = make([]byte, 32)
 	if _, err2 := rand.Read(key); err2 != nil {
 		err = errors.Wrap(err2, "random key generation")
+		return
 	}
 
 	e := NewAES256CBCEncrypter(iv, key)

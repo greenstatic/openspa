@@ -18,9 +18,9 @@ func NewCipherSuiteMock() *CipherSuiteMock {
 	return c
 }
 
-func (c *CipherSuiteMock) CipherSuiteId() CipherSuiteId {
+func (c *CipherSuiteMock) CipherSuiteID() CipherSuiteID {
 	args := c.Called()
-	return CipherSuiteId(uint8(args.Int(0)))
+	return CipherSuiteID(uint8(args.Int(0)))
 }
 
 func (c *CipherSuiteMock) Secure(header []byte, body tlv.Container) (tlv.Container, error) {
@@ -62,7 +62,7 @@ func NewCipherSuiteStub() *CipherSuiteStub {
 	return c
 }
 
-func (c *CipherSuiteStub) CipherSuiteId() CipherSuiteId {
+func (c *CipherSuiteStub) CipherSuiteID() CipherSuiteID {
 	return CipherNoSecurity
 }
 
@@ -85,8 +85,8 @@ func NewPublicKeyLookupMock() *PublicKeyLookupMock {
 	return p
 }
 
-func (p *PublicKeyLookupMock) LookupPublicKey(clientId string) (crypto.PublicKey, error) {
-	args := p.Called(clientId)
+func (p *PublicKeyLookupMock) LookupPublicKey(clientID string) (crypto.PublicKey, error) {
+	args := p.Called(clientID)
 	return args.Get(0).(crypto.PublicKey), args.Error(1)
 }
 

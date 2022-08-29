@@ -12,7 +12,7 @@ type Container interface {
 	Bytes() []byte
 
 	// Size returns the length of the byte slice or buffer
-	//Size() int
+	// Size() int
 
 	// NoEntries returns the number of nodes in the container
 	NoEntries() int

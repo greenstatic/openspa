@@ -17,7 +17,7 @@ func TestNewResponse(t *testing.T) {
 
 	tIP := net.IPv4(88, 200, 23, 19)
 	r, err := NewResponse(ResponseData{
-		TransactionId:   123,
+		TransactionID:   123,
 		TargetProtocol:  ProtocolIPV4,
 		TargetIP:        tIP,
 		TargetPortStart: 80,
@@ -28,7 +28,7 @@ func TestNewResponse(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 
-	assert.Equal(t, byte(123), r.Header.TransactionId)
+	assert.Equal(t, byte(123), r.Header.TransactionID)
 
 	p, err := TargetProtocolFromContainer(r.Body)
 	assert.NoError(t, err)
@@ -69,7 +69,6 @@ func TestResponseSize_Stub(t *testing.T) {
 	assert.NoError(t, err)
 
 	t.Logf("Cipher=none test Response marshaled size: %d", len(b))
-
 }
 
 func TestResponseSize_RSA_SHA256_AES_256_CBC_with2048Keypair(t *testing.T) {
@@ -120,7 +119,7 @@ func TestResponseSize_RSA_SHA256_AES_256_CBC_with4096Keypair(t *testing.T) {
 
 func testResponseData() ResponseData {
 	return ResponseData{
-		TransactionId:   123,
+		TransactionID:   123,
 		TargetProtocol:  ProtocolIPV4,
 		TargetIP:        net.ParseIP("2001:1470:fffd:66::23:19"),
 		TargetPortStart: 80,

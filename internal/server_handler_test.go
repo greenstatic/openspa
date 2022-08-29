@@ -18,7 +18,7 @@ func TestServerHandler_DatagramRequestHandler(t *testing.T) {
 	sh := NewServerHandler(fw, cs)
 
 	reqData := openspalib.RequestData{
-		TransactionId:   23,
+		TransactionID:   23,
 		ClientUUID:      "09896692-c299-4f90-9906-2e23cfcc417c",
 		ClientIP:        net.IPv4(88, 200, 23, 23),
 		TargetProtocol:  openspalib.ProtocolTCP,

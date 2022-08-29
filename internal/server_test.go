@@ -2,7 +2,6 @@ package internal
 
 import (
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -35,8 +34,8 @@ func TestPublicKeyLookupDir_LookupPublicKey(t *testing.T) {
 	pub2Str, err := crypto.RSAEncodePublicKey(pub2)
 	require.NoError(t, err)
 
-	require.NoError(t, ioutil.WriteFile(filepath.Join(dir, "client1.key"), []byte(pub1Str), fs.ModePerm))
-	require.NoError(t, ioutil.WriteFile(filepath.Join(dir, "client2.key"), []byte(pub2Str), fs.ModePerm))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "client1.key"), []byte(pub1Str), fs.ModePerm))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "client2.key"), []byte(pub2Str), fs.ModePerm))
 
 	l := NewPublicKeyLookupDir(dir)
 
@@ -51,7 +50,6 @@ func TestPublicKeyLookupDir_LookupPublicKey(t *testing.T) {
 	pubKey3, err := l.LookupPublicKey("client3.key")
 	assert.Error(t, err)
 	assert.Nil(t, pubKey3)
-
 }
 
 func TestPublicKeyLookupDir_clientFilenameMatch(t *testing.T) {

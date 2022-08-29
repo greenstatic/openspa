@@ -95,7 +95,7 @@ func TestCipherSuite_RSA_SHA256_AES256CBC(t *testing.T) {
 		resolverClient.On("PublicKey", mock.Anything).Return(test.serverPublic, nil).Once()
 
 		csClient := NewCipherSuite_RSA_SHA256_AES256CBC(test.clientPrivate, resolverClient)
-		assert.Equalf(t, CipherRSA_SHA256_AES256CBC_ID, csClient.CipherSuiteId(), desc)
+		assert.Equalf(t, CipherRSA_SHA256_AES256CBC_ID, csClient.CipherSuiteID(), desc)
 
 		ec, err := csClient.Secure(header, pc)
 		assert.NoErrorf(t, err, desc)
