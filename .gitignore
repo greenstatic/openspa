@@ -79,3 +79,6 @@ fabric.properties
 ### CUSTOMG
 .idea/
 ignore/
+.DS_Store
+temp
+cli
