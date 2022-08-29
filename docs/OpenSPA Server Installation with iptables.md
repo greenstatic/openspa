@@ -17,33 +17,27 @@ Once the project will be released officially, we will simply this greatly.
     ```
 2. Logout and log back in your terminal session (to refresh your PATH ENV variable)
 
-3. Download the OpenSPA source code inside your `~/go/src` folder
+3. Download the OpenSPA source code
     ```bash
-    go get github.com/greenstatic/openspa
+    cd ~
+    git clone github.com/greenstatic/openspa
+    mkdir openspa-server
     ```
-    Don't worry if you get a *package github.com/greenstatic/openspa: no Go files in /home/ubuntu/go/src/github.com/greenstatic/openspa* error message.
-
-4. Download the dependencies of the OpenSPA source code
-    ```bash
-    cd ~/go/src/github.com/greenstatic/openspa/cmd/openspa-server
-    go get -u ./... # this may take some time
     
-    cd ~/go/src/github.com/greenstatic/openspa/cmd/openspa-tools
-    go get -u ./...
+4. Build OpenSPA client and tools
+    ```bash
+    cd openspa/openspa/cmd/openspa-server
+    go build .
+    cp openspa-server ~/openspa-server/
+    
+    cd ../openspa-tools
+    go build .
+    cp openspa-tools ~/openspa-server/
     ```
 
-4. Create a directory in which we will build the OpenSPA Server and OpenSPA Tools
-    ```bash
-    mkdir ~/openspa
-    cd ~/go/src/github.com/greenstatic/openspa/cmd/openspa-server
-    go build -o ~/openspa/openspa-server
-    
-    cd ~/go/src/github.com/greenstatic/openspa/cmd/openspa-tools
-    go build -o ~/openspa/openspa-tools
-    ```
 5. Generate the server's private/public keypair
     ```bash
-    cd ~/openspa
+    cd ~/openspa-server
     ./openspa-tools gen-server-key
     mkdir keys
     mv server.key server.pub keys/
@@ -51,30 +45,28 @@ Once the project will be released officially, we will simply this greatly.
 
 5. Create the server config
     ```bash
-    cp ~/go/src/github.com/greenstatic/openspa/configs/server_config_example.yaml ~/openspa/config.yaml
-    nano ~/openspa/config.yaml
+    cp ~/openspa/openspa/configs/server_config_example.yaml ~/openspa-server/config.yaml
+    nano ~/openspa-server/config.yaml
     ```
     Under the field `serverIP` enter the server's public IP
 
 ### Part 2: Setting up the Extension Scripts
-Here we will download some example Extension Scripts (ES) which are meant as a jump off point to get you started.
+Here we will setup some example Extension Scripts (ES) which are meant as a jump off point to get you started.
 
-1. Download and install the example extension scripts
+1. Copy the example extension scripts
     ```bash
-    cd ~/openspa
-    git clone https://github.com/greenstatic/openspa-extension-scripts.git
-    mkdir es
-    cp openspa-extension-scripts/user_directory_service/user_directory_service.py es/
-    cp openspa-extension-scripts/authorization/authorization.py es/
-    cp openspa-extension-scripts/firewalls/iptables/rule_*.py es/
+    mkdir ~/openspa-server/es
+    cp ~/openspa/openspa-extension-scripts/user_directory_service/user_directory_service.py ~/openspa-server/es/
+    cp ~/openspa/openspa-extension-scripts/authorization/authorization.py ~/openspa-server/es/
+    cp ~/openspa/openspa-extension-scripts/firewalls/iptables/rule_*.py ~/openspa-server/es/
     ```
 2. Setup the User Directory Service ES script
     ```bash
-    mkdir ~/openspa/es/public_keys
+    mkdir ~/openspa-server/es/public_keys
     ```
     This will be where all of the client's public keys will be stored.
     
-3. Setup iptables. To understand what all of this does, we recommend you checkout the details of the instructions of the [Extension Script's README](https://github.com/greenstatic/openspa-extension-scripts/tree/master/firewalls/iptables).
+3. Setup iptables. To understand what all of this does, we recommend you checkout the details of the instructions of the [Extension Script's README](../openspa-extension-scripts/firewalls/iptables/README.md).
     ```bash
     sudo iptables -I INPUT 1 -i lo -j ACCEPT
     sudo iptables -A INPUT -p udp --dport 22211 --jump ACCEPT
@@ -107,11 +99,11 @@ Here we will download some example Extension Scripts (ES) which are meant as a j
 5. Finally run the server
     ```bash
     # To run in background we recommend screen
-    sudo screen -d -m ~/openspa/openspa-server start
+    sudo screen -d -m ~/openspa-server/openspa-server start
     # To view the server run: sudo screen -r
     
     # You can of course run the server in the foreground as well
-    sudo ~/openspa/openspa-server start
+    sudo ~/openspa-server/openspa-server start
     ```
     
     A note on *sudo*. 
@@ -122,21 +114,22 @@ Here we will download some example Extension Scripts (ES) which are meant as a j
 ### Part 3: Setting up the client
 1. Build the client
     ```bash
-    cd ~/go/src/github.com/greenstatic/openspa/cmd/openspa-client
-    go build -o ~/openspa/openspa-client # This will build a binary that will only work on operating system and architecture you are building on (eg. on ubuntu it will only work for linux systems)
+    mkdir ~/openspa-client
+    cd ~/openspa/openspa/cmd/openspa-client
+    go build -o ~/openspa-client/openspa-client # This will build a binary that will only work on operating system and architecture you are building on (eg. on ubuntu it will only work for linux systems)
     
     # To build for Linux (amd64) explicitly 
-    GOOS=linux GOARCH=amd64 go build -o ~/openspa/openspa-client_linux
+    GOOS=linux GOARCH=amd64 go build -o ~/openspa-client/openspa-client_linux
     
     # To build for MacOS explicitly 
-    GOOS=darwin GOARCH=amd64 go build -o ~/openspa/openspa-client_macos
+    GOOS=darwin GOARCH=amd64 go build -o ~/openspa-client/openspa-client_macos
     ```
     
 2. Create the client's config file (OSPA file)
     ```bash
-    cd ~/openspa
+    cd ~/openspa-client
     mkdir clients
-    ./openspa-tools gen-client -o clients/ keys/server.pub
+    ~/openspa-server/openspa-tools gen-client -o ~/openspa-client/clients/ ~/openspa-server/keys/server.pub
     
     # Follow the on-screen intructions and DO NOT forget to fill out the server IP!
     ```
@@ -147,7 +140,7 @@ Here we will download some example Extension Scripts (ES) which are meant as a j
     
 3. Copy the client's public key into our directory of allowed clients
     ```bash
-    cd ~/openspa
+    cd ~/openspa-server
     cp clients/<CLIENT_UUID>/<CLIENT_UUID>.pub es/public_keys
     ```
 
@@ -169,11 +162,11 @@ The time allowed to access the system depends on how the server is configured (b
 
 ### Notes
 #### Authorization
-Any client that has their public key inside of `~/openspa/es/public_keys` is authorized for any kind of request for a hard coded limit of 180 seconds.
+Any client that has their public key inside of `~/openspa-server/es/public_keys` is authorized for any kind of request for a hard coded limit of 180 seconds.
 Once the duration is up their access will be revoked.
 The client can of course request access again (the client even has an automatic request mode that re-requests access when the client reaches the half-point before revocation).
 
-To customize the authorization rules checkout the `~/openspa/es/authorization.py` script.
+To customize the authorization rules checkout the `~/openspa-server/es/authorization.py` script.
 
 #### IPv6
 Although we did not show IPv6 support, the setup for IPv6 (only) is identical only replace IPv4 addresses with the IPv6 counterparts and use *ip6tables* instead of *iptables*.
