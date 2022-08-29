@@ -1,0 +1,80 @@
+# This workflow was based on spf13/cobra
+# https://github.com/spf13/cobra/blob/22b617914c8890ba20db7ceafcdc2ef4ca4817d3/.github/workflows/test.yml
+
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  golangci-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '1.18.5'
+
+      - uses: actions/checkout@v3
+
+      - uses: golangci/golangci-lint-action@v3.2.0
+        with:
+          version: latest
+          args: --verbose
+
+  test-unix:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - ubuntu
+          - macOS
+        go:
+          - 17
+          - 18
+    name: '${{ matrix.platform }} | 1.${{ matrix.go }}.x'
+    runs-on: ${{ matrix.platform }}-latest
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.${{ matrix.go }}.x
+
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-1.${{ matrix.go }}.x-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-1.${{ matrix.go }}.x-
+
+      - run: go test ./...
+
+  test-win:
+    name: MINGW64
+    defaults:
+      run:
+        shell: msys2 {0}
+    runs-on: windows-latest
+    steps:
+      - shell: bash
+        run: git config --global core.autocrlf input
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >
+            git
+            make
+            unzip
+            mingw-w64-x86_64-go
+
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.go }}-
+
+      - run: go test ./...
