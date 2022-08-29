@@ -1,8 +1,9 @@
 # OpenSPA
 
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/greenstatic/openspa/Test)
 [![Go Reference](https://pkg.go.dev/badge/github.com/greenstatic/openspa.svg)](https://pkg.go.dev/github.com/greenstatic/openspa)
 [![Go Report Card](https://goreportcard.com/badge/github.com/greenstatic/openspa)](https://goreportcard.com/report/github.com/greenstatic/openspa)
-![](https://img.shields.io/github/license/greenstatic/openspa)
+![License](https://img.shields.io/github/license/greenstatic/openspa)
 
 OpenSPA: An open and extensible Single Packet Authorization (SPA) implementation of the [OpenSPA Protocol](docs/protocol.md).
 
