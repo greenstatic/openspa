@@ -111,7 +111,7 @@ func TestRequestSize_RSA_SHA256_AES_256_CBC_with2048Keypair(t *testing.T) {
 	assert.NoError(t, err)
 
 	res := crypto.NewPublicKeyResolverMock()
-	res.On("PublicKey", mock.Anything).Return(pub2, nil)
+	res.On("PublicKey", mock.Anything, nil).Return(pub2, nil)
 
 	cs := crypto.NewCipherSuite_RSA_SHA256_AES256CBC(key1, res)
 
@@ -134,7 +134,7 @@ func TestRequestSize_RSA_SHA256_AES_256_CBC_with4096Keypair(t *testing.T) {
 	assert.NoError(t, err)
 
 	res := crypto.NewPublicKeyResolverMock()
-	res.On("PublicKey", mock.Anything).Return(pub2, nil)
+	res.On("PublicKey", mock.Anything, nil).Return(pub2, nil)
 
 	cs := crypto.NewCipherSuite_RSA_SHA256_AES256CBC(key1, res)
 

@@ -12,11 +12,12 @@ import (
 
 func TestOpenSpaLib_Usability(t *testing.T) {
 	cs := crypto.NewCipherSuiteStub()
+	clientUUID := RandomUUID()
 
 	// Client: Create request
 	r, err := NewRequest(RequestData{
 		TransactionID:   42,
-		ClientUUID:      RandomUUID(),
+		ClientUUID:      clientUUID,
 		ClientIP:        net.IPv4(88, 200, 23, 30),
 		TargetProtocol:  ProtocolIPV4,
 		TargetIP:        net.IPv4(88, 200, 23, 40),
@@ -62,6 +63,7 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 		TargetPortStart: 80,
 		TargetPortEnd:   100,
 		Duration:        3 * time.Second,
+		ClientUUID:      clientUUID,
 	}, cs)
 	require.NoError(t, err)
 	require.NotNil(t, resp)

@@ -132,7 +132,7 @@ func (r *Request) Marshal() ([]byte, error) {
 		return nil, errors.Wrap(err, "header marshal")
 	}
 
-	ec, err := r.c.Secure(header, r.Body)
+	ec, err := r.c.Secure(header, r.Body, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "secure")
 	}

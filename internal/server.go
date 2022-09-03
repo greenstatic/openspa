@@ -39,10 +39,14 @@ func NewPublicKeyResolveFromClientUUID(l crypto.PublicKeyLookuper) *PublicKeyRes
 	return p
 }
 
-func (p PublicKeyResolveFromClientUUID) PublicKey(packet tlv.Container) (crypt.PublicKey, error) {
-	uuid, err := openspalib.ClientUUIDFromContainer(packet)
+func (p PublicKeyResolveFromClientUUID) PublicKey(_, meta tlv.Container) (crypt.PublicKey, error) {
+	if meta == nil {
+		return nil, errors.New("no meta container")
+	}
+
+	uuid, err := openspalib.ClientUUIDFromContainer(meta)
 	if err != nil {
-		return nil, errors.Wrap(err, "client uuid from container")
+		return nil, errors.Wrap(err, "client uuid from meta container")
 	}
 
 	pub, err := p.l.LookupPublicKey(uuid)

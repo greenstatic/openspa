@@ -34,10 +34,10 @@ func TestRequestRoutine(t *testing.T) {
 
 	resolvClient := crypto.NewPublicKeyResolverMock()
 	cipherClient := crypto.NewCipherSuite_RSA_SHA256_AES256CBC(tEnv.clientPrivateKey, resolvClient)
-	resolvClient.On("PublicKey", mock.Anything).Return(tEnv.serverPublicKey, nil)
+	resolvClient.On("PublicKey", mock.Anything, nil).Return(tEnv.serverPublicKey, nil)
 
 	resolvServer := crypto.NewPublicKeyResolverMock()
-	resolvServer.On("PublicKey", mock.Anything).Return(tEnv.clientPublicKey, nil)
+	resolvServer.On("PublicKey", mock.Anything, mock.Anything).Return(tEnv.clientPublicKey, nil)
 	cipherServer := crypto.NewCipherSuite_RSA_SHA256_AES256CBC(tEnv.serverPrivateKey, resolvServer)
 
 	preHookTriggered := false
@@ -131,9 +131,11 @@ func panicOnErr(err error) {
 func TestPerformRequest(t *testing.T) {
 	sender := &udpSenderMock{}
 	cs := crypto.NewCipherSuiteStub()
+
+	clientUUID := "c3b66a05-9098-4100-8141-be5695ada0e7"
 	reqD := lib.RequestData{
 		TransactionID:   42,
-		ClientUUID:      "c3b66a05-9098-4100-8141-be5695ada0e7",
+		ClientUUID:      clientUUID,
 		ClientIP:        net.IPv4(88, 200, 23, 10),
 		TargetProtocol:  lib.ProtocolTCP,
 		TargetIP:        net.IPv4(88, 200, 23, 19),
@@ -148,6 +150,7 @@ func TestPerformRequest(t *testing.T) {
 		TargetPortStart: reqD.TargetPortStart,
 		TargetPortEnd:   reqD.TargetPortEnd,
 		Duration:        time.Minute,
+		ClientUUID:      clientUUID,
 	}
 
 	respT, err := lib.NewResponse(respD, cs)

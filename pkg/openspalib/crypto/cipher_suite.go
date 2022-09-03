@@ -18,8 +18,10 @@ const (
 type CipherSuite interface {
 	CipherSuiteID() CipherSuiteID
 
-	// Secure performs Encryption (body) and SignatureSignor (header+body) and returns an Encrypted TLV container
-	Secure(header []byte, packet tlv.Container) (tlv.Container, error)
+	// Secure performs Encryption (body) and SignatureSignor (header+body) and returns an Encrypted TLV container.
+	// The meta parameter is additional information that is available for security, it is not actually sent to the
+	// recipient.
+	Secure(header []byte, packet, meta tlv.Container) (tlv.Container, error)
 
 	// Unlock performs Decryption and SignatureSignor verification and returns the Packet TLV container that was secured
 	Unlock(header []byte, ec tlv.Container) (tlv.Container, error)

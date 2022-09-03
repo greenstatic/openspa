@@ -110,7 +110,7 @@ type staticPublicKeyResolver struct {
 	key cryptography.PublicKey
 }
 
-func (r staticPublicKeyResolver) PublicKey(_ tlv.Container) (cryptography.PublicKey, error) {
+func (r staticPublicKeyResolver) PublicKey(_, _ tlv.Container) (cryptography.PublicKey, error) {
 	return r.key, nil
 }
 

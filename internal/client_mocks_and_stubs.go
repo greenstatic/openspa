@@ -53,6 +53,11 @@ func stubServerResponder(reqB []byte, cs crypto.CipherSuite, params stubServerRe
 		return nil, errors.Wrap(err, "request unmarshal")
 	}
 
+	clientUUID, err := lib.ClientUUIDFromContainer(req.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "request has no client uuid")
+	}
+
 	targetProto, err := lib.TargetProtocolFromContainer(req.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "target protocol from container")
@@ -80,6 +85,7 @@ func stubServerResponder(reqB []byte, cs crypto.CipherSuite, params stubServerRe
 		TargetPortStart: targetPortStart,
 		TargetPortEnd:   targetPortEnd,
 		Duration:        params.Duration,
+		ClientUUID:      clientUUID,
 	}, cs)
 	if err != nil {
 		return nil, errors.Wrap(err, "new response")

@@ -92,17 +92,17 @@ func TestCipherSuite_RSA_SHA256_AES256CBC(t *testing.T) {
 
 		// Client
 		resolverClient := NewPublicKeyResolverMock()
-		resolverClient.On("PublicKey", mock.Anything).Return(test.serverPublic, nil).Once()
+		resolverClient.On("PublicKey", mock.Anything, nil).Return(test.serverPublic, nil).Once()
 
 		csClient := NewCipherSuite_RSA_SHA256_AES256CBC(test.clientPrivate, resolverClient)
 		assert.Equalf(t, CipherRSA_SHA256_AES256CBC_ID, csClient.CipherSuiteID(), desc)
 
-		ec, err := csClient.Secure(header, pc)
+		ec, err := csClient.Secure(header, pc, nil)
 		assert.NoErrorf(t, err, desc)
 
 		// Server
 		resolverServer := NewPublicKeyResolverMock()
-		resolverServer.On("PublicKey", mock.Anything).Return(test.clientPublic, nil).Once()
+		resolverServer.On("PublicKey", mock.Anything, nil).Return(test.clientPublic, nil).Once()
 
 		csServer := NewCipherSuite_RSA_SHA256_AES256CBC(test.serverPrivate, resolverServer)
 		pcServer, err := csServer.Unlock(header, ec)
@@ -131,15 +131,15 @@ func TestCipherSuite_RSA_SHA256_AES256CBC_UnlockDoesNotModifyContainer(t *testin
 	pc.SetBytes(5, []byte{5, 4, 3, 2, 1})
 
 	resolverClient := NewPublicKeyResolverMock()
-	resolverClient.On("PublicKey", mock.Anything).Return(serverPub, nil).Once()
+	resolverClient.On("PublicKey", mock.Anything, nil).Return(serverPub, nil).Once()
 
 	csClient := NewCipherSuite_RSA_SHA256_AES256CBC(clientPriv, resolverClient)
-	ec, err := csClient.Secure(header, pc)
+	ec, err := csClient.Secure(header, pc, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, ec)
 
 	resolverServer := NewPublicKeyResolverMock()
-	resolverServer.On("PublicKey", mock.Anything).Return(clientPub, nil).Twice()
+	resolverServer.On("PublicKey", mock.Anything, nil).Return(clientPub, nil).Twice()
 
 	csServer := NewCipherSuite_RSA_SHA256_AES256CBC(serverPriv, resolverServer)
 

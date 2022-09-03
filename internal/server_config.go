@@ -33,6 +33,10 @@ type ServerConfigServerHTTP struct {
 	Port   int    `yaml:"port"`
 }
 
+const (
+	ServerConfigFirewallIIPTables = "iptables"
+)
+
 type ServerConfigFirewall struct {
 	Backend  string               `yaml:"backend"`
 	IPTables ServerConfigIPTables `yaml:"iptables"`
@@ -110,7 +114,7 @@ func (s ServerConfigServerHTTP) Verify() error {
 }
 
 func (s ServerConfigFirewall) Verify() error {
-	if s.Backend != "iptables" {
+	if s.Backend != ServerConfigFirewallIIPTables {
 		return errors.New("invalid backend")
 	}
 
@@ -235,7 +239,7 @@ func DefaultServerConfig() ServerConfig {
 			},
 		},
 		Firewall: ServerConfigFirewall{
-			Backend: "iptables",
+			Backend: ServerConfigFirewallIIPTables,
 			IPTables: ServerConfigIPTables{
 				Chain: IPTablesChainDefault,
 			},

@@ -80,11 +80,22 @@ func TestPublicKeyResolveFromClientUUID_PublicKey(t *testing.T) {
 
 	l.On("LookupPublicKey", uuid).Return(pub, nil).Once()
 
-	pub2, err := p.PublicKey(c)
+	pub2, err := p.PublicKey(nil, c)
 	assert.NoError(t, err)
 	assert.NotNil(t, pub2)
 
 	assert.Equal(t, pub, pub2)
+
+	l.AssertExpectations(t)
+}
+func TestPublicKeyResolveFromClientUUID_PublicKey_NoPanic(t *testing.T) {
+	l := crypto.NewPublicKeyLookupMock()
+	p := NewPublicKeyResolveFromClientUUID(l)
+
+	assert.NotPanics(t, func() {
+		_, err := p.PublicKey(nil, nil)
+		assert.Error(t, err)
+	})
 
 	l.AssertExpectations(t)
 }

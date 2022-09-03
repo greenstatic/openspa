@@ -39,8 +39,8 @@ func (r *CipherSuite_RSA_SHA256_AES256CBC) CipherSuiteID() CipherSuiteID {
 //  4. Encrypts the session key using the receiver's RSA public key
 //
 // Returns a Container according to the Encrypted TLV definition
-func (r *CipherSuite_RSA_SHA256_AES256CBC) Secure(header []byte, packet tlv.Container) (tlv.Container, error) {
-	receiverPubKey, err := r.resolver.PublicKey(packet)
+func (r *CipherSuite_RSA_SHA256_AES256CBC) Secure(header []byte, packet, meta tlv.Container) (tlv.Container, error) {
+	receiverPubKey, err := r.resolver.PublicKey(packet, meta)
 	if err != nil {
 		return nil, errors.Wrap(err, "resolve receiver public key")
 	}
@@ -132,7 +132,7 @@ func (r *CipherSuite_RSA_SHA256_AES256CBC) Unlock(header []byte, ec tlv.Containe
 		return nil, errors.New("no signature")
 	}
 
-	sigPubKey, err := r.resolver.PublicKey(packetContainer)
+	sigPubKey, err := r.resolver.PublicKey(packetContainer, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "resolve sender's public key")
 	}

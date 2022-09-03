@@ -7,15 +7,15 @@ import (
 	"github.com/greenstatic/openspa/pkg/openspalib/tlv"
 )
 
-// PublicKeyLookuper is used when we need to get the client's public key based on their clientId. The client's public
+// PublicKeyLookuper is used when we need to get the client's public key based on their clientUUID. The client's public
 // key will be used to encrypt OpenSPA responses and verify signatures from OpenSPA requests. If the client is not
 // authorized, this function should still return their key, since the authentication step is performed separately.
 type PublicKeyLookuper interface {
-	LookupPublicKey(clientID string) (crypto.PublicKey, error)
+	LookupPublicKey(clientUUID string) (crypto.PublicKey, error)
 }
 
 type PublicKeyResolver interface {
-	PublicKey(packet tlv.Container) (crypto.PublicKey, error)
+	PublicKey(packet, meta tlv.Container) (crypto.PublicKey, error)
 }
 
 func PaddingPKCS7(data []byte, blockSize int) ([]byte, error) {

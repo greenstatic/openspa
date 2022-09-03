@@ -14,6 +14,8 @@ import (
 type ResponseData struct {
 	TransactionID uint8
 
+	ClientUUID string
+
 	TargetProtocol  InternetProtocolNumber
 	TargetIP        net.IP
 	TargetPortStart int
@@ -31,6 +33,11 @@ type Response struct {
 
 	Header Header
 	Body   tlv.Container
+
+	// Metadata is not actually sent, but it is passed to the CipherSuite implementation, so we can provide additional
+	// data that can be used by CipherSuite implementation for security purposes. This data is not packed into OpenSPA
+	// request/responses, it is merely passed along various subsystems.
+	Metadata tlv.Container
 }
 
 func NewResponse(d ResponseData, c crypto.CipherSuite) (*Response, error) {
@@ -49,9 +56,14 @@ func NewResponse(d ResponseData, c crypto.CipherSuite) (*Response, error) {
 		return nil, errors.Wrap(err, "response extended data generation")
 	}
 
-	r.Body, err = r.bodyCreate(d, ed)
-	if err != nil {
+	r.Body = tlv.NewContainer()
+	if err = r.bodyCreate(r.Body, d, ed); err != nil {
 		return nil, errors.Wrap(err, "body create")
+	}
+
+	r.Metadata = tlv.NewContainer()
+	if err := r.metadataCreate(r.Metadata, d); err != nil {
+		return nil, errors.Wrap(err, "metadata create")
 	}
 
 	return r, nil
@@ -63,7 +75,7 @@ func (r *Response) Marshal() ([]byte, error) {
 		return nil, errors.Wrap(err, "header marshal")
 	}
 
-	ec, err := r.c.Secure(header, r.Body)
+	ec, err := r.c.Secure(header, r.Body, r.Metadata)
 	if err != nil {
 		return nil, errors.Wrap(err, "secure")
 	}
@@ -97,44 +109,46 @@ func (r *Response) generateExtendedData() (ResponseExtendedData, error) {
 	return ed, nil
 }
 
-func (r *Response) bodyCreate(d ResponseData, ed ResponseExtendedData) (tlv.Container, error) {
-	c := tlv.NewContainer()
-
+func (r *Response) bodyCreate(c tlv.Container, d ResponseData, ed ResponseExtendedData) error {
 	if err := TargetProtocolToContainer(c, d.TargetProtocol); err != nil {
-		return nil, errors.Wrap(err, "protocol to container")
+		return errors.Wrap(err, "protocol to container")
 	}
 
 	if isIPv4(d.TargetIP) {
 		if err := TargetIPv4ToContainer(c, d.TargetIP); err != nil {
-			return nil, errors.Wrap(err, "target ipv4 to container")
+			return errors.Wrap(err, "target ipv4 to container")
 		}
 	} else {
 		if err := TargetIPv6ToContainer(c, d.TargetIP); err != nil {
-			return nil, errors.Wrap(err, "target ipv6 to container")
+			return errors.Wrap(err, "target ipv6 to container")
 		}
 	}
 
 	if err := TargetPortStartToContainer(c, d.TargetPortStart); err != nil {
-		return nil, errors.Wrap(err, "port start to container")
+		return errors.Wrap(err, "port start to container")
 	}
 
 	if err := TargetPortEndToContainer(c, d.TargetPortEnd); err != nil {
-		return nil, errors.Wrap(err, "port end to container")
+		return errors.Wrap(err, "port end to container")
 	}
 
 	if err := DurationToContainer(c, d.Duration); err != nil {
-		return nil, errors.Wrap(err, "duration to container")
+		return errors.Wrap(err, "duration to container")
 	}
 
 	if err := NonceToContainer(c, ed.Nonce); err != nil {
-		return nil, errors.Wrap(err, "nonce to container")
+		return errors.Wrap(err, "nonce to container")
 	}
 
-	if err := NonceToContainer(c, ed.Nonce); err != nil {
-		return nil, errors.Wrap(err, "nonce to container")
+	return nil
+}
+
+func (r *Response) metadataCreate(c tlv.Container, d ResponseData) error {
+	if err := ClientUUIDToContainer(c, d.ClientUUID); err != nil {
+		return errors.Wrap(err, "client uuid to container")
 	}
 
-	return c, nil
+	return nil
 }
 
 func ResponseUnmarshal(b []byte, cs crypto.CipherSuite) (*Response, error) {

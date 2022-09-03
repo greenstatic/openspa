@@ -23,8 +23,8 @@ func (c *CipherSuiteMock) CipherSuiteID() CipherSuiteID {
 	return CipherSuiteID(uint8(args.Int(0)))
 }
 
-func (c *CipherSuiteMock) Secure(header []byte, body tlv.Container) (tlv.Container, error) {
-	args := c.Called(header, body)
+func (c *CipherSuiteMock) Secure(header []byte, body, meta tlv.Container) (tlv.Container, error) {
+	args := c.Called(header, body, meta)
 	return args.Get(0).(tlv.Container), args.Error(1)
 }
 
@@ -66,7 +66,7 @@ func (c *CipherSuiteStub) CipherSuiteID() CipherSuiteID {
 	return CipherNoSecurity
 }
 
-func (c *CipherSuiteStub) Secure(header []byte, body tlv.Container) (tlv.Container, error) {
+func (c *CipherSuiteStub) Secure(header []byte, body, meta tlv.Container) (tlv.Container, error) {
 	return body, nil
 }
 
@@ -85,8 +85,8 @@ func NewPublicKeyLookupMock() *PublicKeyLookupMock {
 	return p
 }
 
-func (p *PublicKeyLookupMock) LookupPublicKey(clientID string) (crypto.PublicKey, error) {
-	args := p.Called(clientID)
+func (p *PublicKeyLookupMock) LookupPublicKey(clientUUID string) (crypto.PublicKey, error) {
+	args := p.Called(clientUUID)
 	return args.Get(0).(crypto.PublicKey), args.Error(1)
 }
 
@@ -101,7 +101,7 @@ func NewPublicKeyResolverMock() *PublicKeyResolverMock {
 	return p
 }
 
-func (p *PublicKeyResolverMock) PublicKey(packet tlv.Container) (crypto.PublicKey, error) {
-	args := p.Called(packet)
+func (p *PublicKeyResolverMock) PublicKey(packet, meta tlv.Container) (crypto.PublicKey, error) {
+	args := p.Called(packet, meta)
 	return args.Get(0).(crypto.PublicKey), args.Error(1)
 }
