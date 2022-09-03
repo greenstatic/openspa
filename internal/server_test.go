@@ -88,6 +88,7 @@ func TestPublicKeyResolveFromClientUUID_PublicKey(t *testing.T) {
 
 	l.AssertExpectations(t)
 }
+
 func TestPublicKeyResolveFromClientUUID_PublicKey_NoPanic(t *testing.T) {
 	l := crypto.NewPublicKeyLookupMock()
 	p := NewPublicKeyResolveFromClientUUID(l)

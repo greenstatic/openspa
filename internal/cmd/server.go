@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/greenstatic/openspa/internal"
 	"github.com/rs/zerolog/log"
@@ -55,8 +56,9 @@ func server(_ *cobra.Command, config internal.ServerConfig) {
 		IP:                net.ParseIP(config.Server.IP),
 		Port:              config.Server.Port,
 		NoRequestHandlers: internal.NoRequestHandlersDefault,
-		FW:                nil, // TODO
+		FW:                &internal.FirewallStub{}, // TODO
 		CS:                cs,
+		Authz:             internal.NewAuthorizationStrategyAllow(time.Hour), // TODO
 	})
 
 	go func() {

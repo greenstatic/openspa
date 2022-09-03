@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
@@ -12,10 +13,11 @@ import (
 )
 
 func TestServerHandler_DatagramRequestHandler(t *testing.T) {
-	fw := &FirewallStub{}
+	fw := &FirewallMock{}
+	frm := NewFirewallRuleManager(fw)
 	cs := crypto.NewCipherSuiteStub()
 
-	sh := NewServerHandler(fw, cs)
+	sh := NewServerHandler(frm, cs, NewAuthorizationStrategyAllow(time.Hour))
 
 	reqData := openspalib.RequestData{
 		TransactionID:   23,
@@ -38,6 +40,12 @@ func TestServerHandler_DatagramRequestHandler(t *testing.T) {
 		IP:   net.IPv4(88, 200, 23, 12),
 		Port: 40975,
 	}, mock.Anything).Return(nil).Once()
+	fw.On("RuleAdd", FirewallRule{
+		Proto:   FirewallProtoTCP,
+		SrcIP:   net.IPv4(88, 200, 23, 23).To4(),
+		DstIP:   net.IPv4(88, 200, 23, 19).To4(),
+		DstPort: 80,
+	}).Return(nil).Once()
 
 	sh.DatagramRequestHandler(context.TODO(), resp, DatagramRequest{
 		data: reqB,
@@ -48,4 +56,9 @@ func TestServerHandler_DatagramRequestHandler(t *testing.T) {
 	})
 
 	resp.AssertExpectations(t)
+	fw.AssertExpectations(t)
+}
+
+func TestFirewallRuleFromRequestContainer(t *testing.T) {
+	// TODO
 }

@@ -27,10 +27,11 @@ type ServerSettings struct {
 	NoRequestHandlers int
 	FW                Firewall
 	CS                crypto.CipherSuite
+	Authz             AuthorizationStrategy
 }
 
 func NewServer(set ServerSettings) *Server {
-	h := NewServerHandler(set.FW, set.CS)
+	h := NewServerHandler(NewFirewallRuleManager(set.FW), set.CS, set.Authz)
 	rc := NewRequestCoordinator(h, set.NoRequestHandlers)
 
 	udpServer := NewUDPServer(set.IP, set.Port, rc)
@@ -50,6 +51,7 @@ func (s *Server) Start() error {
 
 	return s.udpServer.Start()
 }
+
 func (s *Server) Stop() error {
 	// s.reqCoord.Stop() // TODO
 
