@@ -88,6 +88,7 @@ func (r *CipherSuite_RSA_SHA256_AES256CBC) Secure(header []byte, packet, meta tl
 	return enc, nil
 }
 
+//gocyclo:ignore
 func (r *CipherSuite_RSA_SHA256_AES256CBC) Unlock(header []byte, ec tlv.Container) (tlv.Container, error) {
 	sessionKeyEnc, ok := ec.GetBytes(EncryptedSessionKey)
 	if !ok {
