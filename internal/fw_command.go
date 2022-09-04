@@ -51,6 +51,10 @@ func NewFirewallCommand(setupCmd, ruleAddCmd, ruleRemoveCmd string) *FirewallCom
 }
 
 func (fc *FirewallCommand) FirewallSetup() error {
+	if fc.FirewallSetupCmd == "" {
+		return nil
+	}
+
 	_, err := fc.exec.Execute(fc.FirewallSetupCmd, nil)
 	return err
 }
@@ -104,4 +108,20 @@ func (fc *FirewallCommand) RuleRemove(r FirewallRule, meta FirewallRuleMetadata)
 	}
 
 	return nil
+}
+
+func newFirewallCommandFromServerConfigFirewall(fc ServerConfigFirewall) (*FirewallCommand, error) {
+	setup := fc.Command.FirewallSetup
+	add := fc.Command.RuleAdd
+	remove := fc.Command.RuleRemove
+
+	if len(add) == 0 {
+		return nil, errors.New("rule add command is empty")
+	}
+
+	if len(remove) == 0 {
+		return nil, errors.New("rule remove command is empty")
+	}
+
+	return NewFirewallCommand(setup, add, remove), nil
 }

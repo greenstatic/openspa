@@ -49,8 +49,9 @@ type ServerConfigFirewallIPTables struct {
 }
 
 type ServerConfigFirewallCommand struct {
-	RuleAdd    string `yaml:"ruleAdd"`
-	RuleRemove string `yaml:"ruleRemove"`
+	RuleAdd       string `yaml:"ruleAdd"`
+	RuleRemove    string `yaml:"ruleRemove"`
+	FirewallSetup string `yaml:"firewallSetup,omitempty"` // optional
 }
 
 type ServerConfigCrypto struct {
@@ -145,6 +146,11 @@ func (s ServerConfigFirewallIPTables) Verify() error {
 }
 
 func (s ServerConfigFirewallCommand) Verify() error {
+	//nolint:staticcheck
+	if len(s.FirewallSetup) == 0 {
+		// It's okay if the firewall setup command is empty, it is optional
+	}
+
 	if len(s.RuleAdd) == 0 {
 		return errors.New("rule add is empty")
 	}
@@ -230,8 +236,13 @@ func (s ServerConfig) Merge(sc ServerConfig) ServerConfig {
 		f.Firewall.Backend = sc.Firewall.Backend
 	}
 
-	if sc.Firewall.IPTables.Chain != "" {
-		f.Firewall.IPTables.Chain = sc.Firewall.IPTables.Chain
+	switch sc.Firewall.Backend {
+	case ServerConfigFirewallBackendIPTables:
+		if sc.Firewall.IPTables.Chain != "" {
+			f.Firewall.IPTables.Chain = sc.Firewall.IPTables.Chain
+		}
+	case ServerConfigFirewallBackendCommand:
+		f.Firewall.Command = sc.Firewall.Command
 	}
 
 	f.Crypto = sc.Crypto

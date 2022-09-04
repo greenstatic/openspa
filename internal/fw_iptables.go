@@ -198,3 +198,17 @@ func (c *CommandExecute) Execute(cmd string, stdin []byte, args ...string) ([]by
 
 	return out, nil
 }
+
+func newIPTablesFromServerConfigFirewall(fc ServerConfigFirewall) (*IPTables, error) {
+	chain := fc.IPTables.Chain
+
+	if len(chain) == 0 {
+		return nil, errors.New("missing chain")
+	}
+
+	ipt := NewIPTables(&CommandExecute{}, IPTablesSettings{
+		Chain: chain,
+	})
+
+	return ipt, nil
+}

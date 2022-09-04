@@ -20,6 +20,16 @@ func TestFirewallCommand_FirewallSetup(t *testing.T) {
 
 	exec.AssertExpectations(t)
 }
+func TestFirewallCommand_FirewallSetup_Empty(t *testing.T) {
+	fc := NewFirewallCommand("", "rule-add", "rule-remove")
+	exec := &CommandExecuteMock{}
+	fc.exec = exec
+
+	assert.NoError(t, fc.FirewallSetup())
+
+	exec.AssertExpectations(t)
+	exec.AssertNumberOfCalls(t, "Execute", 0)
+}
 
 func TestFirewallCommand_RuleAdd(t *testing.T) {
 	fc := NewFirewallCommand("setup-cmd", "rule-add", "rule-remove")

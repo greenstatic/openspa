@@ -31,7 +31,12 @@ type ServerSettings struct {
 }
 
 func NewServer(set ServerSettings) *Server {
-	h := NewServerHandler(NewFirewallRuleManager(set.FW), set.CS, set.Authz)
+	frm := NewFirewallRuleManager(set.FW)
+	if err := frm.Start(); err != nil {
+		log.Fatal().Err(err).Msgf("Failed to start firewall rule manager")
+	}
+	// IDEA - start FRM (and stop) using the server's Start/Stop methods
+	h := NewServerHandler(frm, set.CS, set.Authz)
 	rc := NewRequestCoordinator(h, set.NoRequestHandlers)
 
 	udpServer := NewUDPServer(set.IP, set.Port, rc)

@@ -39,6 +39,10 @@ func serverCmdRunFn(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msgf("Failed to parse config file")
 	}
 
+	if err := sc.Verify(); err != nil {
+		log.Fatal().Err(err).Msgf("Server config file invalid")
+	}
+
 	server(cmd, sc)
 }
 
@@ -52,13 +56,18 @@ func server(_ *cobra.Command, config internal.ServerConfig) {
 		log.Fatal().Err(err).Msgf("Failed to setup server cipher suite")
 	}
 
+	fw, err := internal.NewFirewallFromServerConfigFirewall(config.Firewall)
+	if err != nil {
+		log.Fatal().Err(err).Msgf("Failed to initialize firewall backend")
+	}
+
 	s := internal.NewServer(internal.ServerSettings{
 		IP:                net.ParseIP(config.Server.IP),
 		Port:              config.Server.Port,
 		NoRequestHandlers: internal.NoRequestHandlersDefault,
-		FW:                &internal.FirewallStub{}, // TODO
+		FW:                fw,
 		CS:                cs,
-		Authz:             internal.NewAuthorizationStrategyAllow(time.Hour), // TODO
+		Authz:             internal.NewAuthorizationStrategyAllow(10 * time.Second), // TODO
 	})
 
 	go func() {

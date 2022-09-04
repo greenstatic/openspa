@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -36,4 +38,15 @@ func (r *FirewallRule) String() string {
 		return fmt.Sprintf("%s-%d", s, r.DstPortEnd)
 	}
 	return s
+}
+
+func NewFirewallFromServerConfigFirewall(fc ServerConfigFirewall) (Firewall, error) {
+	switch fc.Backend {
+	case ServerConfigFirewallBackendIPTables:
+		return newIPTablesFromServerConfigFirewall(fc)
+	case ServerConfigFirewallBackendCommand:
+		return newFirewallCommandFromServerConfigFirewall(fc)
+	}
+
+	return nil, errors.New("unsupported firewall backend")
 }
