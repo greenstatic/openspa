@@ -155,6 +155,7 @@ func unmarshalContainer(b []byte) (*container, error) {
 	return c, nil
 }
 
+//gocyclo:ignore
 func parse(b []byte) ([]Item, error) {
 	var err error
 
