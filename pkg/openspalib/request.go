@@ -57,6 +57,7 @@ func NewRequest(d RequestData, c crypto.CipherSuite) (*Request, error) {
 	return r, nil
 }
 
+//nolint:unparam
 func (r *Request) generateRequestExtendedData() (RequestExtendedData, error) {
 	ed := RequestExtendedData{}
 
