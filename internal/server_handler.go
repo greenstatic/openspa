@@ -153,27 +153,35 @@ func firewallRuleFromRequestContainer(c tlv.Container) ([]FirewallRule, firewall
 		return nil, firewallRequest{}, errors.Wrap(err, "client uuid")
 	}
 
-	p, err := openspalib.TargetProtocolFromContainer(c)
+	firewallC, err := openspalib.TLVFromContainer(c, openspalib.FirewallKey)
+	if err != nil {
+		return nil, firewallRequest{}, errors.Wrap(err, "firewall tlv container")
+	}
+	if firewallC == nil {
+		return nil, firewallRequest{}, errors.New("firewall tlv container is nil")
+	}
+
+	p, err := openspalib.TargetProtocolFromContainer(firewallC)
 	if err != nil {
 		return nil, firewallRequest{}, errors.Wrap(err, "target protocol")
 	}
 
-	cIP, err := openspalib.ClientIPFromContainer(c)
+	cIP, err := openspalib.ClientIPFromContainer(firewallC)
 	if err != nil {
 		return nil, firewallRequest{}, errors.Wrap(err, "client ip")
 	}
 
-	tIP, err := openspalib.TargetIPFromContainer(c)
+	tIP, err := openspalib.TargetIPFromContainer(firewallC)
 	if err != nil {
 		return nil, firewallRequest{}, errors.Wrap(err, "target ip")
 	}
 
-	portStart, err := openspalib.TargetPortStartFromContainer(c)
+	portStart, err := openspalib.TargetPortStartFromContainer(firewallC)
 	if err != nil {
 		return nil, firewallRequest{}, errors.Wrap(err, "target port start")
 	}
 
-	portEnd, err := openspalib.TargetPortEndFromContainer(c)
+	portEnd, err := openspalib.TargetPortEndFromContainer(firewallC)
 	if err != nil {
 		return nil, firewallRequest{}, errors.Wrap(err, "target port end")
 	}

@@ -58,22 +58,31 @@ func stubServerResponder(reqB []byte, cs crypto.CipherSuite, params stubServerRe
 		return nil, errors.Wrap(err, "request has no client uuid")
 	}
 
-	targetProto, err := lib.TargetProtocolFromContainer(req.Body)
+	firewallC, err := lib.TLVFromContainer(req.Body, lib.FirewallKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "firewall tlv from container")
+	}
+
+	if firewallC == nil {
+		return nil, errors.New("firewall tlv container nil")
+	}
+
+	targetProto, err := lib.TargetProtocolFromContainer(firewallC)
 	if err != nil {
 		return nil, errors.Wrap(err, "target protocol from container")
 	}
 
-	targetIP, err := lib.TargetIPFromContainer(req.Body)
+	targetIP, err := lib.TargetIPFromContainer(firewallC)
 	if err != nil {
 		return nil, errors.Wrap(err, "target ip from container")
 	}
 
-	targetPortStart, err := lib.TargetPortStartFromContainer(req.Body)
+	targetPortStart, err := lib.TargetPortStartFromContainer(firewallC)
 	if err != nil {
 		return nil, errors.Wrap(err, "target port start from container")
 	}
 
-	targetPortEnd, err := lib.TargetPortEndFromContainer(req.Body)
+	targetPortEnd, err := lib.TargetPortEndFromContainer(firewallC)
 	if err != nil {
 		return nil, errors.Wrap(err, "target port end from container")
 	}

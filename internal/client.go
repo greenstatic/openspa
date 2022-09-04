@@ -72,7 +72,12 @@ func RequestRoutine(p RequestRoutineParameters, cs crypto.CipherSuite, opt Reque
 		return fmt.Errorf("transaction id mismatch in response (%d != %d)", rd.TransactionID, resp.Header.TransactionID)
 	}
 
-	dur, err := lib.DurationFromContainer(resp.Body)
+	firewallC, err := lib.TLVFromContainer(resp.Body, lib.FirewallKey)
+	if err != nil {
+		return errors.Wrap(err, "no firewall tlv8 in body container")
+	}
+
+	dur, err := lib.DurationFromContainer(firewallC)
 	if err != nil {
 		return errors.Wrap(err, "duration from response container")
 	}

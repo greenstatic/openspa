@@ -8,18 +8,23 @@ import (
 	"github.com/pkg/errors"
 )
 
+// OpenSPA Packet TLV8 definition keys
 const (
-	TimestampKey       uint8 = 1
-	ClientUUIDKey      uint8 = 2
-	TargetProtocolKey  uint8 = 3
-	TargetPortStartKey uint8 = 4
-	TargetPortEndKey   uint8 = 5
-	ClientIPv4Key      uint8 = 6
-	ClientIPv6Key      uint8 = 7
-	TargetIPv4Key      uint8 = 8
-	TargetIPv6Key      uint8 = 9
-	NonceKey           uint8 = 10
-	DurationKey        uint8 = 11
+	TimestampKey  uint8 = 1
+	ClientUUIDKey uint8 = 2
+	FirewallKey   uint8 = 3
+)
+
+// Firewall TLV8 definition keys
+const (
+	TargetProtocolKey  uint8 = 1
+	TargetPortStartKey uint8 = 2
+	TargetPortEndKey   uint8 = 3
+	ClientIPv4Key      uint8 = 4
+	ClientIPv6Key      uint8 = 5
+	TargetIPv4Key      uint8 = 6
+	TargetIPv6Key      uint8 = 7
+	DurationKey        uint8 = 8
 )
 
 func TimestampFromContainer(c tlv.Container) (time.Time, error) {
@@ -276,25 +281,6 @@ func TargetIPFromContainer(c tlv.Container) (net.IP, error) {
 	return ip, nil
 }
 
-func NonceFromContainer(c tlv.Container) ([]byte, error) {
-	b, ok := c.GetBytes(NonceKey)
-	if !ok {
-		return nil, errors.Wrap(ErrMissingEntry, "no nonce key in container")
-	}
-	return b, nil
-}
-
-func NonceToContainer(c tlv.Container, n []byte) error {
-	b, err := NonceEncode(n)
-	if err != nil {
-		return errors.Wrap(err, "nonce encode")
-	}
-
-	c.SetBytes(NonceKey, b)
-
-	return nil
-}
-
 func DurationFromContainer(c tlv.Container) (time.Duration, error) {
 	b, ok := c.GetBytes(DurationKey)
 	if !ok {
@@ -342,5 +328,25 @@ func ClientUUIDToContainer(c tlv.Container, uuid string) error {
 
 	c.SetBytes(ClientUUIDKey, b)
 
+	return nil
+}
+
+func TLVFromContainer(c tlv.Container, key uint8) (tlv.Container, error) {
+	b, ok := c.GetBytes(key)
+	if !ok {
+		return nil, errors.Wrap(ErrMissingEntry, "no tlv in container")
+	}
+
+	c2, err := tlv.UnmarshalTLVContainer(b)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshal tlv in container")
+	}
+
+	return c2, nil
+}
+
+func TLVToContainer(parent, child tlv.Container, key uint8) error {
+	b := child.Bytes()
+	parent.SetBytes(key, b)
 	return nil
 }

@@ -31,27 +31,31 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 	// Server: Receive request
 	rS, err := RequestUnmarshal(reqBytes, cs)
 	require.NotNil(t, rS)
-	assert.Equal(t, 1, rS.Header.Version)
+	assert.Equal(t, 2, rS.Header.Version)
 	assert.Equal(t, uint8(42), rS.Header.TransactionID)
 	require.NoError(t, err)
 
-	proto, err := TargetProtocolFromContainer(rS.Body)
+	firewallC, err := TLVFromContainer(rS.Body, FirewallKey)
+	assert.NoError(t, err)
+	assert.NotNil(t, firewallC)
+
+	proto, err := TargetProtocolFromContainer(firewallC)
 	assert.NoError(t, err)
 	assert.Equal(t, ProtocolIPV4, proto)
 
-	portA, err := TargetPortStartFromContainer(rS.Body)
+	portA, err := TargetPortStartFromContainer(firewallC)
 	assert.NoError(t, err)
 	assert.Equal(t, 80, portA)
 
-	portB, err := TargetPortEndFromContainer(rS.Body)
+	portB, err := TargetPortEndFromContainer(firewallC)
 	assert.NoError(t, err)
 	assert.Equal(t, 100, portB)
 
-	cIP, err := ClientIPFromContainer(rS.Body)
+	cIP, err := ClientIPFromContainer(firewallC)
 	assert.NoError(t, err)
 	assert.True(t, net.IPv4(88, 200, 23, 30).Equal(cIP))
 
-	sIP, err := TargetIPFromContainer(rS.Body)
+	sIP, err := TargetIPFromContainer(firewallC)
 	assert.NoError(t, err)
 	assert.True(t, net.IPv4(88, 200, 23, 40).Equal(sIP))
 
@@ -74,26 +78,30 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 	respC, err := ResponseUnmarshal(respBytes, cs)
 	assert.NoError(t, err)
 	require.NotNil(t, respC)
-	assert.Equal(t, 1, respC.Header.Version)
+	assert.Equal(t, 2, respC.Header.Version)
 	assert.Equal(t, uint8(42), respC.Header.TransactionID)
 
-	proto, err = TargetProtocolFromContainer(respC.Body)
+	firewallS, err := TLVFromContainer(respC.Body, FirewallKey)
+	assert.NoError(t, err)
+	assert.NotNil(t, firewallS)
+
+	proto, err = TargetProtocolFromContainer(firewallS)
 	assert.NoError(t, err)
 	assert.Equal(t, ProtocolIPV4, proto)
 
-	tIP, err := TargetIPFromContainer(respC.Body)
+	tIP, err := TargetIPFromContainer(firewallS)
 	assert.NoError(t, err)
 	assert.True(t, net.IPv4(88, 200, 23, 8).Equal(tIP))
 
-	portA, err = TargetPortStartFromContainer(respC.Body)
+	portA, err = TargetPortStartFromContainer(firewallS)
 	assert.NoError(t, err)
 	assert.Equal(t, 80, portA)
 
-	portB, err = TargetPortEndFromContainer(respC.Body)
+	portB, err = TargetPortEndFromContainer(firewallS)
 	assert.NoError(t, err)
 	assert.Equal(t, 100, portB)
 
-	d, err := DurationFromContainer(respC.Body)
+	d, err := DurationFromContainer(firewallS)
 	assert.NoError(t, err)
 	assert.Equal(t, 3*time.Second, d)
 }

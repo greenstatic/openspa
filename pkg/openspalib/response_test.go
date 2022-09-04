@@ -32,31 +32,30 @@ func TestNewResponse(t *testing.T) {
 
 	assert.Equal(t, byte(123), r.Header.TransactionID)
 
-	p, err := TargetProtocolFromContainer(r.Body)
+	firewallC, err := TLVFromContainer(r.Body, FirewallKey)
+	assert.NoError(t, err)
+	assert.NotNil(t, firewallC)
+	assert.NotEqual(t, 0, firewallC.NoEntries())
+
+	p, err := TargetProtocolFromContainer(firewallC)
 	assert.NoError(t, err)
 	assert.Equal(t, ProtocolIPV4, p)
 
-	ip, err := TargetIPFromContainer(r.Body)
+	ip, err := TargetIPFromContainer(firewallC)
 	assert.NoError(t, err)
 	assert.True(t, tIP.Equal(ip))
 
-	ps, err := TargetPortStartFromContainer(r.Body)
+	ps, err := TargetPortStartFromContainer(firewallC)
 	assert.NoError(t, err)
 	assert.Equal(t, 80, ps)
 
-	pe, err := TargetPortEndFromContainer(r.Body)
+	pe, err := TargetPortEndFromContainer(firewallC)
 	assert.NoError(t, err)
 	assert.Equal(t, 120, pe)
 
-	d, err := DurationFromContainer(r.Body)
+	d, err := DurationFromContainer(firewallC)
 	assert.NoError(t, err)
 	assert.Equal(t, dur, d)
-
-	non, err := NonceFromContainer(r.Body)
-	assert.NoError(t, err)
-	assert.NotNil(t, non)
-	assert.NotEqual(t, []byte{0, 0, 0}, non)
-	assert.Len(t, non, NonceSize)
 
 	uuid, err := ClientUUIDFromContainer(r.Metadata)
 	assert.NoError(t, err)
@@ -94,22 +93,23 @@ func TestResponse_bodyCreate(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, r.bodyCreate(c, rd, ed))
 
-	_, err = TargetProtocolFromContainer(c)
+	firewallC, err := TLVFromContainer(c, FirewallKey)
+	assert.NoError(t, err)
+	assert.NotNil(t, firewallC)
+
+	_, err = TargetProtocolFromContainer(firewallC)
 	assert.NoError(t, err)
 
-	_, err = TargetIPFromContainer(c)
+	_, err = TargetIPFromContainer(firewallC)
 	assert.NoError(t, err)
 
-	_, err = TargetPortStartFromContainer(c)
+	_, err = TargetPortStartFromContainer(firewallC)
 	assert.NoError(t, err)
 
-	_, err = TargetPortEndFromContainer(c)
+	_, err = TargetPortEndFromContainer(firewallC)
 	assert.NoError(t, err)
 
-	_, err = DurationFromContainer(c)
-	assert.NoError(t, err)
-
-	_, err = NonceFromContainer(c)
+	_, err = DurationFromContainer(firewallC)
 	assert.NoError(t, err)
 }
 

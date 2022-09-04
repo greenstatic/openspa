@@ -58,7 +58,11 @@ func TestRequestRoutine(t *testing.T) {
 
 			assert.NotEqual(t, uint8(0), req.Header.TransactionID)
 
-			targetIP, err := lib.TargetIPFromContainer(req.Body)
+			firewallC, err := lib.TLVFromContainer(req.Body, lib.FirewallKey)
+			require.NoError(t, err)
+			require.NotNil(t, firewallC)
+
+			targetIP, err := lib.TargetIPFromContainer(firewallC)
 			require.NoError(t, err)
 			assert.True(t, params.ReqParams.TargetIP.Equal(targetIP))
 

@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"crypto"
+	"crypto/rand"
 	"errors"
 
 	"github.com/greenstatic/openspa/pkg/openspalib/tlv"
@@ -64,4 +65,15 @@ func PaddingPKCS7Remove(data []byte, blockSize int) ([]byte, error) {
 	}
 
 	return data[:pIdx], nil
+}
+
+const nonceMinSize = 3 // Minimum number of bytes for the nocne
+
+func randomNonce(size int) ([]byte, error) {
+	b := make([]byte, size)
+	_, err := rand.Read(b)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }

@@ -61,6 +61,10 @@ func (r *CipherSuite_RSA_SHA256_AES256CBC) Secure(header []byte, packet, meta tl
 		return nil, errors.Wrap(err, "signing")
 	}
 
+	if err := r.encryptedPayloadContainerPrepare(encPayload); err != nil {
+		return nil, errors.Wrap(err, "encrypted payload container prepare")
+	}
+
 	encPayload.SetBytes(SignatureKey, signature)
 
 	cipher, iv, key, err := AES256CBCEncrypt(encPayload.Bytes())
@@ -117,6 +121,10 @@ func (r *CipherSuite_RSA_SHA256_AES256CBC) Unlock(header []byte, ec tlv.Containe
 		return nil, errors.Wrap(err, "unmarshal payload container")
 	}
 
+	if err := r.encryptedPayloadContainerValid(payloadContainer); err != nil {
+		return nil, errors.Wrap(err, "encrypted payload container not valid")
+	}
+
 	packet, ok := payloadContainer.GetBytes(PacketKey)
 	if !ok {
 		return nil, errors.New("no packet")
@@ -155,6 +163,28 @@ func (r *CipherSuite_RSA_SHA256_AES256CBC) Unlock(header []byte, ec tlv.Containe
 	}
 
 	return packetContainer, nil
+}
+
+func (r *CipherSuite_RSA_SHA256_AES256CBC) encryptedPayloadContainerPrepare(c tlv.Container) error {
+	nonce, err := randomNonce(nonceMinSize)
+	if err != nil {
+		return errors.Wrap(err, "random nonce generation")
+	}
+
+	c.SetBytes(NonceKey, nonce)
+	return nil
+}
+
+func (r *CipherSuite_RSA_SHA256_AES256CBC) encryptedPayloadContainerValid(c tlv.Container) error {
+	nonce, ok := c.GetBytes(NonceKey)
+	if !ok {
+		return errors.New("no nonce")
+	}
+	if len(nonce) < nonceMinSize {
+		return errors.New("nonce size too small")
+	}
+
+	return nil
 }
 
 func (r *CipherSuite_RSA_SHA256_AES256CBC) sign(header, body []byte) ([]byte, error) {

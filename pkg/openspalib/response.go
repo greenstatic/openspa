@@ -2,7 +2,6 @@ package openspalib
 
 import (
 	"bytes"
-	"crypto/rand"
 	"net"
 	"time"
 
@@ -25,7 +24,6 @@ type ResponseData struct {
 }
 
 type ResponseExtendedData struct {
-	Nonce []byte
 }
 
 type Response struct {
@@ -57,6 +55,7 @@ func NewResponse(d ResponseData, c crypto.CipherSuite) (*Response, error) {
 	}
 
 	r.Body = tlv.NewContainer()
+
 	if err = r.bodyCreate(r.Body, d, ed); err != nil {
 		return nil, errors.Wrap(err, "body create")
 	}
@@ -96,48 +95,40 @@ func (r *Response) Marshal() ([]byte, error) {
 func (r *Response) generateExtendedData() (ResponseExtendedData, error) {
 	ed := ResponseExtendedData{}
 
-	ed.Nonce = make([]byte, NonceSize)
-
-	n, err := rand.Read(ed.Nonce)
-	if err != nil {
-		return ResponseExtendedData{}, errors.New("nonce generation")
-	}
-	if n != NonceSize {
-		return ResponseExtendedData{}, errors.New("invalid nonce size random bytes")
-	}
-
 	return ed, nil
 }
 
 func (r *Response) bodyCreate(c tlv.Container, d ResponseData, ed ResponseExtendedData) error {
-	if err := TargetProtocolToContainer(c, d.TargetProtocol); err != nil {
+	firewallC := tlv.NewContainer()
+
+	if err := TargetProtocolToContainer(firewallC, d.TargetProtocol); err != nil {
 		return errors.Wrap(err, "protocol to container")
 	}
 
 	if isIPv4(d.TargetIP) {
-		if err := TargetIPv4ToContainer(c, d.TargetIP); err != nil {
+		if err := TargetIPv4ToContainer(firewallC, d.TargetIP); err != nil {
 			return errors.Wrap(err, "target ipv4 to container")
 		}
 	} else {
-		if err := TargetIPv6ToContainer(c, d.TargetIP); err != nil {
+		if err := TargetIPv6ToContainer(firewallC, d.TargetIP); err != nil {
 			return errors.Wrap(err, "target ipv6 to container")
 		}
 	}
 
-	if err := TargetPortStartToContainer(c, d.TargetPortStart); err != nil {
+	if err := TargetPortStartToContainer(firewallC, d.TargetPortStart); err != nil {
 		return errors.Wrap(err, "port start to container")
 	}
 
-	if err := TargetPortEndToContainer(c, d.TargetPortEnd); err != nil {
+	if err := TargetPortEndToContainer(firewallC, d.TargetPortEnd); err != nil {
 		return errors.Wrap(err, "port end to container")
 	}
 
-	if err := DurationToContainer(c, d.Duration); err != nil {
+	if err := DurationToContainer(firewallC, d.Duration); err != nil {
 		return errors.Wrap(err, "duration to container")
 	}
 
-	if err := NonceToContainer(c, ed.Nonce); err != nil {
-		return errors.Wrap(err, "nonce to container")
+	if err := TLVToContainer(c, firewallC, FirewallKey); err != nil {
+		return errors.Wrap(err, "firewall tlv8 container to container")
 	}
 
 	return nil

@@ -17,7 +17,6 @@ const (
 	TargetPortSize     = 2
 	IPV4Size           = 4
 	IPV6Size           = 16
-	NonceSize          = 3
 	DurationSize       = 3
 	ClientUUIDSize     = 16
 )
@@ -158,22 +157,6 @@ func isIPv4(ip net.IP) bool {
 
 func isIPv6(ip net.IP) bool {
 	return strings.Contains(ip.String(), ":")
-}
-
-func NonceEncode(n []byte) ([]byte, error) {
-	if len(n) != NonceSize {
-		return nil, ErrInvalidBytes
-	}
-
-	return n, nil
-}
-
-func NonceDecode(b []byte) ([]byte, error) {
-	if len(b) != NonceSize {
-		return nil, ErrInvalidBytes
-	}
-
-	return b, nil
 }
 
 var maxDuration = int(math.Pow(2, 8*DurationSize)) - 1

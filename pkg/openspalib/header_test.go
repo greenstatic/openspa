@@ -14,7 +14,7 @@ func TestHeader_MarshalRequestType(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, b, 8)
 	assert.Equal(t, []byte{
-		0x10, // Control field: type: request, version: 1
+		0x20, // Control field: type: request, version: 2
 		0x00, // Transaction ID: 0
 		0xff, // Cipher Suite: No Security
 		0x00, // reserved field
@@ -32,7 +32,7 @@ func TestHeader_MarshalResponseTypeCipher24(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, b, 8)
 	assert.Equal(t, []byte{
-		0x90, // Control field: type: response, version: 1
+		0xA0, // Control field: type: response, version: 1
 		0x00, // Transaction ID: 0
 		0x18, // Cipher Suite: 24
 		0x00, // reserved field
@@ -51,7 +51,7 @@ func TestHeader_MarshalRequestTransaction123(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, b, 8)
 	assert.Equal(t, []byte{
-		0x10, // Control field: type: request, version: 1
+		0x20, // Control field: type: request, version: 1
 		0x7B, // Transaction ID: 123
 		0xff, // Cipher Suite: No Security
 		0x00, // reserved field
@@ -62,15 +62,15 @@ func TestHeader_MarshalRequestTransaction123(t *testing.T) {
 	}, b)
 }
 
-func TestHeader_MarshalRequestVersion2(t *testing.T) {
+func TestHeader_MarshalRequestVersion3(t *testing.T) {
 	h := NewHeader(RequestPDU, crypto.CipherNoSecurity)
-	h.Version = 2
+	h.Version = 3
 	b, err := h.Marshal()
 
 	assert.NoError(t, err)
 	assert.Len(t, b, 8)
 	assert.Equal(t, []byte{
-		0x20, // Control field: type: request, version: 2
+		0x30, // Control field: type: request, version: 2
 		0x00, // Transaction ID: 00
 		0xff, // Cipher Suite: No Security
 		0x00, // reserved field
@@ -91,7 +91,6 @@ func TestHeaderMarshalControlField_RequestVersion1(t *testing.T) {
 
 func TestHeaderMarshalControlField_RequestVersion2(t *testing.T) {
 	h := NewHeader(RequestPDU, crypto.CipherNoSecurity)
-	h.Version = 2
 	b := h.marshalControlField()
 
 	assert.Equal(t, byte(0x20), b)
@@ -99,9 +98,17 @@ func TestHeaderMarshalControlField_RequestVersion2(t *testing.T) {
 
 func TestHeaderMarshalControlField_ResponseVersion1(t *testing.T) {
 	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
+	h.Version = 1
 	b := h.marshalControlField()
 
 	assert.Equal(t, byte(0x90), b)
+}
+
+func TestHeaderMarshalControlField_ResponseVersion2(t *testing.T) {
+	h := NewHeader(ResponsePDU, crypto.CipherNoSecurity)
+	b := h.marshalControlField()
+
+	assert.Equal(t, byte(0xA0), b)
 }
 
 func TestHeaderMarshalTransactionId_0(t *testing.T) {
@@ -211,5 +218,5 @@ func TestUnmarshalHeader_ResponsePDU(t *testing.T) {
 	assert.Equal(t, ResponsePDU, header.Type)
 	assert.Equal(t, uint8(123), header.TransactionID)
 	assert.Equal(t, crypto.CipherRSA_SHA256_AES256CBC_ID, header.CipherSuiteID)
-	assert.Equal(t, 1, header.Version)
+	assert.Equal(t, 2, header.Version)
 }

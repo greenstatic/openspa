@@ -95,3 +95,17 @@ func TestPaddingPKCS7Remove_PaddingEmptySlice(t *testing.T) {
 	assert.Len(t, res, 0)
 	assert.NoError(t, err)
 }
+
+func TestRandomNonce(t *testing.T) {
+	bx := make([][]byte, 0)
+	for i := 0; i < 100; i++ {
+		b, err := randomNonce(3)
+		assert.NoError(t, err)
+
+		for j := 0; j < len(bx); j++ {
+			assert.NotEqual(t, bx[j], b)
+		}
+
+		bx = append(bx, b)
+	}
+}

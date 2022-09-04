@@ -156,3 +156,48 @@ func TestCipherSuite_RSA_SHA256_AES256CBC_UnlockDoesNotModifyContainer(t *testin
 	ec2 := ec.Bytes()
 	assert.Equal(t, ec1, ec2)
 }
+
+func TestCipherSuite_RSA_SHA256_AES256CBC_EncryptedPayloadContainerPrepare(t *testing.T) {
+	r := CipherSuite_RSA_SHA256_AES256CBC{}
+
+	c := tlv.NewContainer()
+	assert.NoError(t, r.encryptedPayloadContainerPrepare(c))
+
+	nonce, ok := c.GetBytes(NonceKey)
+	assert.True(t, ok)
+	assert.Len(t, nonce, nonceMinSize)
+}
+
+func TestCipherSuite_RSA_SHA256_AES256CBC_EncryptedPayloadContainerValid(t *testing.T) {
+	r := CipherSuite_RSA_SHA256_AES256CBC{}
+
+	assert.Error(t, r.encryptedPayloadContainerValid(tlv.NewContainer()))
+
+	c := tlv.NewContainer()
+	c.SetBytes(PacketKey, []byte("This is a test"))
+	assert.Error(t, r.encryptedPayloadContainerValid(c))
+
+	c = tlv.NewContainer()
+	c.SetBytes(NonceKey, []byte{})
+	assert.Error(t, r.encryptedPayloadContainerValid(c))
+
+	c = tlv.NewContainer()
+	c.SetBytes(NonceKey, []byte{32})
+	assert.Error(t, r.encryptedPayloadContainerValid(c))
+
+	c = tlv.NewContainer()
+	c.SetBytes(NonceKey, []byte{32, 42})
+	assert.Error(t, r.encryptedPayloadContainerValid(c))
+
+	c = tlv.NewContainer()
+	c.SetBytes(NonceKey, []byte{32, 42, 00})
+	assert.NoError(t, r.encryptedPayloadContainerValid(c))
+
+	c = tlv.NewContainer()
+	c.SetBytes(NonceKey, []byte{32, 42, 00, 21})
+	assert.NoError(t, r.encryptedPayloadContainerValid(c))
+
+	c = tlv.NewContainer()
+	c.SetBytes(NonceKey, []byte{32, 42, 00, 21, 99})
+	assert.NoError(t, r.encryptedPayloadContainerValid(c))
+}

@@ -40,31 +40,29 @@ func TestNewRequest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, clientUUID, cid)
 
-	p, err := TargetProtocolFromContainer(r.Body)
+	firewall, err := TLVFromContainer(r.Body, FirewallKey)
+	assert.NoError(t, err)
+	assert.NotNil(t, firewall)
+
+	p, err := TargetProtocolFromContainer(firewall)
 	assert.NoError(t, err)
 	assert.Equal(t, ProtocolIPV4, p)
 
-	ps, err := TargetPortStartFromContainer(r.Body)
+	ps, err := TargetPortStartFromContainer(firewall)
 	assert.NoError(t, err)
 	assert.Equal(t, 80, ps)
 
-	pe, err := TargetPortEndFromContainer(r.Body)
+	pe, err := TargetPortEndFromContainer(firewall)
 	assert.NoError(t, err)
 	assert.Equal(t, 120, pe)
 
-	cip, err := ClientIPFromContainer(r.Body)
+	cip, err := ClientIPFromContainer(firewall)
 	assert.NoError(t, err)
 	assert.True(t, clientIP.Equal(cip))
 
-	sip, err := TargetIPFromContainer(r.Body)
+	sip, err := TargetIPFromContainer(firewall)
 	assert.NoError(t, err)
 	assert.True(t, serverIP.Equal(sip))
-
-	non, err := NonceFromContainer(r.Body)
-	assert.NoError(t, err)
-	assert.NotNil(t, non)
-	assert.NotEqual(t, []byte{0, 0, 0}, non)
-	assert.Len(t, non, NonceSize)
 
 	b, err := r.Marshal()
 	assert.NoError(t, err)

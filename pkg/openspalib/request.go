@@ -2,7 +2,6 @@ package openspalib
 
 import (
 	"bytes"
-	"crypto/rand"
 	"net"
 	"time"
 
@@ -25,7 +24,6 @@ type RequestData struct {
 
 type RequestExtendedData struct {
 	Timestamp time.Time
-	Nonce     []byte
 }
 
 type Request struct {
@@ -63,67 +61,59 @@ func (r *Request) generateRequestExtendedData() (RequestExtendedData, error) {
 	ed := RequestExtendedData{}
 
 	ed.Timestamp = time.Now()
-	ed.Nonce = make([]byte, NonceSize)
-
-	n, err := rand.Read(ed.Nonce)
-	if err != nil {
-		return RequestExtendedData{}, errors.New("nonce generation")
-	}
-	if n != NonceSize {
-		return RequestExtendedData{}, errors.New("invalid nonce size random bytes")
-	}
 
 	return ed, nil
 }
 
 func (r *Request) bodyCreate(d RequestData, ed RequestExtendedData) (tlv.Container, error) {
-	c := tlv.NewContainer()
+	packet := tlv.NewContainer()
+	firewall := tlv.NewContainer()
 
-	if err := TimestampToContainer(c, ed.Timestamp); err != nil {
+	if err := TimestampToContainer(packet, ed.Timestamp); err != nil {
 		return nil, errors.Wrap(err, "timestamp to container")
 	}
 
-	if err := ClientUUIDToContainer(c, d.ClientUUID); err != nil {
+	if err := ClientUUIDToContainer(packet, d.ClientUUID); err != nil {
 		return nil, errors.Wrap(err, "client uuid to container")
 	}
 
-	if err := TargetProtocolToContainer(c, d.TargetProtocol); err != nil {
+	if err := TargetProtocolToContainer(firewall, d.TargetProtocol); err != nil {
 		return nil, errors.Wrap(err, "target protocol to container")
 	}
 
-	if err := TargetPortStartToContainer(c, d.TargetPortStart); err != nil {
+	if err := TargetPortStartToContainer(firewall, d.TargetPortStart); err != nil {
 		return nil, errors.Wrap(err, "target port start to container")
 	}
 
-	if err := TargetPortEndToContainer(c, d.TargetPortEnd); err != nil {
+	if err := TargetPortEndToContainer(firewall, d.TargetPortEnd); err != nil {
 		return nil, errors.Wrap(err, "target port end to container")
 	}
 
 	if isIPv4(d.ClientIP) {
-		if err := ClientIPv4ToContainer(c, d.ClientIP); err != nil {
+		if err := ClientIPv4ToContainer(firewall, d.ClientIP); err != nil {
 			return nil, errors.Wrap(err, "client ipv4 to container")
 		}
 	} else {
-		if err := ClientIPv6ToContainer(c, d.ClientIP); err != nil {
+		if err := ClientIPv6ToContainer(firewall, d.ClientIP); err != nil {
 			return nil, errors.Wrap(err, "client ipv6 to container")
 		}
 	}
 
 	if isIPv4(d.TargetIP) {
-		if err := TargetIPv4ToContainer(c, d.TargetIP); err != nil {
+		if err := TargetIPv4ToContainer(firewall, d.TargetIP); err != nil {
 			return nil, errors.Wrap(err, "target ipv4 to container")
 		}
 	} else {
-		if err := TargetIPv6ToContainer(c, d.TargetIP); err != nil {
+		if err := TargetIPv6ToContainer(firewall, d.TargetIP); err != nil {
 			return nil, errors.Wrap(err, "target ipv6 to container")
 		}
 	}
 
-	if err := NonceToContainer(c, ed.Nonce); err != nil {
-		return nil, errors.Wrap(err, "nonce to container")
+	if err := TLVToContainer(packet, firewall, FirewallKey); err != nil {
+		return nil, errors.Wrap(err, "firewall tlv to packet container")
 	}
 
-	return c, nil
+	return packet, nil
 }
 
 func (r *Request) Marshal() ([]byte, error) {

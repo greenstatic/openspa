@@ -1,7 +1,6 @@
 package openspalib
 
 import (
-	"crypto/rand"
 	"net"
 	"testing"
 	"time"
@@ -286,39 +285,6 @@ func TestTargetIPFromContainer_Empty(t *testing.T) {
 	c.AssertExpectations(t)
 }
 
-func TestNonceFromContainer(t *testing.T) {
-	b := make([]byte, 3)
-	_, err := rand.Read(b)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	c := tlv.NewContainerMock()
-	c.On("GetBytes", NonceKey).Return(b, true).Once()
-
-	n, err := NonceFromContainer(c)
-	assert.NoError(t, err)
-	assert.Equal(t, b, n)
-
-	c.AssertExpectations(t)
-}
-
-func TestNonceToContainer(t *testing.T) {
-	b := make([]byte, 3)
-	_, err := rand.Read(b)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	c := tlv.NewContainerMock()
-	c.On("SetBytes", NonceKey, b).Once()
-
-	err = NonceToContainer(c, b)
-	assert.NoError(t, err)
-
-	c.AssertExpectations(t)
-}
-
 func TestDurationFromContainer(t *testing.T) {
 	b, err := DurationEncode(time.Hour)
 	assert.NoError(t, err)
@@ -368,6 +334,37 @@ func TestClientUUIDToContainer(t *testing.T) {
 	c.On("SetBytes", ClientUUIDKey, u.Bytes()).Once()
 
 	err := ClientUUIDToContainer(c, u.String())
+	assert.NoError(t, err)
+
+	c.AssertExpectations(t)
+}
+
+func TestTLVFromContainer(t *testing.T) {
+	c2 := tlv.NewContainer()
+	c2.SetBytes(1, []byte("tlv from container test"))
+	c2B := c2.Bytes()
+
+	c := tlv.NewContainerMock()
+	c.On("GetBytes", uint8(33)).Return(c2B, true).Once()
+
+	c3, err := TLVFromContainer(c, 33)
+	assert.NoError(t, err)
+
+	assert.Equal(t, c2.NoEntries(), c3.NoEntries())
+	assert.Equal(t, c2.Bytes(), c3.Bytes())
+
+	c.AssertExpectations(t)
+}
+
+func TestTLVToContainer(t *testing.T) {
+	c2 := tlv.NewContainer()
+	c2.SetBytes(1, []byte("tlv from container test"))
+	c2B := c2.Bytes()
+
+	c := tlv.NewContainerMock()
+	c.On("SetBytes", uint8(33), c2B).Once()
+
+	err := TLVToContainer(c, c2, 33)
 	assert.NoError(t, err)
 
 	c.AssertExpectations(t)

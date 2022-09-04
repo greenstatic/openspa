@@ -1,7 +1,6 @@
 package openspalib
 
 import (
-	"crypto/rand"
 	"net"
 	"testing"
 	"time"
@@ -456,59 +455,6 @@ func TestIsIPv6(t *testing.T) {
 		b := isIPv6(test.input)
 		assert.Equal(t, test.expected, b)
 	}
-}
-
-func TestNonceEncode(t *testing.T) {
-	n := make([]byte, 3)
-	_, err := rand.Read(n)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	b, err := NonceEncode(n)
-	assert.NoError(t, err)
-	assert.Equal(t, n, b)
-}
-
-func TestNonceEncode_TooShort(t *testing.T) {
-	n := []byte{0x01, 0x02}
-
-	b, err := NonceEncode(n)
-	assert.ErrorIs(t, err, ErrInvalidBytes)
-	assert.Nil(t, b)
-}
-
-func TestNonceEncode_Nil(t *testing.T) {
-	b, err := NonceEncode(nil)
-	assert.ErrorIs(t, err, ErrInvalidBytes)
-	assert.Nil(t, b)
-}
-
-func TestNonceEncode_TooLong(t *testing.T) {
-	n := []byte{0x01, 0x02, 0x03, 0x04}
-	b, err := NonceEncode(n)
-	assert.ErrorIs(t, err, ErrInvalidBytes)
-	assert.Nil(t, b)
-}
-
-func TestNonceDecode(t *testing.T) {
-	n := []byte{0x03, 0x01, 0x02}
-	b, err := NonceDecode(n)
-	assert.NoError(t, err)
-	assert.Equal(t, n, b)
-}
-
-func TestNonceDecode_TooShort(t *testing.T) {
-	n := []byte{0x03}
-	b, err := NonceDecode(n)
-	assert.ErrorIs(t, err, ErrInvalidBytes)
-	assert.Nil(t, b)
-}
-
-func TestNonceDecode_Nil(t *testing.T) {
-	b, err := NonceDecode(nil)
-	assert.ErrorIs(t, err, ErrInvalidBytes)
-	assert.Nil(t, b)
 }
 
 func TestDurationEncode(t *testing.T) {

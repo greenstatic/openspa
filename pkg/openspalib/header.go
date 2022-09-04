@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	HeaderLength = 8
-	ADKLength    = 4
+	HeaderLength    = 8
+	ADKLength       = 4
+	ProtocolVersion = 2
 )
 
 type PDUType string
@@ -28,9 +29,8 @@ type Header struct {
 
 func NewHeader(t PDUType, c crypto.CipherSuiteID) Header {
 	return Header{
-		Type: t,
-		// TODO - replace this with 2
-		Version:       1,
+		Type:          t,
+		Version:       ProtocolVersion,
 		TransactionID: 0,
 		CipherSuiteID: c,
 	}
