@@ -46,17 +46,26 @@ func (o *ServerHandler) DatagramRequestHandler(_ context.Context, resp UDPRespon
 		return
 	}
 
-	fwRules, fwReq, err := firewallRuleFromRequestContainer(request.Body)
+	fwRule, fwReq, err := firewallRuleFromRequestContainer(request.Body)
 	if err != nil {
 		log.Info().Err(err).Msgf("Failed to get firewall rule information from OpenSPA request")
 		return
 	}
 
-	for _, r := range fwRules {
-		if err := o.frm.Add(r, dur); err != nil {
-			log.Error().Err(err).Msgf("Failed to add firewall rule: %s", r.String())
-			return
-		}
+	clientUUID, err := openspalib.ClientUUIDFromContainer(request.Body)
+	if err != nil {
+		log.Info().Err(err).Msgf("Failed to get client uuid from OpenSPA request")
+		return
+	}
+
+	meta := FirewallRuleMetadata{
+		ClientUUID: clientUUID,
+		Duration:   dur,
+	}
+
+	if err := o.frm.Add(fwRule, meta); err != nil {
+		log.Error().Err(err).Msgf("Failed to add firewall rule: %s", fwRule.String())
+		return
 	}
 
 	rd := openspalib.ResponseData{
@@ -147,62 +156,59 @@ type firewallRequest struct {
 	DstPortEnd   int
 }
 
-func firewallRuleFromRequestContainer(c tlv.Container) ([]FirewallRule, firewallRequest, error) {
+func firewallRuleFromRequestContainer(c tlv.Container) (FirewallRule, firewallRequest, error) {
 	uuid, err := openspalib.ClientUUIDFromContainer(c)
 	if err != nil {
-		return nil, firewallRequest{}, errors.Wrap(err, "client uuid")
+		return FirewallRule{}, firewallRequest{}, errors.Wrap(err, "client uuid")
 	}
 
 	firewallC, err := openspalib.TLVFromContainer(c, openspalib.FirewallKey)
 	if err != nil {
-		return nil, firewallRequest{}, errors.Wrap(err, "firewall tlv container")
+		return FirewallRule{}, firewallRequest{}, errors.Wrap(err, "firewall tlv container")
 	}
 	if firewallC == nil {
-		return nil, firewallRequest{}, errors.New("firewall tlv container is nil")
+		return FirewallRule{}, firewallRequest{}, errors.New("firewall tlv container is nil")
 	}
 
 	p, err := openspalib.TargetProtocolFromContainer(firewallC)
 	if err != nil {
-		return nil, firewallRequest{}, errors.Wrap(err, "target protocol")
+		return FirewallRule{}, firewallRequest{}, errors.Wrap(err, "target protocol")
 	}
 
 	cIP, err := openspalib.ClientIPFromContainer(firewallC)
 	if err != nil {
-		return nil, firewallRequest{}, errors.Wrap(err, "client ip")
+		return FirewallRule{}, firewallRequest{}, errors.Wrap(err, "client ip")
 	}
 
 	tIP, err := openspalib.TargetIPFromContainer(firewallC)
 	if err != nil {
-		return nil, firewallRequest{}, errors.Wrap(err, "target ip")
+		return FirewallRule{}, firewallRequest{}, errors.Wrap(err, "target ip")
 	}
 
 	portStart, err := openspalib.TargetPortStartFromContainer(firewallC)
 	if err != nil {
-		return nil, firewallRequest{}, errors.Wrap(err, "target port start")
+		return FirewallRule{}, firewallRequest{}, errors.Wrap(err, "target port start")
 	}
 
 	portEnd, err := openspalib.TargetPortEndFromContainer(firewallC)
 	if err != nil {
-		return nil, firewallRequest{}, errors.Wrap(err, "target port end")
+		return FirewallRule{}, firewallRequest{}, errors.Wrap(err, "target port end")
 	}
 
 	noPorts := portEnd - portStart + 1
 	if noPorts < 0 {
-		return nil, firewallRequest{}, errors.New("invalid target port range")
+		return FirewallRule{}, firewallRequest{}, errors.New("invalid target port range")
 	}
 
-	rules := make([]FirewallRule, 0, noPorts)
-
-	for i := portStart; i <= portEnd; i++ {
-		rules = append(rules, FirewallRule{
-			Proto:   p.String(),
-			SrcIP:   cIP,
-			DstIP:   tIP,
-			DstPort: i,
-		})
+	rule := FirewallRule{
+		Proto:        p.String(),
+		SrcIP:        cIP,
+		DstIP:        tIP,
+		DstPortStart: portStart,
+		DstPortEnd:   portEnd,
 	}
 
-	return rules, firewallRequest{
+	return rule, firewallRequest{
 		ClientUUID:   uuid,
 		Proto:        p,
 		SrcIP:        cIP,

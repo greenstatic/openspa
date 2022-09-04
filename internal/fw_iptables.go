@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
@@ -41,17 +42,17 @@ func NewIPTables(c CommandExecuter, s IPTablesSettings) *IPTables {
 }
 
 func (ipt *IPTables) Check() error {
-	_, err := ipt.c.Execute(iptablesCommand(), "-V")
+	_, err := ipt.c.Execute(iptablesCommand(), nil, "-V")
 	if err != nil {
 		return errors.Wrap(err, "iptables")
 	}
 
-	_, err = ipt.c.Execute(ip6tablesCommand(), "-V")
+	_, err = ipt.c.Execute(ip6tablesCommand(), nil, "-V")
 	if err != nil {
 		return errors.Wrap(err, "ip6tables")
 	}
 
-	_, err = ipt.c.Execute(conntrackCommand(), "-V")
+	_, err = ipt.c.Execute(conntrackCommand(), nil, "-V")
 	if err != nil {
 		return errors.Wrap(err, "conntrack")
 	}
@@ -60,17 +61,17 @@ func (ipt *IPTables) Check() error {
 }
 
 func (ipt *IPTables) FirewallSetup() error {
-	_, err := ipt.c.Execute(iptablesCommand(), "-F", ipt.Settings.Chain)
+	_, err := ipt.c.Execute(iptablesCommand(), nil, "-F", ipt.Settings.Chain)
 	if err != nil {
-		_, err := ipt.c.Execute(iptablesCommand(), "--new-chain", ipt.Settings.Chain)
+		_, err := ipt.c.Execute(iptablesCommand(), nil, "--new-chain", ipt.Settings.Chain)
 		if err != nil {
 			return errors.Wrap(err, "iptables new chain")
 		}
 	}
 
-	_, err = ipt.c.Execute(ip6tablesCommand(), "-F", ipt.Settings.Chain)
+	_, err = ipt.c.Execute(ip6tablesCommand(), nil, "-F", ipt.Settings.Chain)
 	if err != nil {
-		_, err := ipt.c.Execute(ip6tablesCommand(), "--new-chain", ipt.Settings.Chain)
+		_, err := ipt.c.Execute(ip6tablesCommand(), nil, "--new-chain", ipt.Settings.Chain)
 		if err != nil {
 			return errors.Wrap(err, "ip6tables new chain")
 		}
@@ -79,7 +80,7 @@ func (ipt *IPTables) FirewallSetup() error {
 	return nil
 }
 
-func (ipt *IPTables) RuleAdd(r FirewallRule) error {
+func (ipt *IPTables) RuleAdd(r FirewallRule, _ FirewallRuleMetadata) error {
 	cmd := iptablesCommand()
 	src6 := isIPv6(r.SrcIP)
 	dst6 := isIPv6(r.DstIP)
@@ -90,12 +91,12 @@ func (ipt *IPTables) RuleAdd(r FirewallRule) error {
 		return errors.New("src and dst are not same ip family")
 	}
 
-	_, err := ipt.c.Execute(cmd,
+	_, err := ipt.c.Execute(cmd, nil,
 		"-A", ipt.Settings.Chain,
 		"-p", r.Proto,
 		"-s", r.SrcIP.String(),
 		"-d", r.DstIP.String(),
-		"--dport", strconv.Itoa(r.DstPort),
+		"--dport", ipt.portString(r),
 		"-j", "ACCEPT")
 
 	if err != nil {
@@ -104,7 +105,7 @@ func (ipt *IPTables) RuleAdd(r FirewallRule) error {
 	return nil
 }
 
-func (ipt *IPTables) RuleRemove(r FirewallRule) error {
+func (ipt *IPTables) RuleRemove(r FirewallRule, _ FirewallRuleMetadata) error {
 	cmd := iptablesCommand()
 	src6 := isIPv6(r.SrcIP)
 	dst6 := isIPv6(r.DstIP)
@@ -115,25 +116,37 @@ func (ipt *IPTables) RuleRemove(r FirewallRule) error {
 		return errors.New("src and dst are not same ip family")
 	}
 
-	_, err := ipt.c.Execute(cmd,
+	_, err := ipt.c.Execute(cmd, nil,
 		"-D", ipt.Settings.Chain,
 		"-p", r.Proto,
 		"-s", r.SrcIP.String(),
 		"-d", r.DstIP.String(),
-		"--dport", strconv.Itoa(r.DstPort),
+		"--dport", ipt.portString(r),
 		"-j", "ACCEPT")
 
 	if err != nil {
 		return errors.Wrap(err, cmd)
 	}
-	_, _ = ipt.c.Execute(conntrackCommand(),
+	_, _ = ipt.c.Execute(conntrackCommand(), nil,
 		"-D",
 		"-p", r.Proto,
 		"-s", r.SrcIP.String(),
 		"-d", r.DstIP.String(),
-		"--dport", strconv.Itoa(r.DstPort))
+		"--dport", ipt.portString(r))
 
 	return nil
+}
+
+func (ipt *IPTables) portString(r FirewallRule) string {
+	if r.DstPortStart == r.DstPortEnd {
+		return strconv.Itoa(r.DstPortStart)
+	}
+
+	if r.DstPortEnd == 0 {
+		return strconv.Itoa(r.DstPortStart)
+	}
+
+	return fmt.Sprintf("%d:%d", r.DstPortStart, r.DstPortEnd)
 }
 
 func iptablesCommand() string {
@@ -170,14 +183,14 @@ func execErrHandle(err error) error {
 }
 
 type CommandExecuter interface {
-	Execute(cmd string, args ...string) ([]byte, error)
+	Execute(cmd string, stdin []byte, args ...string) ([]byte, error)
 }
 
 var _ CommandExecuter = &CommandExecute{}
 
 type CommandExecute struct{}
 
-func (c *CommandExecute) Execute(cmd string, args ...string) ([]byte, error) {
+func (c *CommandExecute) Execute(cmd string, stdin []byte, args ...string) ([]byte, error) {
 	out, err := exec.Command(cmd, args...).Output()
 	if err != nil {
 		return nil, execErrHandle(err)

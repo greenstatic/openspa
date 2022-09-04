@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"net"
+	"time"
 )
 
 var (
@@ -11,18 +12,28 @@ var (
 )
 
 type FirewallRule struct {
-	Proto   string
-	SrcIP   net.IP
-	DstIP   net.IP
-	DstPort int
+	Proto        string
+	SrcIP        net.IP
+	DstIP        net.IP
+	DstPortStart int
+	DstPortEnd   int
+}
+
+type FirewallRuleMetadata struct {
+	ClientUUID string
+	Duration   time.Duration
 }
 
 type Firewall interface {
 	FirewallSetup() error
-	RuleAdd(r FirewallRule) error
-	RuleRemove(r FirewallRule) error
+	RuleAdd(r FirewallRule, meta FirewallRuleMetadata) error
+	RuleRemove(r FirewallRule, meta FirewallRuleMetadata) error
 }
 
 func (r *FirewallRule) String() string {
-	return fmt.Sprintf("%s -> %s %s/%d", r.SrcIP.String(), r.DstIP.String(), r.Proto, r.DstPort)
+	s := fmt.Sprintf("%s -> %s %s/%d", r.SrcIP.String(), r.DstIP.String(), r.Proto, r.DstPortStart)
+	if r.DstPortEnd != r.DstPortStart && r.DstPortEnd != 0 {
+		return fmt.Sprintf("%s-%d", s, r.DstPortEnd)
+	}
+	return s
 }

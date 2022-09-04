@@ -34,7 +34,7 @@ func TestRequestRoutine(t *testing.T) {
 
 	resolvClient := crypto.NewPublicKeyResolverMock()
 	cipherClient := crypto.NewCipherSuite_RSA_SHA256_AES256CBC(tEnv.clientPrivateKey, resolvClient)
-	resolvClient.On("PublicKey", mock.Anything, nil).Return(tEnv.serverPublicKey, nil)
+	resolvClient.On("PublicKey", mock.Anything, mock.Anything).Return(tEnv.serverPublicKey, nil)
 
 	resolvServer := crypto.NewPublicKeyResolverMock()
 	resolvServer.On("PublicKey", mock.Anything, mock.Anything).Return(tEnv.clientPublicKey, nil)

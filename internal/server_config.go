@@ -34,16 +34,23 @@ type ServerConfigServerHTTP struct {
 }
 
 const (
-	ServerConfigFirewallIIPTables = "iptables"
+	ServerConfigFirewallBackendIPTables = "iptables"
+	ServerConfigFirewallBackendCommand  = "command"
 )
 
 type ServerConfigFirewall struct {
-	Backend  string               `yaml:"backend"`
-	IPTables ServerConfigIPTables `yaml:"iptables"`
+	Backend  string                       `yaml:"backend"`
+	IPTables ServerConfigFirewallIPTables `yaml:"iptables"`
+	Command  ServerConfigFirewallCommand  `yaml:"command"`
 }
 
-type ServerConfigIPTables struct {
+type ServerConfigFirewallIPTables struct {
 	Chain string `yaml:"chain"`
+}
+
+type ServerConfigFirewallCommand struct {
+	RuleAdd    string `yaml:"ruleAdd"`
+	RuleRemove string `yaml:"ruleRemove"`
 }
 
 type ServerConfigCrypto struct {
@@ -114,21 +121,38 @@ func (s ServerConfigServerHTTP) Verify() error {
 }
 
 func (s ServerConfigFirewall) Verify() error {
-	if s.Backend != ServerConfigFirewallIIPTables {
+	switch s.Backend {
+	case ServerConfigFirewallBackendIPTables:
+		if err := s.IPTables.Verify(); err != nil {
+			return errors.Wrap(err, "iptables")
+		}
+	case ServerConfigFirewallBackendCommand:
+		if err := s.Command.Verify(); err != nil {
+			return errors.Wrap(err, "command")
+		}
+	default:
 		return errors.New("invalid backend")
-	}
-
-	if err := s.IPTables.Verify(); err != nil {
-		return errors.Wrap(err, "iptables")
 	}
 
 	return nil
 }
 
-func (s ServerConfigIPTables) Verify() error {
+func (s ServerConfigFirewallIPTables) Verify() error {
 	if len(s.Chain) == 0 {
 		return errors.New("chain parameter is empty")
 	}
+	return nil
+}
+
+func (s ServerConfigFirewallCommand) Verify() error {
+	if len(s.RuleAdd) == 0 {
+		return errors.New("rule add is empty")
+	}
+
+	if len(s.RuleRemove) == 0 {
+		return errors.New("rule remove is empty")
+	}
+
 	return nil
 }
 
@@ -239,8 +263,8 @@ func DefaultServerConfig() ServerConfig {
 			},
 		},
 		Firewall: ServerConfigFirewall{
-			Backend: ServerConfigFirewallIIPTables,
-			IPTables: ServerConfigIPTables{
+			Backend: ServerConfigFirewallBackendIPTables,
+			IPTables: ServerConfigFirewallIPTables{
 				Chain: IPTablesChainDefault,
 			},
 		},

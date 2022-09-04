@@ -141,7 +141,7 @@ func (r *CipherSuite_RSA_SHA256_AES256CBC) Unlock(header []byte, ec tlv.Containe
 		return nil, errors.New("no signature")
 	}
 
-	sigPubKey, err := r.resolver.PublicKey(packetContainer, nil)
+	sigPubKey, err := r.resolver.PublicKey(packetContainer, packetContainer)
 	if err != nil {
 		return nil, errors.Wrap(err, "resolve sender's public key")
 	}

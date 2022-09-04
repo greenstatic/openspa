@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 var firewallRuleManagerExpirationTestingSleep = time.Second
@@ -19,16 +20,16 @@ func TestFirewallRuleManager_Expiration(t *testing.T) {
 
 	dur := time.Second
 	r := FirewallRule{
-		Proto:   FirewallProtoTCP,
-		SrcIP:   net.IPv4(1, 2, 3, 4),
-		DstIP:   net.IPv4(1, 1, 1, 1),
-		DstPort: 80,
+		Proto:        FirewallProtoTCP,
+		SrcIP:        net.IPv4(1, 2, 3, 4),
+		DstIP:        net.IPv4(1, 1, 1, 1),
+		DstPortStart: 80,
 	}
 
-	fw.On("RuleAdd", r).Return(nil).Once()
-	fw.On("RuleRemove", r).Return(nil).Once()
+	fw.On("RuleAdd", r, mock.Anything).Return(nil).Once()
+	fw.On("RuleRemove", r, mock.Anything).Return(nil).Once()
 
-	assert.NoError(t, rm.Add(r, dur))
+	assert.NoError(t, rm.Add(r, FirewallRuleMetadata{Duration: dur}))
 	assert.Equal(t, 1, rm.Count())
 
 	time.Sleep(firewallRuleManagerExpirationTestingSleep + dur)
@@ -50,20 +51,20 @@ func TestFirewallRuleManager_MultipleRules(t *testing.T) {
 	rulesCount := 10
 	for i := 0; i < rulesCount; i++ {
 		r := FirewallRule{
-			Proto:   FirewallProtoTCP,
-			SrcIP:   net.IPv4(1, 2, 3, 4),
-			DstIP:   net.IPv4(1, 1, 1, 1),
-			DstPort: 80 + i,
+			Proto:        FirewallProtoTCP,
+			SrcIP:        net.IPv4(1, 2, 3, 4),
+			DstIP:        net.IPv4(1, 1, 1, 1),
+			DstPortStart: 80 + i,
 		}
-		fw.On("RuleAdd", r).Return(nil).Once()
-		fw.On("RuleRemove", r).Return(nil).Once()
+		fw.On("RuleAdd", r, mock.Anything).Return(nil).Once()
+		fw.On("RuleRemove", r, mock.Anything).Return(nil).Once()
 
 		d := dur
 		if i+1 == rulesCount {
 			d = dur2
 		}
 
-		assert.NoError(t, rm.Add(r, d))
+		assert.NoError(t, rm.Add(r, FirewallRuleMetadata{Duration: d}))
 	}
 
 	assert.Equal(t, rulesCount, rm.Count())
@@ -128,11 +129,11 @@ func firewallRuleManagerCleanup(b *testing.B, size int, dur time.Duration) {
 	rm := NewFirewallRuleManager(&FirewallStub{})
 	for i := 0; i < size; i++ {
 		err := rm.Add(FirewallRule{
-			Proto:   FirewallProtoUDP,
-			SrcIP:   net.IPv4(1, 2, 3, 4),
-			DstIP:   net.IPv4(1, 2, 3, 4),
-			DstPort: 80 + i,
-		}, dur)
+			Proto:        FirewallProtoUDP,
+			SrcIP:        net.IPv4(1, 2, 3, 4),
+			DstIP:        net.IPv4(1, 2, 3, 4),
+			DstPortStart: 80 + i,
+		}, FirewallRuleMetadata{Duration: dur})
 		if err != nil {
 			b.Fatal(err)
 		}

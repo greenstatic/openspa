@@ -57,8 +57,13 @@ func RequestRoutine(p RequestRoutineParameters, cs crypto.CipherSuite, opt Reque
 
 	// TODO: implement auto-mode
 
-	log.Debug().Msgf("OpenSPA sending request for access to target (%s %s/%d-%d)",
-		rd.TargetIP, rd.TargetProtocol, rd.TargetPortStart, rd.TargetPortEnd)
+	s := fmt.Sprintf("OpenSPA sending request for access to target (%s %s/%d)",
+		rd.TargetIP, rd.TargetProtocol, rd.TargetPortStart)
+	if rd.TargetPortEnd != rd.TargetPortEnd {
+		s = fmt.Sprintf("%s-%d", s, rd.TargetPortEnd)
+	}
+
+	log.Debug().Msg(s)
 
 	resp, err := performRequest(opt.Sender, cs, rd, sAddr, performRequestParameters{
 		retryCount: p.RetryCount,

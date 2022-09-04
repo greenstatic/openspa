@@ -84,3 +84,91 @@ crypto:
 	assert.Equal(t, "/home/openspa/server/server_private.key", sc.Crypto.RSA.Server.PrivateKeyPath)
 	assert.Equal(t, "/home/openspa/server/server_public.key", sc.Crypto.RSA.Server.PublicKeyPath)
 }
+
+func TestServerConfigFirewall(t *testing.T) {
+	assert.Error(t, ServerConfigFirewall{
+		Backend: ServerConfigFirewallBackendCommand,
+		Command: ServerConfigFirewallCommand{
+			RuleAdd:    "",
+			RuleRemove: "",
+		},
+	}.Verify())
+
+	assert.Error(t, ServerConfigFirewall{
+		Backend: ServerConfigFirewallBackendCommand,
+		Command: ServerConfigFirewallCommand{
+			RuleAdd:    "foo",
+			RuleRemove: "",
+		},
+	}.Verify())
+
+	assert.Error(t, ServerConfigFirewall{
+		Backend: ServerConfigFirewallBackendIPTables,
+		Command: ServerConfigFirewallCommand{
+			RuleAdd:    "foo",
+			RuleRemove: "bar",
+		},
+	}.Verify())
+
+	assert.NoError(t, ServerConfigFirewall{
+		Backend: ServerConfigFirewallBackendCommand,
+		Command: ServerConfigFirewallCommand{
+			RuleAdd:    "foo",
+			RuleRemove: "bar",
+		},
+	}.Verify())
+
+	assert.Error(t, ServerConfigFirewall{
+		Backend: ServerConfigFirewallBackendCommand,
+		IPTables: ServerConfigFirewallIPTables{
+			Chain: "OPENSPA-ALLOW",
+		},
+		Command: ServerConfigFirewallCommand{
+			RuleAdd:    "foo",
+			RuleRemove: "",
+		},
+	}.Verify())
+
+	assert.NoError(t, ServerConfigFirewall{
+		Backend: ServerConfigFirewallBackendCommand,
+		IPTables: ServerConfigFirewallIPTables{
+			Chain: "OPENSPA-ALLOW",
+		},
+		Command: ServerConfigFirewallCommand{
+			RuleAdd:    "foo",
+			RuleRemove: "bar",
+		},
+	}.Verify())
+
+	assert.NoError(t, ServerConfigFirewall{
+		Backend: ServerConfigFirewallBackendCommand,
+		IPTables: ServerConfigFirewallIPTables{
+			Chain: "",
+		},
+		Command: ServerConfigFirewallCommand{
+			RuleAdd:    "foo",
+			RuleRemove: "bar",
+		},
+	}.Verify())
+
+	assert.Error(t, ServerConfigFirewall{
+		Backend: ServerConfigFirewallBackendIPTables,
+		IPTables: ServerConfigFirewallIPTables{
+			Chain: "",
+		},
+		Command: ServerConfigFirewallCommand{
+			RuleAdd:    "foo",
+			RuleRemove: "bar",
+		},
+	}.Verify())
+
+	assert.NoError(t, ServerConfigFirewall{
+		Backend: ServerConfigFirewallBackendIPTables,
+		IPTables: ServerConfigFirewallIPTables{
+			Chain: "OPENSPA-ALLOW",
+		},
+		Command: ServerConfigFirewallCommand{
+			RuleAdd: "foo",
+		},
+	}.Verify())
+}

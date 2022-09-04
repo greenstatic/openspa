@@ -41,11 +41,12 @@ func TestServerHandler_DatagramRequestHandler(t *testing.T) {
 		Port: 40975,
 	}, mock.Anything).Return(nil).Once()
 	fw.On("RuleAdd", FirewallRule{
-		Proto:   FirewallProtoTCP,
-		SrcIP:   net.IPv4(88, 200, 23, 23).To4(),
-		DstIP:   net.IPv4(88, 200, 23, 19).To4(),
-		DstPort: 80,
-	}).Return(nil).Once()
+		Proto:        FirewallProtoTCP,
+		SrcIP:        net.IPv4(88, 200, 23, 23).To4(),
+		DstIP:        net.IPv4(88, 200, 23, 19).To4(),
+		DstPortStart: 80,
+		DstPortEnd:   80,
+	}, mock.Anything).Return(nil).Once()
 
 	sh.DatagramRequestHandler(context.TODO(), resp, DatagramRequest{
 		data: reqB,

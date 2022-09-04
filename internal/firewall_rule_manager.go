@@ -72,7 +72,7 @@ mainloop:
 
 			if time.Now().After(re.Expiration()) {
 				// remove
-				err := frm.fw.RuleRemove(re.Rule)
+				err := frm.fw.RuleRemove(re.Rule, re.Meta)
 				if err != nil {
 					return errors.Wrap(err, "firewall rule remove")
 				}
@@ -103,7 +103,7 @@ func (frm *FirewallRuleManager) removeAllRules() []error {
 			panic("invalid type in rule manger list")
 		}
 
-		err := frm.fw.RuleRemove(re.Rule)
+		err := frm.fw.RuleRemove(re.Rule, re.Meta)
 		errs = append(errs, errors.Wrap(err, fmt.Sprintf("firewall rule: %s", re.String())))
 	}
 
@@ -123,10 +123,11 @@ func (frm *FirewallRuleManager) Stop() error {
 	return nil
 }
 
-func (frm *FirewallRuleManager) Add(r FirewallRule, d time.Duration) error {
+func (frm *FirewallRuleManager) Add(r FirewallRule, meta FirewallRuleMetadata) error {
 	re := FirewallRuleWithExpiration{
 		Rule:     r,
-		Duration: d,
+		Meta:     meta,
+		Duration: meta.Duration,
 		Created:  time.Now(),
 	}
 
@@ -134,7 +135,7 @@ func (frm *FirewallRuleManager) Add(r FirewallRule, d time.Duration) error {
 	frm.rules.Add(re)
 	frm.lock.Unlock()
 
-	err := frm.fw.RuleAdd(r)
+	err := frm.fw.RuleAdd(r, meta)
 	if err != nil {
 		return errors.Wrap(err, "firewall rule add")
 	}
@@ -169,6 +170,7 @@ func (frm *FirewallRuleManager) Debug() map[string]interface{} {
 
 type FirewallRuleWithExpiration struct {
 	Rule     FirewallRule
+	Meta     FirewallRuleMetadata
 	Duration time.Duration
 	Created  time.Time
 }
