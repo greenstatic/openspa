@@ -22,7 +22,6 @@ server:
 
 firewall:
   backend: "iptables"
-
   iptables:
     chain: "OPENSPA-ALLOW"
 
@@ -76,8 +75,6 @@ crypto:
 	assert.Equal(t, false, sc.Server.HTTP.Enable)
 	assert.Equal(t, "::", sc.Server.HTTP.IP)
 	assert.Equal(t, 22212, sc.Server.HTTP.Port)
-	assert.Equal(t, "iptables", sc.Firewall.Backend)
-	assert.Equal(t, "OPENSPA-ALLOW", sc.Firewall.IPTables.Chain)
 
 	assert.Equal(t, []string{"CipherRSA_SHA256_AES256CBC"}, sc.Crypto.CipherSuitePriority)
 	assert.Equal(t, "/home/openspa/server/authorized", sc.Crypto.RSA.Client.PublicKeyLookupDir)
@@ -87,65 +84,50 @@ crypto:
 
 func TestServerConfigFirewall(t *testing.T) {
 	assert.Error(t, ServerConfigFirewall{
-		Backend: ServerConfigFirewallBackendCommand,
-		Command: ServerConfigFirewallCommand{
-			RuleAdd:    "",
-			RuleRemove: "",
+		Backend: "",
+		IPTables: &ServerConfigFirewallIPTables{
+			Chain: "zar",
+		},
+		Command: &ServerConfigFirewallCommand{
+			RuleAdd:       "foo",
+			RuleRemove:    "bar",
+			FirewallSetup: "zar",
 		},
 	}.Verify())
 
 	assert.Error(t, ServerConfigFirewall{
-		Backend: ServerConfigFirewallBackendCommand,
-		Command: ServerConfigFirewallCommand{
-			RuleAdd:    "foo",
-			RuleRemove: "",
+		Backend: "",
+		IPTables: &ServerConfigFirewallIPTables{
+			Chain: "zar",
 		},
+		Command: nil,
 	}.Verify())
 
 	assert.Error(t, ServerConfigFirewall{
-		Backend: ServerConfigFirewallBackendIPTables,
-		Command: ServerConfigFirewallCommand{
+		Backend:  ServerConfigFirewallBackendIPTables,
+		IPTables: nil,
+		Command:  nil,
+	}.Verify())
+
+	assert.Error(t, ServerConfigFirewall{
+		Backend:  ServerConfigFirewallBackendCommand,
+		IPTables: nil,
+		Command:  nil,
+	}.Verify())
+
+	assert.NoError(t, ServerConfigFirewall{
+		Backend:  ServerConfigFirewallBackendCommand,
+		IPTables: nil,
+		Command: &ServerConfigFirewallCommand{
 			RuleAdd:    "foo",
 			RuleRemove: "bar",
 		},
 	}.Verify())
 
-	assert.NoError(t, ServerConfigFirewall{
-		Backend: ServerConfigFirewallBackendCommand,
-		Command: ServerConfigFirewallCommand{
-			RuleAdd:    "foo",
-			RuleRemove: "bar",
-		},
-	}.Verify())
-
 	assert.Error(t, ServerConfigFirewall{
-		Backend: ServerConfigFirewallBackendCommand,
-		IPTables: ServerConfigFirewallIPTables{
-			Chain: "OPENSPA-ALLOW",
-		},
-		Command: ServerConfigFirewallCommand{
-			RuleAdd:    "foo",
-			RuleRemove: "",
-		},
-	}.Verify())
-
-	assert.NoError(t, ServerConfigFirewall{
-		Backend: ServerConfigFirewallBackendCommand,
-		IPTables: ServerConfigFirewallIPTables{
-			Chain: "OPENSPA-ALLOW",
-		},
-		Command: ServerConfigFirewallCommand{
-			RuleAdd:    "foo",
-			RuleRemove: "bar",
-		},
-	}.Verify())
-
-	assert.NoError(t, ServerConfigFirewall{
-		Backend: ServerConfigFirewallBackendCommand,
-		IPTables: ServerConfigFirewallIPTables{
-			Chain: "",
-		},
-		Command: ServerConfigFirewallCommand{
+		Backend:  ServerConfigFirewallBackendIPTables,
+		IPTables: nil,
+		Command: &ServerConfigFirewallCommand{
 			RuleAdd:    "foo",
 			RuleRemove: "bar",
 		},
@@ -153,10 +135,10 @@ func TestServerConfigFirewall(t *testing.T) {
 
 	assert.Error(t, ServerConfigFirewall{
 		Backend: ServerConfigFirewallBackendIPTables,
-		IPTables: ServerConfigFirewallIPTables{
-			Chain: "",
+		IPTables: &ServerConfigFirewallIPTables{
+			Chain: "zar",
 		},
-		Command: ServerConfigFirewallCommand{
+		Command: &ServerConfigFirewallCommand{
 			RuleAdd:    "foo",
 			RuleRemove: "bar",
 		},
@@ -164,11 +146,139 @@ func TestServerConfigFirewall(t *testing.T) {
 
 	assert.NoError(t, ServerConfigFirewall{
 		Backend: ServerConfigFirewallBackendIPTables,
-		IPTables: ServerConfigFirewallIPTables{
-			Chain: "OPENSPA-ALLOW",
+		IPTables: &ServerConfigFirewallIPTables{
+			Chain: "zar",
 		},
-		Command: ServerConfigFirewallCommand{
-			RuleAdd: "foo",
+		Command: nil,
+	}.Verify())
+}
+
+func TestServerConfigFirewallIPTables(t *testing.T) {
+	assert.Error(t, ServerConfigFirewallIPTables{
+		Chain: "",
+	}.Verify())
+
+	assert.NoError(t, ServerConfigFirewallIPTables{
+		Chain: "foo",
+	}.Verify())
+}
+
+func TestServerConfigFirewallCommand(t *testing.T) {
+	assert.Error(t, ServerConfigFirewallCommand{
+		FirewallSetup: "",
+		RuleAdd:       "",
+		RuleRemove:    "",
+	}.Verify())
+
+	assert.Error(t, ServerConfigFirewallCommand{
+		FirewallSetup: "",
+		RuleAdd:       "foo",
+		RuleRemove:    "",
+	}.Verify())
+
+	assert.Error(t, ServerConfigFirewallCommand{
+		FirewallSetup: "bar",
+		RuleAdd:       "foo",
+		RuleRemove:    "",
+	}.Verify())
+
+	assert.NoError(t, ServerConfigFirewallCommand{
+		FirewallSetup: "",
+		RuleAdd:       "foo",
+		RuleRemove:    "bar",
+	}.Verify())
+
+	assert.NoError(t, ServerConfigFirewallCommand{
+		FirewallSetup: "zar",
+		RuleAdd:       "foo",
+		RuleRemove:    "bar",
+	}.Verify())
+
+	assert.Error(t, ServerConfigFirewallCommand{
+		FirewallSetup: "zar",
+		RuleAdd:       "",
+		RuleRemove:    "bar",
+	}.Verify())
+
+	assert.Error(t, ServerConfigFirewallCommand{
+		FirewallSetup: "zar",
+		RuleAdd:       "bar",
+		RuleRemove:    "",
+	}.Verify())
+}
+
+func TestServerConfigAuthorization(t *testing.T) {
+	assert.Error(t, ServerConfigAuthorization{
+		Backend: "",
+		Simple: &ServerConfigAuthorizationSimple{
+			Duration: "1h",
+		},
+		Command: &ServerConfigAuthorizationCommand{
+			AuthorizationCmd: "foo",
 		},
 	}.Verify())
+
+	assert.Error(t, ServerConfigAuthorization{
+		Backend: "",
+		Simple: &ServerConfigAuthorizationSimple{
+			Duration: "1h",
+		},
+		Command: nil,
+	}.Verify())
+
+	assert.Error(t, ServerConfigAuthorization{
+		Backend: ServerConfigAuthorizationBackendSimple,
+		Simple:  nil,
+		Command: nil,
+	}.Verify())
+
+	assert.Error(t, ServerConfigAuthorization{
+		Backend: ServerConfigAuthorizationBackendCommand,
+		Simple:  nil,
+		Command: nil,
+	}.Verify())
+
+	assert.NoError(t, ServerConfigAuthorization{
+		Backend: ServerConfigAuthorizationBackendCommand,
+		Simple:  nil,
+		Command: &ServerConfigAuthorizationCommand{
+			AuthorizationCmd: "foo",
+		},
+	}.Verify())
+
+	assert.Error(t, ServerConfigAuthorization{
+		Backend: ServerConfigAuthorizationBackendSimple,
+		Simple:  nil,
+		Command: &ServerConfigAuthorizationCommand{
+			AuthorizationCmd: "foo",
+		},
+	}.Verify())
+
+	assert.Error(t, ServerConfigAuthorization{
+		Backend: ServerConfigAuthorizationBackendSimple,
+		Simple: &ServerConfigAuthorizationSimple{
+			Duration: "1h",
+		},
+		Command: &ServerConfigAuthorizationCommand{
+			AuthorizationCmd: "foo",
+		},
+	}.Verify())
+
+	assert.NoError(t, ServerConfigAuthorization{
+		Backend: ServerConfigAuthorizationBackendSimple,
+		Simple: &ServerConfigAuthorizationSimple{
+			Duration: "1h",
+		},
+		Command: nil,
+	}.Verify())
+}
+
+func TestServerConfigAuthorizationSimple(t *testing.T) {
+	assert.NoError(t, ServerConfigAuthorizationSimple{Duration: "1h"}.Verify())
+	assert.NoError(t, ServerConfigAuthorizationSimple{Duration: "100h"}.Verify())
+	assert.NoError(t, ServerConfigAuthorizationSimple{Duration: "4660h"}.Verify())
+	assert.Error(t, ServerConfigAuthorizationSimple{Duration: "4661h"}.Verify())
+	assert.Error(t, ServerConfigAuthorizationSimple{Duration: "0.5s"}.Verify())
+	assert.Error(t, ServerConfigAuthorizationSimple{Duration: "-1h"}.Verify())
+	assert.Error(t, ServerConfigAuthorizationSimple{Duration: "1ms"}.Verify())
 }

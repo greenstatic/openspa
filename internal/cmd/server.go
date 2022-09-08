@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/greenstatic/openspa/internal"
 	"github.com/rs/zerolog/log"
@@ -61,13 +60,18 @@ func server(_ *cobra.Command, config internal.ServerConfig) {
 		log.Fatal().Err(err).Msgf("Failed to initialize firewall backend")
 	}
 
+	authz, err := internal.NewAuthorizationStrategyFromServerConfigAuthorization(config.Authorization)
+	if err != nil {
+		log.Fatal().Err(err).Msgf("Failed to initialize authorization backend")
+	}
+
 	s := internal.NewServer(internal.ServerSettings{
 		IP:                net.ParseIP(config.Server.IP),
 		Port:              config.Server.Port,
-		NoRequestHandlers: internal.NoRequestHandlersDefault,
+		NoRequestHandlers: config.Server.RequestHandlers,
 		FW:                fw,
 		CS:                cs,
-		Authz:             internal.NewAuthorizationStrategyAllow(10 * time.Second), // TODO
+		Authz:             authz,
 	})
 
 	go func() {

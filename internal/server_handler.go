@@ -3,7 +3,6 @@ package internal
 import (
 	"context"
 	"net"
-	"time"
 
 	"github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
@@ -122,29 +121,6 @@ func (u *UDPResponse) SendUDPResponse(dst net.UDPAddr, body []byte) error {
 	}
 
 	return nil
-}
-
-type AuthorizationStrategy interface {
-	RequestAuthorization(request tlv.Container) (time.Duration, error)
-}
-
-var _ AuthorizationStrategy = AuthorizationStrategyAllow{}
-
-// AuthorizationStrategyAllow authorized any form of request as long as it is authenticated successfully (authentication
-// should be performed externally).
-type AuthorizationStrategyAllow struct {
-	dur time.Duration
-}
-
-func NewAuthorizationStrategyAllow(duration time.Duration) *AuthorizationStrategyAllow {
-	a := &AuthorizationStrategyAllow{
-		dur: duration,
-	}
-	return a
-}
-
-func (a AuthorizationStrategyAllow) RequestAuthorization(_ tlv.Container) (time.Duration, error) {
-	return a.dur, nil
 }
 
 type firewallRequest struct {

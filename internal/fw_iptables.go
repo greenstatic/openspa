@@ -182,23 +182,6 @@ func execErrHandle(err error) error {
 	}
 }
 
-type CommandExecuter interface {
-	Execute(cmd string, stdin []byte, args ...string) ([]byte, error)
-}
-
-var _ CommandExecuter = &CommandExecute{}
-
-type CommandExecute struct{}
-
-func (c *CommandExecute) Execute(cmd string, stdin []byte, args ...string) ([]byte, error) {
-	out, err := exec.Command(cmd, args...).Output()
-	if err != nil {
-		return nil, execErrHandle(err)
-	}
-
-	return out, nil
-}
-
 func newIPTablesFromServerConfigFirewall(fc ServerConfigFirewall) (*IPTables, error) {
 	chain := fc.IPTables.Chain
 

@@ -159,11 +159,11 @@ func isIPv6(ip net.IP) bool {
 	return strings.Contains(ip.String(), ":")
 }
 
-var maxDuration = int(math.Pow(2, 8*DurationSize)) - 1
+var DurationMax = int(math.Pow(2, 8*DurationSize)) - 1
 
 func DurationEncode(d time.Duration) ([]byte, error) {
 	s := int(d.Seconds())
-	if s > maxDuration {
+	if s > DurationMax {
 		return nil, errors.Wrap(ErrBadInput, "duration too long")
 	}
 

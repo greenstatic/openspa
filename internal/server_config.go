@@ -3,6 +3,7 @@ package internal
 import (
 	"net"
 	"os"
+	"time"
 
 	"github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
@@ -15,9 +16,10 @@ type Verifier interface {
 }
 
 type ServerConfig struct {
-	Server   ServerConfigServer   `yaml:"server"`
-	Firewall ServerConfigFirewall `yaml:"firewall"`
-	Crypto   ServerConfigCrypto   `yaml:"crypto"`
+	Server        ServerConfigServer        `yaml:"server"`
+	Firewall      ServerConfigFirewall      `yaml:"firewall"`
+	Authorization ServerConfigAuthorization `yaml:"authorization"`
+	Crypto        ServerConfigCrypto        `yaml:"crypto"`
 }
 
 type ServerConfigServer struct {
@@ -39,9 +41,9 @@ const (
 )
 
 type ServerConfigFirewall struct {
-	Backend  string                       `yaml:"backend"`
-	IPTables ServerConfigFirewallIPTables `yaml:"iptables"`
-	Command  ServerConfigFirewallCommand  `yaml:"command"`
+	Backend  string                        `yaml:"backend"`
+	IPTables *ServerConfigFirewallIPTables `yaml:"iptables"`
+	Command  *ServerConfigFirewallCommand  `yaml:"command"`
 }
 
 type ServerConfigFirewallIPTables struct {
@@ -52,6 +54,25 @@ type ServerConfigFirewallCommand struct {
 	RuleAdd       string `yaml:"ruleAdd"`
 	RuleRemove    string `yaml:"ruleRemove"`
 	FirewallSetup string `yaml:"firewallSetup,omitempty"` // optional
+}
+
+const (
+	ServerConfigAuthorizationBackendSimple  = "simple"
+	ServerConfigAuthorizationBackendCommand = "command"
+)
+
+type ServerConfigAuthorization struct {
+	Backend string                            `yaml:"backend"`
+	Simple  *ServerConfigAuthorizationSimple  `yaml:"simple"`
+	Command *ServerConfigAuthorizationCommand `yaml:"command"`
+}
+
+type ServerConfigAuthorizationSimple struct {
+	Duration string `yaml:"duration"`
+}
+
+type ServerConfigAuthorizationCommand struct {
+	AuthorizationCmd string `yaml:"authorizationCmd"`
 }
 
 type ServerConfigCrypto struct {
@@ -80,6 +101,10 @@ func (s ServerConfig) Verify() error {
 
 	if err := s.Firewall.Verify(); err != nil {
 		return errors.Wrap(err, "firewall")
+	}
+
+	if err := s.Authorization.Verify(); err != nil {
+		return errors.Wrap(err, "authorization")
 	}
 
 	if err := s.Crypto.Verify(); err != nil {
@@ -124,10 +149,26 @@ func (s ServerConfigServerHTTP) Verify() error {
 func (s ServerConfigFirewall) Verify() error {
 	switch s.Backend {
 	case ServerConfigFirewallBackendIPTables:
+		if s.IPTables == nil {
+			return errors.New("iptables field is missing")
+		}
+
+		if s.Command != nil {
+			return errors.New("command is defined while using iptables backend")
+		}
+
 		if err := s.IPTables.Verify(); err != nil {
 			return errors.Wrap(err, "iptables")
 		}
 	case ServerConfigFirewallBackendCommand:
+		if s.Command == nil {
+			return errors.New("command field is missing")
+		}
+
+		if s.IPTables != nil {
+			return errors.New("iptables is defined while using command backend")
+		}
+
 		if err := s.Command.Verify(); err != nil {
 			return errors.Wrap(err, "command")
 		}
@@ -157,6 +198,72 @@ func (s ServerConfigFirewallCommand) Verify() error {
 
 	if len(s.RuleRemove) == 0 {
 		return errors.New("rule remove is empty")
+	}
+
+	return nil
+}
+
+func (s ServerConfigAuthorization) Verify() error {
+	switch s.Backend {
+	case ServerConfigAuthorizationBackendSimple:
+		if s.Simple == nil {
+			return errors.New("simple field is missing")
+		}
+
+		if s.Command != nil {
+			return errors.New("command is defined while using simple backend")
+		}
+
+		if err := s.Simple.Verify(); err != nil {
+			return errors.Wrap(err, "simple")
+		}
+	case ServerConfigAuthorizationBackendCommand:
+		if s.Command == nil {
+			return errors.New("command field is missing")
+		}
+
+		if s.Simple != nil {
+			return errors.New("simple is defined while using command backend")
+		}
+
+		if err := s.Command.Verify(); err != nil {
+			return errors.Wrap(err, "command")
+		}
+	default:
+		return errors.New("invalid backend")
+	}
+
+	return nil
+}
+
+func (s ServerConfigAuthorizationSimple) Verify() error {
+	d, err := time.ParseDuration(s.Duration)
+	if err != nil {
+		return errors.Wrap(err, "duration parse")
+	}
+
+	if d.Seconds() < 1 {
+		return errors.New("duration is shorter than a second")
+	}
+
+	if d.Seconds() > float64(openspalib.DurationMax) {
+		return errors.New("duration is longer than max allowed duration")
+	}
+
+	return nil
+}
+
+func (s ServerConfigAuthorizationSimple) GetDuration() time.Duration {
+	d, err := time.ParseDuration(s.Duration)
+	if err != nil {
+		panic(err)
+	}
+	return d
+}
+
+func (s ServerConfigAuthorizationCommand) Verify() error {
+	if s.AuthorizationCmd == "" {
+		return errors.New("authorization cmd empty")
 	}
 
 	return nil
@@ -232,19 +339,8 @@ func (s ServerConfig) Merge(sc ServerConfig) ServerConfig {
 		f.Server.HTTP.IP = sc.Server.HTTP.IP
 	}
 
-	if sc.Firewall.Backend != "" {
-		f.Firewall.Backend = sc.Firewall.Backend
-	}
-
-	switch sc.Firewall.Backend {
-	case ServerConfigFirewallBackendIPTables:
-		if sc.Firewall.IPTables.Chain != "" {
-			f.Firewall.IPTables.Chain = sc.Firewall.IPTables.Chain
-		}
-	case ServerConfigFirewallBackendCommand:
-		f.Firewall.Command = sc.Firewall.Command
-	}
-
+	f.Firewall = sc.Firewall
+	f.Authorization = sc.Authorization
 	f.Crypto = sc.Crypto
 
 	return f
@@ -273,12 +369,5 @@ func DefaultServerConfig() ServerConfig {
 				Port:   ServerHTTPPortDefault,
 			},
 		},
-		Firewall: ServerConfigFirewall{
-			Backend: ServerConfigFirewallBackendIPTables,
-			IPTables: ServerConfigFirewallIPTables{
-				Chain: IPTablesChainDefault,
-			},
-		},
-		// Crypto is missing on purpose
 	}
 }

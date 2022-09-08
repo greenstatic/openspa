@@ -158,3 +158,34 @@ func testRequestData() RequestData {
 		TargetIP:        net.IPv4(88, 200, 23, 200),
 	}
 }
+
+func TestRequestDataToContainer_And_RequestFirewallDataFromContainer(t *testing.T) {
+	rd := RequestData{
+		TransactionID:   123,
+		ClientUUID:      "87d809fb-7aea-46db-94f8-1d9275bd61ce",
+		ClientIP:        net.IPv4(88, 200, 23, 100),
+		TargetProtocol:  ProtocolTCP,
+		TargetIP:        net.IPv4(88, 200, 23, 200),
+		TargetPortStart: 80,
+		TargetPortEnd:   443,
+	}
+
+	red := RequestExtendedData{
+		Timestamp: time.Now().UTC(),
+	}
+
+	c, err := RequestDataToContainer(rd, red)
+	assert.NoError(t, err)
+
+	fwd, err := RequestFirewallDataFromContainer(c)
+	assert.NoError(t, err)
+
+	assert.WithinDuration(t, red.Timestamp, fwd.Timestamp, time.Second)
+	assert.Equal(t, rd.ClientUUID, fwd.ClientUUID)
+	assert.True(t, rd.ClientIP.Equal(fwd.ClientIP))
+	assert.True(t, rd.TargetIP.Equal(fwd.TargetIP))
+	assert.Equal(t, rd.TargetProtocol, fwd.TargetProtocol)
+	assert.Equal(t, rd.TargetPortStart, fwd.TargetPortStart)
+	assert.Equal(t, rd.TargetPortEnd, fwd.TargetPortEnd)
+
+}
