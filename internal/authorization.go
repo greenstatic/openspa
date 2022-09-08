@@ -17,8 +17,8 @@ type AuthorizationStrategy interface {
 
 var _ AuthorizationStrategy = AuthorizationStrategySimple{}
 
-// AuthorizationStrategySimple authorizes any form of request as long as it is authenticated successfully (authentication
-// should be performed externally).
+// AuthorizationStrategySimple authorizes any form of request as long as it is authenticated successfully
+// (authentication should be performed externally).
 type AuthorizationStrategySimple struct {
 	dur time.Duration
 }
@@ -81,14 +81,18 @@ func (a AuthorizationStrategyCommand) RequestAuthorization(c tlv.Container) (tim
 	if err := json.Unmarshal(stdout, &out); err != nil {
 		log.Info().Msgf("Authorize command output: %s", string(stdout))
 		return 0, errors.Wrap(err, "json unmarshal AuthorizationStrategyCommand stdout output")
-	} else {
-		log.Debug().Msgf("Authorize command output: %s", string(stdout))
+	}
+
+	log.Debug().Msgf("Authorize command output: %s", string(stdout))
+	if err != nil {
+		return 0, errors.Wrap(err, "executing authorization command "+a.AuthorizeCmd)
 	}
 
 	d := time.Duration(out.Duration) * time.Second
 	return d, nil
 }
 
+//nolint:lll
 func (a AuthorizationStrategyCommand) authorizeInputGenerate(c tlv.Container) (AuthorizationStrategyCommandAuthorizeInput, error) {
 	fwd, err := lib.RequestFirewallDataFromContainer(c)
 	if err != nil {
@@ -108,12 +112,12 @@ func (a AuthorizationStrategyCommand) authorizeInputGenerate(c tlv.Container) (A
 	return i, nil
 }
 
-func NewAuthorizationStrategyFromServerConfigAuthorization(sca ServerConfigAuthorization) (AuthorizationStrategy, error) {
-	switch sca.Backend {
+func NewAuthorizationStrategyFromServerConfigAuthorization(s ServerConfigAuthorization) (AuthorizationStrategy, error) {
+	switch s.Backend {
 	case ServerConfigAuthorizationBackendSimple:
-		return NewAuthorizationStrategyAllow(sca.Simple.GetDuration()), nil
+		return NewAuthorizationStrategyAllow(s.Simple.GetDuration()), nil
 	case ServerConfigAuthorizationBackendCommand:
-		return NewAuthorizationStrategyCommand(sca.Command.AuthorizationCmd), nil
+		return NewAuthorizationStrategyCommand(s.Command.AuthorizationCmd), nil
 	}
 
 	return nil, errors.New("unsupported authorization backend")

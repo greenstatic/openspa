@@ -187,5 +187,4 @@ func TestRequestDataToContainer_And_RequestFirewallDataFromContainer(t *testing.
 	assert.Equal(t, rd.TargetProtocol, fwd.TargetProtocol)
 	assert.Equal(t, rd.TargetPortStart, fwd.TargetPortStart)
 	assert.Equal(t, rd.TargetPortEnd, fwd.TargetPortEnd)
-
 }
