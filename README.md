@@ -47,18 +47,19 @@ native IPtables integration to support different firewalls).
 Completed:
 * openspalib (`pkg/openspalib`) - library for the OpenSPA protocol. With this you can implement your own OpenSPA client 
 and server
-* client (`cli/openspa-client`) - OpenSPA client CLI
+* Client (`cli/openspa-client`) - OpenSPA client CLI
+* Server (`cli/openspa-server`) - OpenSPA server CLI
+  * Config file support
+  * Native IPtables integration
+  * External firewall integration
+  * External authorization integration
 
 In progress:
-* server (`cli/openspa-server`) - OpenSPA server CLI
-  * Native IPtables integration is completed
-  * Config file support is completed
-  * TODO
-    * External authentication & authorization integration 
-    * External firewall integration
+* Server should expose Prometheus metrics via HTTP
 
 Planned:
 * ECC support
 * x509 certificate support
 * Helper utility to generate keys
 * eBPF integration for ADK (Anti DoS knocking protection)
+* Server external authentication support
