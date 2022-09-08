@@ -48,7 +48,7 @@ jobs:
           key: ${{ runner.os }}-1.${{ matrix.go }}.x-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-1.${{ matrix.go }}.x-
 
-      - run: go test ./...
+      - run: make test
 
   test-win:
     name: MINGW64
@@ -78,4 +78,4 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-${{ matrix.go }}-
 
-      - run: go test ./...
+      - run: make test
