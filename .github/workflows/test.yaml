@@ -69,6 +69,7 @@ jobs:
             make
             unzip
             mingw-w64-x86_64-go
+            python3
 
       - uses: actions/checkout@v3
 
