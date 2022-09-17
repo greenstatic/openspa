@@ -49,6 +49,7 @@ var clientCmd = &cobra.Command{
 
 func clientCmdSetup(c *cobra.Command) {
 	c.AddCommand(cmd.ReqCmd)
+	cmd.ReqCmdSetup(cmd.ReqCmd)
 
 	c.AddCommand(cmd.IPCmd)
 	cmd.IPCmdSetup(cmd.IPCmd)
