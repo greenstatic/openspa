@@ -9,8 +9,10 @@ import (
 )
 
 var (
-	FirewallProtoTCP = "TCP"
-	FirewallProtoUDP = "UDP"
+	FirewallProtoTCP    = "TCP"
+	FirewallProtoUDP    = "UDP"
+	FirewallProtoICMP   = "ICMP"
+	FirewallProtoICMPv6 = "ICMPv6"
 )
 
 type FirewallRule struct {

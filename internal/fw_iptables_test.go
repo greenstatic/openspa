@@ -96,6 +96,76 @@ func TestIPTables_IPv6RuleAddAndRemove(t *testing.T) {
 	c.AssertExpectations(t)
 }
 
+func TestIPTables_IPv4RuleAddRemoveICMP(t *testing.T) {
+	c := &CommandExecuteMock{}
+	ipt := NewIPTables(c, IPTablesSettingsDefault)
+
+	c.On("Execute", "iptables", []byte(nil), []string{
+		"-A", IPTablesChainDefault,
+		"-p", "ICMP",
+		"-s", "88.200.23.12",
+		"-d", "88.200.23.3",
+		"-j", "ACCEPT"}).Return([]byte{}, nil).Once()
+	r := FirewallRule{
+		Proto:        FirewallProtoICMP,
+		SrcIP:        net.IPv4(88, 200, 23, 12),
+		DstIP:        net.IPv4(88, 200, 23, 3),
+		DstPortStart: 443,
+	}
+	assert.NoError(t, ipt.RuleAdd(r, FirewallRuleMetadata{}))
+
+	c.On("Execute", "iptables", []byte(nil), []string{
+		"-D", IPTablesChainDefault,
+		"-p", "ICMP",
+		"-s", "88.200.23.12",
+		"-d", "88.200.23.3",
+		"-j", "ACCEPT"}).Return([]byte{}, nil).Once()
+	c.On("Execute", "conntrack", []byte(nil), []string{
+		"-D",
+		"-p", "ICMP",
+		"-s", "88.200.23.12",
+		"-d", "88.200.23.3"}).Return([]byte{}, nil).Once()
+
+	assert.NoError(t, ipt.RuleRemove(r, FirewallRuleMetadata{}))
+
+	c.AssertExpectations(t)
+}
+
+func TestIPTables_IPv4RuleAddRemoveICMPv6(t *testing.T) {
+	c := &CommandExecuteMock{}
+	ipt := NewIPTables(c, IPTablesSettingsDefault)
+
+	c.On("Execute", "iptables", []byte(nil), []string{
+		"-A", IPTablesChainDefault,
+		"-p", "ICMPv6",
+		"-s", "88.200.23.12",
+		"-d", "88.200.23.3",
+		"-j", "ACCEPT"}).Return([]byte{}, nil).Once()
+	r := FirewallRule{
+		Proto:        FirewallProtoICMPv6,
+		SrcIP:        net.IPv4(88, 200, 23, 12),
+		DstIP:        net.IPv4(88, 200, 23, 3),
+		DstPortStart: 443,
+	}
+	assert.NoError(t, ipt.RuleAdd(r, FirewallRuleMetadata{}))
+
+	c.On("Execute", "iptables", []byte(nil), []string{
+		"-D", IPTablesChainDefault,
+		"-p", "ICMPv6",
+		"-s", "88.200.23.12",
+		"-d", "88.200.23.3",
+		"-j", "ACCEPT"}).Return([]byte{}, nil).Once()
+	c.On("Execute", "conntrack", []byte(nil), []string{
+		"-D",
+		"-p", "ICMPv6",
+		"-s", "88.200.23.12",
+		"-d", "88.200.23.3"}).Return([]byte{}, nil).Once()
+
+	assert.NoError(t, ipt.RuleRemove(r, FirewallRuleMetadata{}))
+
+	c.AssertExpectations(t)
+}
+
 func TestIPTables_PortString(t *testing.T) {
 	ipt := IPTables{}
 

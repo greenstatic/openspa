@@ -91,17 +91,33 @@ func (ipt *IPTables) RuleAdd(r FirewallRule, _ FirewallRuleMetadata) error {
 		return errors.New("src and dst are not same ip family")
 	}
 
-	_, err := ipt.c.Execute(cmd, nil,
-		"-A", ipt.Settings.Chain,
-		"-p", r.Proto,
-		"-s", r.SrcIP.String(),
-		"-d", r.DstIP.String(),
-		"--dport", ipt.portString(r),
-		"-j", "ACCEPT")
+	var args []string
+	if r.Proto == FirewallProtoTCP || r.Proto == FirewallProtoUDP {
+		args = []string{
+			"-A", ipt.Settings.Chain,
+			"-p", r.Proto,
+			"-s", r.SrcIP.String(),
+			"-d", r.DstIP.String(),
+			"--dport", ipt.portString(r),
+			"-j", "ACCEPT",
+		}
+	} else if r.Proto == FirewallProtoICMP || r.Proto == FirewallProtoICMPv6 {
+		args = []string{
+			"-A", ipt.Settings.Chain,
+			"-p", r.Proto,
+			"-s", r.SrcIP.String(),
+			"-d", r.DstIP.String(),
+			"-j", "ACCEPT",
+		}
+	} else {
+		return errors.New("unsupported protocol")
+	}
 
+	_, err := ipt.c.Execute(cmd, nil, args...)
 	if err != nil {
 		return errors.Wrap(err, cmd)
 	}
+
 	return nil
 }
 
@@ -116,23 +132,47 @@ func (ipt *IPTables) RuleRemove(r FirewallRule, _ FirewallRuleMetadata) error {
 		return errors.New("src and dst are not same ip family")
 	}
 
-	_, err := ipt.c.Execute(cmd, nil,
-		"-D", ipt.Settings.Chain,
-		"-p", r.Proto,
-		"-s", r.SrcIP.String(),
-		"-d", r.DstIP.String(),
-		"--dport", ipt.portString(r),
-		"-j", "ACCEPT")
+	var iptablesArgs []string
+	var conntrackArgs []string
+	if r.Proto == FirewallProtoTCP || r.Proto == FirewallProtoUDP {
+		iptablesArgs = []string{
+			"-D", ipt.Settings.Chain,
+			"-p", r.Proto,
+			"-s", r.SrcIP.String(),
+			"-d", r.DstIP.String(),
+			"--dport", ipt.portString(r),
+			"-j", "ACCEPT",
+		}
+		conntrackArgs = []string{
+			"-D",
+			"-p", r.Proto,
+			"-s", r.SrcIP.String(),
+			"-d", r.DstIP.String(),
+			"--dport", ipt.portString(r),
+		}
+	} else if r.Proto == FirewallProtoICMP || r.Proto == FirewallProtoICMPv6 {
+		iptablesArgs = []string{
+			"-D", ipt.Settings.Chain,
+			"-p", r.Proto,
+			"-s", r.SrcIP.String(),
+			"-d", r.DstIP.String(),
+			"-j", "ACCEPT",
+		}
+		conntrackArgs = []string{
+			"-D",
+			"-p", r.Proto,
+			"-s", r.SrcIP.String(),
+			"-d", r.DstIP.String(),
+		}
+	} else {
+		return errors.New("unsupported protocol")
+	}
 
+	_, err := ipt.c.Execute(cmd, nil, iptablesArgs...)
 	if err != nil {
 		return errors.Wrap(err, cmd)
 	}
-	_, _ = ipt.c.Execute(conntrackCommand(), nil,
-		"-D",
-		"-p", r.Proto,
-		"-s", r.SrcIP.String(),
-		"-d", r.DstIP.String(),
-		"--dport", ipt.portString(r))
+	_, _ = ipt.c.Execute(conntrackCommand(), nil, conntrackArgs...)
 
 	return nil
 }
