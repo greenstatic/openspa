@@ -16,6 +16,7 @@ const readRequestBufferSize = openspalib.MaxPDUSize
 type Server struct {
 	udpServer *UDPServer
 	reqCoord  *RequestCoordinator
+	frm       *FirewallRuleManager
 	settings  ServerSettings
 }
 
@@ -31,15 +32,7 @@ type ServerSettings struct {
 }
 
 func NewServer(set ServerSettings) *Server {
-	if err := set.FW.FirewallSetup(); err != nil {
-		log.Fatal().Err(err).Msgf("Failed to setup firewall")
-	}
-
 	frm := NewFirewallRuleManager(set.FW)
-	if err := frm.Start(); err != nil {
-		log.Fatal().Err(err).Msgf("Failed to start firewall rule manager")
-	}
-	// IDEA - start FRM (and stop) using the server's Start/Stop methods
 	h := NewServerHandler(frm, set.CS, set.Authz)
 	rc := NewRequestCoordinator(h, set.NoRequestHandlers)
 
@@ -49,11 +42,20 @@ func NewServer(set ServerSettings) *Server {
 		udpServer: udpServer,
 		reqCoord:  rc,
 		settings:  set,
+		frm:       frm,
 	}
 	return s
 }
 
 func (s *Server) Start() error {
+	if err := s.frm.fw.FirewallSetup(); err != nil {
+		log.Fatal().Err(err).Msgf("Failed to setup firewall")
+	}
+
+	if err := s.frm.Start(); err != nil {
+		log.Fatal().Err(err).Msgf("Failed to start firewall rule manager")
+	}
+
 	bind := net.JoinHostPort(s.settings.IP.String(), strconv.Itoa(s.settings.Port))
 	log.Info().Msgf("Starting UDP server: %s", bind)
 	s.reqCoord.Start()
@@ -62,9 +64,17 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Stop() error {
-	// s.reqCoord.Stop() // TODO
+	//s.reqCoord.Stop() // TODO
 
-	return s.udpServer.Stop()
+	if err := s.udpServer.Stop(); err != nil {
+		return errors.Wrap(err, "udp server stop")
+	}
+
+	if err := s.frm.Stop(); err != nil {
+		return errors.Wrap(err, "firewall rule manager stop")
+	}
+
+	return nil
 }
 
 type UDPServer struct {

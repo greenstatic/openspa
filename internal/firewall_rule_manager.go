@@ -104,7 +104,9 @@ func (frm *FirewallRuleManager) removeAllRules() []error {
 		}
 
 		err := frm.fw.RuleRemove(re.Rule, re.Meta)
-		errs = append(errs, errors.Wrap(err, fmt.Sprintf("firewall rule: %s", re.String())))
+		if err != nil {
+			errs = append(errs, errors.Wrap(err, fmt.Sprintf("firewall rule: %s", re.String())))
+		}
 	}
 
 	frm.rules.Clear()

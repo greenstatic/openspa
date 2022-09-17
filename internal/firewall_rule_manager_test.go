@@ -101,7 +101,7 @@ func TestFirewallRuleManager_FirewallRuleNotAppliedShouldNotBeManaged(t *testing
 	assert.NoError(t, rm.Start())
 	assert.Equal(t, 0, rm.Count())
 
-	dur := time.Second
+	dur := time.Hour
 	r := FirewallRule{
 		Proto:        FirewallProtoTCP,
 		SrcIP:        net.IPv4(1, 2, 3, 4),
@@ -114,8 +114,35 @@ func TestFirewallRuleManager_FirewallRuleNotAppliedShouldNotBeManaged(t *testing
 	assert.Error(t, rm.Add(r, FirewallRuleMetadata{Duration: dur}))
 	assert.Equal(t, 0, rm.Count())
 
-	time.Sleep(firewallRuleManagerExpirationTestingSleep + dur)
+	assert.NoError(t, rm.Stop())
+	fw.AssertExpectations(t)
+}
+
+func TestFirewallRuleManager_RemoveAllRules(t *testing.T) {
+	fw := &FirewallMock{}
+	rm := NewFirewallRuleManager(fw)
+
+	assert.NoError(t, rm.Start())
 	assert.Equal(t, 0, rm.Count())
+
+	dur := time.Hour
+	r := FirewallRule{
+		Proto:        FirewallProtoTCP,
+		SrcIP:        net.IPv4(1, 2, 3, 4),
+		DstIP:        net.IPv4(1, 1, 1, 1),
+		DstPortStart: 80,
+	}
+
+	fw.On("RuleAdd", mock.Anything, mock.Anything).Return(nil).Times(5)
+	fw.On("RuleRemove", mock.Anything, mock.Anything).Return(nil).Times(4)
+	fw.On("RuleRemove", mock.Anything, mock.Anything).Return(errors.New("simulated error")).Times(1)
+
+	for i := 0; i < 5; i++ {
+		assert.NoError(t, rm.Add(r, FirewallRuleMetadata{Duration: dur}))
+	}
+	assert.Equal(t, 5, rm.Count())
+	errs := rm.removeAllRules()
+	assert.Len(t, errs, 1)
 
 	assert.NoError(t, rm.Stop())
 	fw.AssertExpectations(t)

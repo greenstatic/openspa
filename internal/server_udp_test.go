@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -187,4 +188,53 @@ func TestRequestCoordinator_WorkAllocation(t *testing.T) {
 
 	assert.LessOrEqual(t, diff.Seconds(), 2.5)
 	assert.GreaterOrEqual(t, diff.Seconds(), 2.0)
+}
+
+func TestServerShutdown(t *testing.T) {
+	fw := &FirewallMock{}
+	cs := crypto.NewCipherSuiteStub()
+	authz := &AuthorizationStrategySimple{
+		dur: time.Hour,
+	}
+
+	fw.On("FirewallSetup").Return(nil).Once()
+
+	s := NewServer(ServerSettings{
+		IP:                net.IPv4(127, 0, 0, 1).To4(),
+		Port:              8083,
+		NoRequestHandlers: 10,
+		FW:                fw,
+		CS:                cs,
+		Authz:             authz,
+	})
+
+	startDone := make(chan bool)
+	go func() {
+		assert.NoError(t, s.Start())
+		startDone <- true
+	}()
+
+	time.Sleep(time.Second)
+
+	rule := FirewallRule{
+		Proto: FirewallProtoICMP,
+		SrcIP: net.IPv4(88, 200, 23, 19),
+		DstIP: net.IPv4(88, 200, 23, 20),
+	}
+	meta := FirewallRuleMetadata{
+		ClientUUID: "a5670963-24c7-4b19-b7b4-e30f1200a46c",
+		Duration:   time.Hour,
+	}
+
+	fw.On("RuleAdd", rule, meta).Return(nil).Once()
+	assert.NoError(t, s.frm.Add(rule, meta))
+
+	time.Sleep(2 * time.Second)
+
+	fw.On("RuleRemove", rule, meta).Return(nil).Once()
+	assert.NoError(t, s.Stop())
+
+	<-startDone
+
+	fw.AssertExpectations(t)
 }
