@@ -92,6 +92,7 @@ func (ipt *IPTables) RuleAdd(r FirewallRule, _ FirewallRuleMetadata) error {
 	}
 
 	var args []string
+	//nolint:gocritic
 	if r.Proto == FirewallProtoTCP || r.Proto == FirewallProtoUDP {
 		args = []string{
 			"-A", ipt.Settings.Chain,
@@ -134,6 +135,7 @@ func (ipt *IPTables) RuleRemove(r FirewallRule, _ FirewallRuleMetadata) error {
 
 	var iptablesArgs []string
 	var conntrackArgs []string
+	//nolint:gocritic
 	if r.Proto == FirewallProtoTCP || r.Proto == FirewallProtoUDP {
 		iptablesArgs = []string{
 			"-D", ipt.Settings.Chain,

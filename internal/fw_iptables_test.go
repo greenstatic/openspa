@@ -96,7 +96,7 @@ func TestIPTables_IPv6RuleAddAndRemove(t *testing.T) {
 	c.AssertExpectations(t)
 }
 
-func TestIPTables_IPv4RuleAddRemoveICMP(t *testing.T) {
+func TestIPTables_IPv4RuleAddRemoveICMPAndICMPv6(t *testing.T) {
 	c := &CommandExecuteMock{}
 	ipt := NewIPTables(c, IPTablesSettingsDefault)
 
@@ -128,20 +128,14 @@ func TestIPTables_IPv4RuleAddRemoveICMP(t *testing.T) {
 
 	assert.NoError(t, ipt.RuleRemove(r, FirewallRuleMetadata{}))
 
-	c.AssertExpectations(t)
-}
-
-func TestIPTables_IPv4RuleAddRemoveICMPv6(t *testing.T) {
-	c := &CommandExecuteMock{}
-	ipt := NewIPTables(c, IPTablesSettingsDefault)
-
+	// ICMPv6
 	c.On("Execute", "iptables", []byte(nil), []string{
 		"-A", IPTablesChainDefault,
 		"-p", "ICMPv6",
 		"-s", "88.200.23.12",
 		"-d", "88.200.23.3",
 		"-j", "ACCEPT"}).Return([]byte{}, nil).Once()
-	r := FirewallRule{
+	r = FirewallRule{
 		Proto:        FirewallProtoICMPv6,
 		SrcIP:        net.IPv4(88, 200, 23, 12),
 		DstIP:        net.IPv4(88, 200, 23, 3),

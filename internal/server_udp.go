@@ -64,7 +64,7 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Stop() error {
-	//s.reqCoord.Stop() // TODO
+	// s.reqCoord.Stop() // TODO
 
 	if err := s.udpServer.Stop(); err != nil {
 		return errors.Wrap(err, "udp server stop")
