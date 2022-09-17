@@ -131,14 +131,14 @@ func (frm *FirewallRuleManager) Add(r FirewallRule, meta FirewallRuleMetadata) e
 		Created:  time.Now(),
 	}
 
-	frm.lock.Lock()
-	frm.rules.Add(re)
-	frm.lock.Unlock()
-
 	err := frm.fw.RuleAdd(r, meta)
 	if err != nil {
 		return errors.Wrap(err, "firewall rule add")
 	}
+
+	frm.lock.Lock()
+	frm.rules.Add(re)
+	frm.lock.Unlock()
 
 	return nil
 }

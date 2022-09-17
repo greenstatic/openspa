@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -91,6 +92,33 @@ func TestFirewallRuleManager_MultipleStartStop(t *testing.T) {
 
 	assert.NoError(t, rm.Start())
 	assert.NoError(t, rm.Stop())
+}
+
+func TestFirewallRuleManager_FirewallRuleNotAppliedShouldNotBeManaged(t *testing.T) {
+	fw := &FirewallMock{}
+	rm := NewFirewallRuleManager(fw)
+
+	assert.NoError(t, rm.Start())
+	assert.Equal(t, 0, rm.Count())
+
+	dur := time.Second
+	r := FirewallRule{
+		Proto:        FirewallProtoTCP,
+		SrcIP:        net.IPv4(1, 2, 3, 4),
+		DstIP:        net.IPv4(1, 1, 1, 1),
+		DstPortStart: 80,
+	}
+
+	fw.On("RuleAdd", r, mock.Anything).Return(errors.New("simulate error")).Once()
+
+	assert.Error(t, rm.Add(r, FirewallRuleMetadata{Duration: dur}))
+	assert.Equal(t, 0, rm.Count())
+
+	time.Sleep(firewallRuleManagerExpirationTestingSleep + dur)
+	assert.Equal(t, 0, rm.Count())
+
+	assert.NoError(t, rm.Stop())
+	fw.AssertExpectations(t)
 }
 
 func BenchmarkFirewallRuleManagerCleanupWithoutRemove_10Rules(b *testing.B) {
