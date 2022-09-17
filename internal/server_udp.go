@@ -31,6 +31,10 @@ type ServerSettings struct {
 }
 
 func NewServer(set ServerSettings) *Server {
+	if err := set.FW.FirewallSetup(); err != nil {
+		log.Fatal().Err(err).Msgf("Failed to setup firewall")
+	}
+
 	frm := NewFirewallRuleManager(set.FW)
 	if err := frm.Start(); err != nil {
 		log.Fatal().Err(err).Msgf("Failed to start firewall rule manager")
