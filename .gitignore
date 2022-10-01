@@ -79,3 +79,4 @@ venv.bak/
 .idea/
 .DS_Store
 temp/
+artifacts/
