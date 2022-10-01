@@ -48,6 +48,7 @@ jobs:
           key: ${{ runner.os }}-1.${{ matrix.go }}.x-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-1.${{ matrix.go }}.x-
 
+      - run: make bench
       - run: make test
 
   test-win:
