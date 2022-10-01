@@ -20,6 +20,10 @@ test:
 	go test ./...
 	cd ./examples && $(MAKE) test
 
+.PHONY: bench
+bench:
+	go test -bench=. ./...
+
 .PHONY: lint
 lint:
 	golangci-lint run
