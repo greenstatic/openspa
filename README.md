@@ -64,3 +64,12 @@ Planned:
 * x509 certificate support
 * Helper utility to generate keys
 * Server external authentication support
+
+## Building from Source
+```sh
+$ sudo apt install build-essential make git
+$ git clone https://github.com/greenstatic/openspa.git
+$ cd openspa
+$ make build
+# Build artifacts in the: ./artifacts directory
+```

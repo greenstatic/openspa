@@ -80,5 +80,6 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
           restore-keys: ${{ runner.os }}-${{ matrix.go }}-
 
-      - run: make bench
+      # Windows runners are too slow for running benchmarks, since it will kill the process for taking too long (11 min).
+      # - run: make bench
       - run: make test

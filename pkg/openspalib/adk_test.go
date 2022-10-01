@@ -40,9 +40,13 @@ func TestADKProver(t *testing.T) {
 	pc, err := NewADKProver(s)
 	assert.NoError(t, err)
 
-	proof0, err := pc.Proof()
+	proof0, err := ADKGenerateProof(s)
 	assert.NoError(t, err)
-	assert.NotEqual(t, uint32(0), proof0)
+
+	pc0, err := pc.Proof()
+	assert.NoError(t, err)
+	assert.NotEqual(t, uint32(0), pc0)
+	assert.Equal(t, proof0, pc0)
 	assert.NotEqualf(t, time.Time{}, pc.last, "time field last was not updated")
 
 	for i := 0; i < 10; i++ {
@@ -77,7 +81,7 @@ func TestADKProver_ShouldBeFasterThanWithoutCache(t *testing.T) {
 	tCEnd := time.Now()
 	tCDur := tCEnd.Sub(tCStart)
 
-	assert.Truef(t, tCDur*2 < tNCDur, "with cache should be at least twice as fast as no cache")
+	assert.Truef(t, tCDur < tNCDur, "with cache should be faster than no cache")
 }
 
 func TestADKProver_Valid(t *testing.T) {
