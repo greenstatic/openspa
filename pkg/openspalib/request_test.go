@@ -16,6 +16,10 @@ func TestNewRequest(t *testing.T) {
 	clientUUID := RandomUUID()
 	clientIP := net.IPv4(88, 200, 23, 100)
 	serverIP := net.IPv4(88, 200, 23, 200)
+	adkSecret := "7O4ZIRI"
+
+	adkProof, err := ADKGenerateProof(adkSecret)
+	assert.NoError(t, err)
 
 	r, err := NewRequest(RequestData{
 		TransactionID:   123,
@@ -25,12 +29,15 @@ func TestNewRequest(t *testing.T) {
 		TargetPortEnd:   120,
 		ClientIP:        clientIP,
 		TargetIP:        serverIP,
-	}, cs)
+	}, cs, RequestDataOpt{
+		ADKSecret: adkSecret,
+	})
 
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 
 	assert.Equal(t, byte(123), r.Header.TransactionID)
+	assert.Equal(t, adkProof, r.Header.ADKProof)
 
 	tstamp, err := TimestampFromContainer(r.Body)
 	assert.NoError(t, err)
@@ -75,6 +82,48 @@ func TestNewRequest(t *testing.T) {
 
 	assert.Equal(t, r.Header.TransactionID, r2.Header.TransactionID)
 	assert.Equal(t, r.Header.TransactionID, r3.Header.TransactionID)
+	assert.Equal(t, r.Header.ADKProof, r2.Header.ADKProof)
+	assert.Equal(t, r.Header.ADKProof, r3.Header.ADKProof)
+}
+
+func TestNewRequest_WithNoADKProof(t *testing.T) {
+	cs := crypto.NewCipherSuiteStub()
+
+	clientUUID := RandomUUID()
+	clientIP := net.IPv4(88, 200, 23, 100)
+	serverIP := net.IPv4(88, 200, 23, 200)
+
+	r, err := NewRequest(RequestData{
+		TransactionID:   123,
+		ClientUUID:      clientUUID,
+		TargetProtocol:  ProtocolIPV4,
+		TargetPortStart: 80,
+		TargetPortEnd:   120,
+		ClientIP:        clientIP,
+		TargetIP:        serverIP,
+	}, cs, RequestDataOpt{
+		ADKSecret: "",
+	})
+
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+
+	assert.Equal(t, byte(123), r.Header.TransactionID)
+	assert.Equal(t, uint32(0), r.Header.ADKProof)
+
+	b, err := r.Marshal()
+	assert.NoError(t, err)
+
+	// Multiple unmarshals should be ok
+	r2, err := RequestUnmarshal(b, cs)
+	assert.NoError(t, err)
+	r3, err := RequestUnmarshal(b, cs)
+	assert.NoError(t, err)
+
+	assert.Equal(t, r.Header.TransactionID, r2.Header.TransactionID)
+	assert.Equal(t, r.Header.TransactionID, r3.Header.TransactionID)
+	assert.Equal(t, uint32(0), r2.Header.ADKProof)
+	assert.Equal(t, uint32(0), r3.Header.ADKProof)
 }
 
 func TestRequestUnmarshal(t *testing.T) {
@@ -90,7 +139,7 @@ func TestRequestUnmarshal(t *testing.T) {
 func TestRequestSize_Stub(t *testing.T) {
 	cs := crypto.NewCipherSuiteStub()
 
-	r, err := NewRequest(testRequestData(), cs)
+	r, err := NewRequest(testRequestData(), cs, RequestDataOpt{})
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 
@@ -113,7 +162,7 @@ func TestRequestSize_RSA_SHA256_AES_256_CBC_with2048Keypair(t *testing.T) {
 
 	cs := crypto.NewCipherSuite_RSA_SHA256_AES256CBC(key1, res)
 
-	r, err := NewRequest(testRequestData(), cs)
+	r, err := NewRequest(testRequestData(), cs, RequestDataOpt{})
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 
@@ -136,7 +185,7 @@ func TestRequestSize_RSA_SHA256_AES_256_CBC_with4096Keypair(t *testing.T) {
 
 	cs := crypto.NewCipherSuite_RSA_SHA256_AES256CBC(key1, res)
 
-	r, err := NewRequest(testRequestData(), cs)
+	r, err := NewRequest(testRequestData(), cs, RequestDataOpt{})
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 
@@ -187,4 +236,27 @@ func TestRequestDataToContainer_And_RequestFirewallDataFromContainer(t *testing.
 	assert.Equal(t, rd.TargetProtocol, fwd.TargetProtocol)
 	assert.Equal(t, rd.TargetPortStart, fwd.TargetPortStart)
 	assert.Equal(t, rd.TargetPortEnd, fwd.TargetPortEnd)
+}
+
+func TestRequestUnmarshalHeader(t *testing.T) {
+	cs := crypto.NewCipherSuiteStub()
+	r, err := NewRequest(testRequestData(), cs, RequestDataOpt{})
+	assert.NoError(t, err)
+	assert.NotNil(t, r)
+
+	b, err := r.Marshal()
+	assert.NoError(t, err)
+
+	_, err = RequestUnmarshalHeader(b)
+	assert.NoError(t, err)
+
+	// These should fail
+	_, err = RequestUnmarshalHeader(nil)
+	assert.Error(t, err)
+	_, err = RequestUnmarshalHeader([]byte{})
+	assert.Error(t, err)
+	_, err = RequestUnmarshalHeader([]byte{0x1})
+	assert.Error(t, err)
+	_, err = RequestUnmarshalHeader([]byte{0x1, 0x00, 0x00, 0x00})
+	assert.Error(t, err)
 }

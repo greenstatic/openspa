@@ -53,9 +53,9 @@ func ADKGenerateProof(secret string) (uint32, error) {
 }
 
 // ADKProver is a cached version of the ADKGenerateProof function, which recalculates the proof when the cached
-// version is older than a second. This avoids calculating the same proof for every single packet and instead calculating
-// the proof at least every second opposed to multiple times per second (when receiving multiple packets with a second).
-// Run the benchmarks to see the speedup numbers for your setup.
+// version is older than a second. This avoids calculating the same proof for every single packet and instead
+// calculating the proof at least every second opposed to multiple times per second (when receiving multiple packets
+// with a second). Run the benchmarks to see the speedup numbers for your setup.
 type ADKProver struct {
 	secret string
 

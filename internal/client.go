@@ -19,7 +19,9 @@ type RequestRoutineParameters struct {
 	AutoMode   bool
 	RetryCount int
 	Timeout    time.Duration
+	ADKSecret  string
 }
+
 type RequestRoutineReqParameters struct {
 	ClientUUID      string
 	ClientIP        net.IP
@@ -68,6 +70,7 @@ func RequestRoutine(p RequestRoutineParameters, cs crypto.CipherSuite, opt Reque
 	resp, err := performRequest(opt.Sender, cs, rd, sAddr, performRequestParameters{
 		retryCount: p.RetryCount,
 		timeout:    p.Timeout,
+		adkSecret:  p.ADKSecret,
 	})
 	if err != nil {
 		return errors.Wrap(err, "request failure")
@@ -127,11 +130,12 @@ func (r staticPublicKeyResolver) PublicKey(_, _ tlv.Container) (cryptography.Pub
 type performRequestParameters struct {
 	retryCount int
 	timeout    time.Duration
+	adkSecret  string
 }
 
 func performRequest(u UDPSender, c crypto.CipherSuite, d lib.RequestData, server net.UDPAddr,
 	params performRequestParameters) (*lib.Response, error) {
-	r, err := lib.NewRequest(d, c)
+	r, err := lib.NewRequest(d, c, lib.RequestDataOpt{ADKSecret: params.adkSecret})
 	if err != nil {
 		return nil, errors.Wrap(err, "new request")
 	}

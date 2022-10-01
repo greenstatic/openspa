@@ -30,7 +30,6 @@ func TestADKGenerateProof(t *testing.T) {
 		proof, err := ADKGenerateProof(s)
 		assert.NoError(t, err)
 		assert.Equal(t, proof0, proof)
-
 	}
 }
 

@@ -19,6 +19,9 @@ server:
     ip: "0.0.0.0"
     port: 22212
 
+  adk:
+    secret: "7O4ZIRI"
+
 firewall:
   backend: "iptables"
   iptables:
@@ -43,6 +46,8 @@ crypto:
 	assert.Equal(t, true, sc.Server.HTTP.Enable)
 	assert.Equal(t, "0.0.0.0", sc.Server.HTTP.IP)
 	assert.Equal(t, 22212, sc.Server.HTTP.Port)
+	assert.Equal(t, "7O4ZIRI", sc.Server.ADK.Secret)
+
 	assert.Equal(t, "iptables", sc.Firewall.Backend)
 	assert.Equal(t, "OPENSPA-ALLOW", sc.Firewall.IPTables.Chain)
 
@@ -73,6 +78,7 @@ crypto:
 	assert.Equal(t, false, sc.Server.HTTP.Enable)
 	assert.Equal(t, "::", sc.Server.HTTP.IP)
 	assert.Equal(t, 22212, sc.Server.HTTP.Port)
+	assert.Equal(t, "", sc.Server.ADK.Secret)
 
 	assert.Equal(t, []string{"CipherRSA_SHA256_AES256CBC"}, sc.Crypto.CipherSuitePriority)
 	assert.Equal(t, "/home/openspa/server/authorized", sc.Crypto.RSA.Client.PublicKeyLookupDir)

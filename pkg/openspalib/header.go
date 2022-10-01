@@ -2,9 +2,10 @@ package openspalib
 
 import (
 	"crypto/rand"
-	"errors"
+	"encoding/binary"
 
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
+	errors "github.com/pkg/errors"
 )
 
 const (
@@ -25,6 +26,7 @@ type Header struct {
 	Version       int
 	TransactionID uint8
 	CipherSuiteID crypto.CipherSuiteID
+	ADKProof      uint32
 }
 
 func NewHeader(t PDUType, c crypto.CipherSuiteID) Header {
@@ -41,9 +43,9 @@ func (h *Header) Marshal() ([]byte, error) {
 	b[0x00] = h.marshalControlField()
 	b[0x01] = h.marshalTransactionID()
 	b[0x02] = h.marshalCipherSuite()
-	b[0x03] = 0
+	b[0x03] = 0 // reserved field
 
-	b = append(b, h.marshalADK()...)
+	b = append(b, h.marshalADKProof()...)
 	return b, nil
 }
 
@@ -76,12 +78,9 @@ func (h *Header) marshalCipherSuite() byte {
 	return byte(h.CipherSuiteID)
 }
 
-func (h *Header) marshalADK() []byte {
+func (h *Header) marshalADKProof() []byte {
 	b := make([]byte, 4)
-	b[0] = 0
-	b[1] = 0
-	b[2] = 0
-	b[3] = 0
+	binary.BigEndian.PutUint32(b, h.ADKProof)
 	return b
 }
 
@@ -104,6 +103,14 @@ func (h *Header) unmarshalCipherSuite(b byte) crypto.CipherSuiteID {
 	return crypto.CipherSuiteID(b)
 }
 
+func (h *Header) unmarshalADKProof(b []byte) (uint32, error) {
+	if len(b) != ADKLength {
+		return 0, errors.New("invalid length")
+	}
+
+	return binary.BigEndian.Uint32(b), nil
+}
+
 func UnmarshalHeader(b []byte) (Header, error) {
 	if len(b) != HeaderLength {
 		return Header{}, errors.New("invalid header length")
@@ -113,6 +120,12 @@ func UnmarshalHeader(b []byte) (Header, error) {
 	h.Type, h.Version = h.unmarshalControlField(b[0])
 	h.TransactionID = h.unmarshalTransactionID(b[1])
 	h.CipherSuiteID = h.unmarshalCipherSuite(b[2])
+	// b[3] is reserved field
+	proof, err := h.unmarshalADKProof(b[4:HeaderLength])
+	if err != nil {
+		return Header{}, errors.Wrap(err, "unmarshal adk proof")
+	}
+	h.ADKProof = proof
 
 	return h, nil
 }

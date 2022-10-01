@@ -18,19 +18,56 @@ type ServerHandler struct {
 	cs  crypto.CipherSuite
 
 	authz AuthorizationStrategy
+
+	adkProver *openspalib.ADKProver
 }
 
-func NewServerHandler(frm *FirewallRuleManager, cs crypto.CipherSuite, authz AuthorizationStrategy) *ServerHandler {
+type ServerHandlerOpt struct {
+	ADKSecret string
+}
+
+func NewServerHandler(frm *FirewallRuleManager, cs crypto.CipherSuite, authz AuthorizationStrategy,
+	opt ServerHandlerOpt) *ServerHandler {
 	o := &ServerHandler{
 		cs:    cs,
 		frm:   frm,
 		authz: authz,
 	}
+
+	if len(opt.ADKSecret) != 0 {
+		p, err := openspalib.NewADKProver(opt.ADKSecret)
+		if err != nil {
+			panic(err)
+		}
+
+		o.adkProver = &p
+	}
+
 	return o
 }
 
 func (o *ServerHandler) DatagramRequestHandler(_ context.Context, resp UDPResponser, r DatagramRequest) {
 	log.Debug().Msgf("Received UDP datagram from: %s", r.rAddr.String())
+
+	if o.adkProver != nil {
+		header, err := openspalib.RequestUnmarshalHeader(r.data)
+		if err != nil {
+			log.Info().Err(err).Msgf("OpenSPA request unmarshal header failure")
+			return
+		}
+
+		if header.ADKProof == 0 {
+			log.Debug().Msgf("OpenSPA request missing ADK proof")
+			return
+		}
+
+		if err := o.adkProver.Valid(header.ADKProof); err != nil {
+			log.Info().Msgf("OpenSPA request ADK proof rejected")
+			return
+		}
+
+		log.Debug().Msgf("OpenSPA request ADK proof accepted")
+	}
 
 	request, err := openspalib.RequestUnmarshal(r.data, o.cs)
 	if err != nil {

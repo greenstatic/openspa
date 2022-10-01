@@ -23,7 +23,7 @@ func TestOpenSpaLib_Usability(t *testing.T) {
 		TargetIP:        net.IPv4(88, 200, 23, 40),
 		TargetPortStart: 80,
 		TargetPortEnd:   100,
-	}, cs)
+	}, cs, RequestDataOpt{})
 	require.NoError(t, err)
 	reqBytes, err := r.Marshal()
 	require.NoError(t, err)

@@ -22,6 +22,10 @@ type RequestData struct {
 	TargetPortEnd   int
 }
 
+type RequestDataOpt struct {
+	ADKSecret string
+}
+
 type RequestExtendedData struct {
 	Timestamp time.Time
 }
@@ -33,7 +37,7 @@ type Request struct {
 	Body   tlv.Container
 }
 
-func NewRequest(d RequestData, c crypto.CipherSuite) (*Request, error) {
+func NewRequest(d RequestData, c crypto.CipherSuite, opt RequestDataOpt) (*Request, error) {
 	if c == nil {
 		return nil, ErrCipherSuiteRequired
 	}
@@ -43,6 +47,15 @@ func NewRequest(d RequestData, c crypto.CipherSuite) (*Request, error) {
 
 	r.Header = NewHeader(RequestPDU, c.CipherSuiteID())
 	r.Header.TransactionID = d.TransactionID
+
+	if len(opt.ADKSecret) != 0 {
+		proof, err := ADKGenerateProof(opt.ADKSecret)
+		if err != nil {
+			return nil, errors.Wrap(err, "adk generate proof")
+		}
+
+		r.Header.ADKProof = proof
+	}
 
 	ed, err := r.generateRequestExtendedData()
 	if err != nil {
@@ -91,21 +104,13 @@ func (r *Request) Marshal() ([]byte, error) {
 }
 
 func RequestUnmarshal(b []byte, cs crypto.CipherSuite) (*Request, error) {
-	if len(b) < HeaderLength {
-		return nil, errors.New("too short to be request")
-	}
-
-	if len(b) == HeaderLength {
-		return nil, errors.New("body is empty")
+	header, err := RequestUnmarshalHeader(b)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshal header")
 	}
 
 	headerBytes := b[:HeaderLength]
 	bodyBytes := b[HeaderLength:]
-
-	header, err := UnmarshalHeader(headerBytes)
-	if err != nil {
-		return nil, errors.Wrap(err, "unmarshal header")
-	}
 
 	c, err := tlv.UnmarshalTLVContainer(bodyBytes)
 	if err != nil {
@@ -124,6 +129,25 @@ func RequestUnmarshal(b []byte, cs crypto.CipherSuite) (*Request, error) {
 	}
 
 	return r, nil
+}
+
+func RequestUnmarshalHeader(b []byte) (Header, error) {
+	if len(b) < HeaderLength {
+		return Header{}, errors.New("too short to be request")
+	}
+
+	if len(b) == HeaderLength {
+		return Header{}, errors.New("body is empty")
+	}
+
+	headerBytes := b[:HeaderLength]
+
+	h, err := UnmarshalHeader(headerBytes)
+	if err != nil {
+		return Header{}, errors.Wrap(err, "unmarshal header")
+	}
+
+	return h, nil
 }
 
 func RequestDataToContainer(d RequestData, ed RequestExtendedData) (tlv.Container, error) {

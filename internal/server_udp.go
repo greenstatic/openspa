@@ -29,11 +29,14 @@ type ServerSettings struct {
 	FW                Firewall
 	CS                crypto.CipherSuite
 	Authz             AuthorizationStrategy
+
+	// Optional
+	ADKSecret string
 }
 
 func NewServer(set ServerSettings) *Server {
 	frm := NewFirewallRuleManager(set.FW)
-	h := NewServerHandler(frm, set.CS, set.Authz)
+	h := NewServerHandler(frm, set.CS, set.Authz, ServerHandlerOpt{ADKSecret: set.ADKSecret})
 	rc := NewRequestCoordinator(h, set.NoRequestHandlers)
 
 	udpServer := NewUDPServer(set.IP, set.Port, rc)

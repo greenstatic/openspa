@@ -33,6 +33,9 @@ func rootCmdSetup(c *cobra.Command) {
 	c.AddCommand(cmd.ServerCmd)
 	cmd.ServerCmdSetup(cmd.ServerCmd)
 
+	c.AddCommand(cmd.ADKCmd)
+	cmd.ADKCmdSetup(cmd.ADKCmd)
+
 	c.AddCommand(cmd.VersionCmd)
 }
 

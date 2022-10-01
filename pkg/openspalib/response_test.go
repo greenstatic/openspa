@@ -31,6 +31,7 @@ func TestNewResponse(t *testing.T) {
 	assert.NotNil(t, r)
 
 	assert.Equal(t, byte(123), r.Header.TransactionID)
+	assert.Equal(t, uint32(0), r.Header.ADKProof)
 
 	firewallC, err := TLVFromContainer(r.Body, FirewallKey)
 	assert.NoError(t, err)

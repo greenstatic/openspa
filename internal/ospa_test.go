@@ -16,6 +16,9 @@ clientUUID: "c3b66a05-9098-4100-8141-be5695ada0e7"
 serverHost: "localhost" # can be domain or IP
 serverPort: 22211
 
+adk:
+  secret: "7O4ZIRI"
+
 crypto:
   cipherSuitePriority:
     - "CipherRSA_SHA256_AES256CBC"
@@ -43,6 +46,7 @@ crypto:
 	assert.Equal(t, "c3b66a05-9098-4100-8141-be5695ada0e7", o.ClientUUID)
 	assert.Equal(t, "localhost", o.ServerHost)
 	assert.Equal(t, 22211, o.ServerPort)
+	assert.Equal(t, "7O4ZIRI", o.ADK.Secret)
 	assert.Equal(t, []string{"CipherRSA_SHA256_AES256CBC"}, o.Crypto.CipherSuitePriority)
 
 	clientPrivKey := "-----BEGIN RSA PRIVATE KEY-----\n<TODO: PRIVATE KEY CONTENTS HERE>\n-----END RSA PRIVATE KEY-----\n"

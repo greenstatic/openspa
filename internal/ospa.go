@@ -3,6 +3,7 @@ package internal
 import (
 	"os"
 
+	lib "github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -17,7 +18,12 @@ type OSPA struct {
 	ClientUUID string     `yaml:"clientUUID"`
 	ServerHost string     `yaml:"serverHost"`
 	ServerPort int        `yaml:"serverPort"`
+	ADK        OSPAADK    `yaml:"adk"`
 	Crypto     OSPACrypto `yaml:"crypto"`
+}
+
+type OSPAADK struct {
+	Secret string `yaml:"secret"`
 }
 
 type OSPACrypto struct {
@@ -79,8 +85,22 @@ func (o OSPA) Verify() error {
 		return errors.New("server port invalid")
 	}
 
+	if err := o.ADK.Verify(); err != nil {
+		return errors.Wrap(err, "adk")
+	}
+
 	if err := o.Crypto.Verify(); err != nil {
 		return errors.Wrap(err, "crypto")
+	}
+
+	return nil
+}
+
+func (o OSPAADK) Verify() error {
+	if len(o.Secret) > 0 {
+		if len(o.Secret) != lib.ADKSecretEncodedLen {
+			return errors.New("secret length invalid")
+		}
 	}
 
 	return nil

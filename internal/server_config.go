@@ -27,12 +27,17 @@ type ServerConfigServer struct {
 	Port            int                    `yaml:"port"`
 	RequestHandlers int                    `yaml:"requestHandlers"`
 	HTTP            ServerConfigServerHTTP `yaml:"http"`
+	ADK             ServerConfigADK        `yaml:"adk"`
 }
 
 type ServerConfigServerHTTP struct {
 	Enable bool   `yaml:"enable"`
 	IP     string `yaml:"ip"`
 	Port   int    `yaml:"port"`
+}
+
+type ServerConfigADK struct {
+	Secret string `yaml:"secret"`
 }
 
 const (
@@ -130,6 +135,10 @@ func (s ServerConfigServer) Verify() error {
 		return errors.Wrap(err, "http")
 	}
 
+	if err := s.ADK.Verify(); err != nil {
+		return errors.Wrap(err, "adk")
+	}
+
 	return nil
 }
 
@@ -141,6 +150,15 @@ func (s ServerConfigServerHTTP) Verify() error {
 
 		if s.Port == 0 {
 			return errors.New("invalid port")
+		}
+	}
+	return nil
+}
+
+func (s ServerConfigADK) Verify() error {
+	if len(s.Secret) > 0 {
+		if len(s.Secret) != openspalib.ADKSecretEncodedLen {
+			return errors.New("encoded secret should be length 7")
 		}
 	}
 	return nil
@@ -339,6 +357,10 @@ func (s ServerConfig) Merge(sc ServerConfig) ServerConfig {
 		f.Server.HTTP.IP = sc.Server.HTTP.IP
 	}
 
+	if len(sc.Server.ADK.Secret) != 0 {
+		f.Server.ADK = sc.Server.ADK
+	}
+
 	f.Firewall = sc.Firewall
 	f.Authorization = sc.Authorization
 	f.Crypto = sc.Crypto
@@ -362,11 +384,14 @@ func DefaultServerConfig() ServerConfig {
 		Server: ServerConfigServer{
 			IP:              "::",
 			Port:            openspalib.DefaultServerPort,
-			RequestHandlers: 100,
+			RequestHandlers: NoRequestHandlersDefault,
 			HTTP: ServerConfigServerHTTP{
 				Enable: true,
 				IP:     "::",
 				Port:   ServerHTTPPortDefault,
+			},
+			ADK: ServerConfigADK{
+				Secret: "",
 			},
 		},
 	}
