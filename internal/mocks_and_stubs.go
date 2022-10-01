@@ -17,6 +17,11 @@ func (d *DatagramRequestHandlerMock) DatagramRequestHandler(ctx context.Context,
 	d.Called(resp, r)
 }
 
+func (d *DatagramRequestHandlerMock) ADKSupport() bool {
+	args := d.Called()
+	return args.Bool(0)
+}
+
 func NewDatagramRequestHandlerMock() *DatagramRequestHandlerMock {
 	d := &DatagramRequestHandlerMock{}
 	return d
@@ -25,17 +30,23 @@ func NewDatagramRequestHandlerMock() *DatagramRequestHandlerMock {
 var _ UDPDatagramRequestHandler = &DatagramRequestHandlerStub{}
 
 type DatagramRequestHandlerStub struct {
-	f func(ctx context.Context, resp UDPResponser, r DatagramRequest)
+	f          func(ctx context.Context, resp UDPResponser, r DatagramRequest)
+	adkSupport bool
 }
 
-func (d *DatagramRequestHandlerStub) DatagramRequestHandler(ctx context.Context, resp UDPResponser, r DatagramRequest) {
+func (d DatagramRequestHandlerStub) DatagramRequestHandler(ctx context.Context, resp UDPResponser, r DatagramRequest) {
 	d.f(ctx, resp, r)
 }
 
+func (d DatagramRequestHandlerStub) ADKSupport() bool {
+	return d.adkSupport
+}
+
 //nolint:lll
-func NewDatagramRequestHandlerStub(f func(ctx context.Context, resp UDPResponser, r DatagramRequest)) *DatagramRequestHandlerStub {
+func NewDatagramRequestHandlerStub(f func(ctx context.Context, resp UDPResponser, r DatagramRequest), adkSupport bool) *DatagramRequestHandlerStub {
 	d := &DatagramRequestHandlerStub{
-		f: f,
+		f:          f,
+		adkSupport: adkSupport,
 	}
 	return d
 }

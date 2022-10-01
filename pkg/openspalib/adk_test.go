@@ -59,7 +59,7 @@ func TestADKProver_ShouldBeFasterThanWithoutCache(t *testing.T) {
 	pc, err := NewADKProver(s)
 	assert.NoError(t, err)
 
-	const iter = 500
+	const iter = 2000
 
 	tNCStart := time.Now()
 

@@ -60,7 +60,7 @@ func (s *Server) Start() error {
 	}
 
 	bind := net.JoinHostPort(s.settings.IP.String(), strconv.Itoa(s.settings.Port))
-	log.Info().Msgf("Starting UDP server: %s", bind)
+	log.Info().Msgf("Starting UDP server (ADK support: %t): %s", s.reqCoord.ADKSupport(), bind)
 	s.reqCoord.Start()
 
 	return s.udpServer.Start()
@@ -162,6 +162,7 @@ type DatagramRequest struct {
 
 type UDPDatagramRequestHandler interface {
 	DatagramRequestHandler(ctx context.Context, resp UDPResponser, r DatagramRequest)
+	ADKSupport() bool
 }
 
 var _ UDPDatagramRequestHandler = &RequestCoordinator{}
@@ -198,6 +199,10 @@ func (d *RequestCoordinator) Start() {
 
 func (d *RequestCoordinator) DatagramRequestHandler(ctx context.Context, resp UDPResponser, r DatagramRequest) {
 	d.queue <- QueuedDatagramRequest{ctx: ctx, DatagramRequest: r, resp: resp}
+}
+
+func (d *RequestCoordinator) ADKSupport() bool {
+	return d.reqHandler.ADKSupport()
 }
 
 // startHandlers spawns size handler(), each in a goroutine.

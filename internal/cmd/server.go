@@ -72,6 +72,7 @@ func server(_ *cobra.Command, config internal.ServerConfig) {
 		FW:                fw,
 		CS:                cs,
 		Authz:             authz,
+		ADKSecret:         config.Server.ADK.Secret,
 	})
 
 	go func() {

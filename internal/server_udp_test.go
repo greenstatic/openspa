@@ -152,7 +152,7 @@ func TestRequestCoordinator_WorkAllocation(t *testing.T) {
 	h := NewDatagramRequestHandlerStub(func(ctx context.Context, resp UDPResponser, r DatagramRequest) {
 		time.Sleep(time.Second)
 		wg.Done()
-	})
+	}, false)
 
 	r := NewRequestCoordinator(h, 10)
 	r.Start()

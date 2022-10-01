@@ -59,8 +59,10 @@ func RequestRoutine(p RequestRoutineParameters, cs crypto.CipherSuite, opt Reque
 
 	// TODO: implement auto-mode
 
-	s := fmt.Sprintf("OpenSPA sending request for access to target (%s %s/%d)",
-		rd.TargetIP, rd.TargetProtocol, rd.TargetPortStart)
+	adkSupport := len(p.ADKSecret) > 0
+
+	s := fmt.Sprintf("OpenSPA sending request for access to target (%s %s/%d) (ADK support: %t)",
+		rd.TargetIP, rd.TargetProtocol, rd.TargetPortStart, adkSupport)
 	if rd.TargetPortStart != rd.TargetPortEnd {
 		s = fmt.Sprintf("%s-%d", s, rd.TargetPortEnd)
 	}

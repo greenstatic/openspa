@@ -23,7 +23,7 @@ var ADKSecretCmd = &cobra.Command{
 }
 
 var ADKProofCmd = &cobra.Command{
-	Use:    "proof [ADK secret]",
+	Use:    "proof <ADK secret>",
 	Short:  "Generate ADK proof",
 	Run:    adkProofCmdRunFn,
 	PreRun: PreRunLogSetupFn,

@@ -130,6 +130,7 @@ func reqHandle(cmd *cobra.Command, ospaFilePath string) {
 		AutoMode:   autoMode,
 		RetryCount: int(retryCount),
 		Timeout:    time.Duration(timeoutSec) * time.Second,
+		ADKSecret:  ospa.ADK.Secret,
 	}
 
 	cs, err := internal.SetupClientCipherSuite(ospa)
