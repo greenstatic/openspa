@@ -54,9 +54,9 @@ and server
   * External firewall integration
   * External authorization integration
 * ADK (Anti DoS Knocking protection) implemented using TOTP
+* Server should expose Prometheus metrics via HTTP
 
 In progress:
-* Server should expose Prometheus metrics via HTTP
 * eBPF/XDP ADK acceleration (Anti DoS knocking protection)
 
 Planned:
