@@ -56,34 +56,6 @@ func TestADKProver(t *testing.T) {
 	}
 }
 
-func TestADKProver_ShouldBeFasterThanWithoutCache(t *testing.T) {
-	s, err := ADKGenerateSecret()
-	assert.NoError(t, err)
-
-	pc, err := NewADKProver(s)
-	assert.NoError(t, err)
-
-	const iter = 500
-
-	tNCStart := time.Now()
-
-	for i := 0; i < iter; i++ {
-		_, _ = ADKGenerateProof(s)
-	}
-	tNCEnd := time.Now()
-
-	tNCDur := tNCEnd.Sub(tNCStart)
-
-	tCStart := time.Now()
-	for i := 0; i < iter; i++ {
-		_, _ = pc.Proof()
-	}
-	tCEnd := time.Now()
-	tCDur := tCEnd.Sub(tCStart)
-
-	assert.Truef(t, tCDur < tNCDur, "with cache should be faster than no cache")
-}
-
 func TestADKProver_Valid(t *testing.T) {
 	s, err := ADKGenerateSecret()
 	assert.NoError(t, err)
