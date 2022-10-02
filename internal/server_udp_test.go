@@ -32,6 +32,8 @@ func TestUDPServer(t *testing.T) {
 		done <- true
 	}()
 
+	assert.Equal(t, 0, s.metrics.datagramRX.Get())
+
 	go func() {
 		time.Sleep(2 * time.Second)
 		assert.NoError(t, s.stop())
@@ -61,6 +63,7 @@ func TestUDPServer(t *testing.T) {
 	}
 
 	h.AssertExpectations(t)
+	assert.Equal(t, 1, s.metrics.datagramRX.Get())
 }
 
 func TestRequestCoordinator_Size0ShouldBlock(t *testing.T) {

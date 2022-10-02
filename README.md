@@ -38,7 +38,7 @@ The major difference between v1 and v2 of the OpenSPA protocol is how binary mes
 Version 1 had a well-defined binary format (e.g. offset X with a length of 32 bits contains the client's IP address).
 While this of course worked, it also proved very difficult to extend and modify.
 Which is why version 2 uses TLVs to encode the binary messages.
-This allows v2 to be customized and extended very easily for difference use-cases.
+This allows v2 to be customized and extended very easily for different use-cases.
 
 Version 2 also brings native support for IPtables, making extension scripts optional (or rather an alternative to the 
 native IPtables integration to support different firewalls).

@@ -388,22 +388,27 @@ func TestPrometheusCounter_IncAndAdd(t *testing.T) {
 
 	assert.NoError(t, c.c.Write(m))
 	assert.Equal(t, float64(0), *m.Counter.Value)
+	assert.Equal(t, 0, c.Get())
 
 	c.Inc()
 	assert.NoError(t, c.c.Write(m))
 	assert.Equal(t, float64(1), *m.Counter.Value)
+	assert.Equal(t, 1, c.Get())
 
 	c.Inc()
 	assert.NoError(t, c.c.Write(m))
 	assert.Equal(t, float64(2), *m.Counter.Value)
+	assert.Equal(t, 2, c.Get())
 
 	c.Add(1)
 	assert.NoError(t, c.c.Write(m))
 	assert.Equal(t, float64(3), *m.Counter.Value)
+	assert.Equal(t, 3, c.Get())
 
 	c.Add(3)
 	assert.NoError(t, c.c.Write(m))
 	assert.Equal(t, float64(6), *m.Counter.Value)
+	assert.Equal(t, 6, c.Get())
 }
 
 func TestPrometheusCounterVec_Name(t *testing.T) {

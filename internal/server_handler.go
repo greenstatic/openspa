@@ -142,12 +142,14 @@ type UDPResponser interface {
 }
 
 type UDPResponse struct {
-	c *net.UDPConn
+	c       *net.UDPConn
+	metrics udpServerMetrics
 }
 
-func NewUDPResponse(c *net.UDPConn) *UDPResponse {
+func NewUDPResponse(c *net.UDPConn, metrics udpServerMetrics) *UDPResponse {
 	r := &UDPResponse{
-		c: c,
+		c:       c,
+		metrics: metrics,
 	}
 	return r
 }
@@ -161,6 +163,8 @@ func (u *UDPResponse) SendUDPResponse(dst net.UDPAddr, body []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "udp write")
 	}
+
+	u.metrics.datagramTX.Inc()
 
 	return nil
 }

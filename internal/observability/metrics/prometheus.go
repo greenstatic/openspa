@@ -12,6 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	dto "github.com/prometheus/client_model/go"
 )
 
 const (
@@ -232,6 +233,15 @@ func (c PrometheusCounter) Inc() {
 
 func (c PrometheusCounter) Add(count int) {
 	c.c.Add(float64(count))
+}
+
+func (c PrometheusCounter) Get() int {
+	m := &dto.Metric{}
+	if err := c.c.Write(m); err != nil {
+		return -1
+	}
+
+	return int(*m.Counter.Value)
 }
 
 var _ observability.CounterVec = &PrometheusCounterVec{}

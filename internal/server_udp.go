@@ -5,6 +5,7 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/greenstatic/openspa/internal/observability"
 	"github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
 	"github.com/pkg/errors"
@@ -109,6 +110,13 @@ type UDPServer struct {
 	handler UDPDatagramRequestHandler
 
 	c *net.UDPConn
+
+	metrics udpServerMetrics
+}
+
+type udpServerMetrics struct {
+	datagramRX observability.Counter
+	datagramTX observability.Counter
 }
 
 func NewUDPServer(ip net.IP, port int, reqHandle UDPDatagramRequestHandler) *UDPServer {
@@ -116,6 +124,7 @@ func NewUDPServer(ip net.IP, port int, reqHandle UDPDatagramRequestHandler) *UDP
 		IP:      ip,
 		Port:    port,
 		handler: reqHandle,
+		metrics: newUDPServerMetrics(),
 	}
 	return u
 }
@@ -136,7 +145,7 @@ func (u *UDPServer) start() error {
 	}
 
 	u.c = c
-	responder := NewUDPResponse(c)
+	responder := NewUDPResponse(c, u.metrics)
 
 	defer c.Close()
 
@@ -150,6 +159,8 @@ func (u *UDPServer) start() error {
 
 			return errors.Wrap(err, "failed to read from udp con")
 		}
+
+		u.metrics.datagramRX.Inc()
 
 		bCpy := make([]byte, n)
 		copy(bCpy, b)
@@ -176,6 +187,16 @@ func (u *UDPServer) stop() error {
 	}
 
 	return nil
+}
+
+func newUDPServerMetrics() udpServerMetrics {
+	m := udpServerMetrics{}
+	mr := getMetricsRepository()
+	lbl := observability.NewLabels()
+
+	m.datagramRX = mr.Count("udp_server_rx", lbl)
+	m.datagramTX = mr.Count("udp_server_tx", lbl)
+	return m
 }
 
 type DatagramRequest struct {

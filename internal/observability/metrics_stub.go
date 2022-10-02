@@ -12,7 +12,8 @@ var _ CountRegistry = CountRegistryStub{}
 type CountRegistryStub struct{}
 
 func (c CountRegistryStub) Count(_ string, _ Labels) Counter {
-	return CounterStub{}
+	cs := CounterStub(0)
+	return &cs
 }
 
 func (c CountRegistryStub) CountVec(_ string, _ ...string) CounterVec {
@@ -33,11 +34,19 @@ func (g GaugeRegistryStub) GaugeFunc(_ string, _ Labels) GaugeFunc {
 	return GaugeFuncStub{}
 }
 
-type CounterStub struct{}
+type CounterStub int
 
-func (c CounterStub) Inc() {}
+func (c *CounterStub) Inc() {
+	*c++
+}
 
-func (c CounterStub) Add(_ int) {}
+func (c *CounterStub) Add(i int) {
+	*c += CounterStub(i)
+}
+
+func (c *CounterStub) Get() int {
+	return int(*c)
+}
 
 type CounterVecStub struct{}
 

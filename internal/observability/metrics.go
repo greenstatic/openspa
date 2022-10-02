@@ -21,6 +21,7 @@ type CountRegistry interface {
 type Counter interface {
 	Inc()
 	Add(count int)
+	Get() int
 }
 
 type CounterVec interface {

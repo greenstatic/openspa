@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/greenstatic/openspa/internal/observability"
 	"github.com/greenstatic/openspa/internal/observability/metrics"
 	"github.com/rs/zerolog/log"
 )
@@ -37,8 +36,7 @@ func (h *HTTPServer) Start() error {
 }
 
 func (h *HTTPServer) start() error {
-	h.prom = metrics.NewPrometheusRepository(true)
-	observability.SetGlobalMetricsRepository(h.prom)
+	h.prom = prometheusRepo
 
 	mux := http.NewServeMux()
 	h.setHandles(mux)
