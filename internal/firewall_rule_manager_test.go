@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/greenstatic/openspa/internal/observability"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -13,11 +14,15 @@ import (
 var firewallRuleManagerExpirationTestingSleep = time.Second
 
 func TestFirewallRuleManager_Expiration(t *testing.T) {
+	SetMetricsRepository(observability.MetricsRepositoryStub{})
+
 	fw := &FirewallMock{}
 	rm := NewFirewallRuleManager(fw)
 
 	assert.NoError(t, rm.Start())
 	assert.Equal(t, 0, rm.Count())
+	assert.Equal(t, 0, rm.metrics.rulesAdded.Get())
+	assert.Equal(t, 0, rm.metrics.rulesRemoved.Get())
 
 	dur := time.Second
 	r := FirewallRule{
@@ -38,6 +43,9 @@ func TestFirewallRuleManager_Expiration(t *testing.T) {
 
 	assert.NoError(t, rm.Stop())
 	fw.AssertExpectations(t)
+
+	assert.Equal(t, 1, rm.metrics.rulesAdded.Get())
+	assert.Equal(t, 1, rm.metrics.rulesRemoved.Get())
 }
 
 func TestFirewallRuleManager_MultipleRules(t *testing.T) {

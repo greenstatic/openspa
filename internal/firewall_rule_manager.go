@@ -7,6 +7,7 @@ import (
 
 	"github.com/emirpasic/gods/lists"
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
+	"github.com/greenstatic/openspa/internal/observability"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -17,13 +18,20 @@ type FirewallRuleManager struct {
 	rules lists.List
 	lock  sync.Mutex
 
-	stop chan struct{}
+	stop    chan struct{}
+	metrics firewallRuleManagerMetrics
+}
+
+type firewallRuleManagerMetrics struct {
+	rulesAdded   observability.Counter
+	rulesRemoved observability.Counter
 }
 
 func NewFirewallRuleManager(fw Firewall) *FirewallRuleManager {
 	r := &FirewallRuleManager{
-		fw:    fw,
-		rules: doublylinkedlist.New(),
+		fw:      fw,
+		rules:   doublylinkedlist.New(),
+		metrics: newFirewallRuleManagerMetrics(),
 	}
 	return r
 }
@@ -76,6 +84,7 @@ mainloop:
 				if err != nil {
 					return errors.Wrap(err, "firewall rule remove")
 				}
+				frm.metrics.rulesRemoved.Inc()
 
 				frm.rules.Remove(i)
 				last = i
@@ -138,6 +147,8 @@ func (frm *FirewallRuleManager) Add(r FirewallRule, meta FirewallRuleMetadata) e
 		return errors.Wrap(err, "firewall rule add")
 	}
 
+	frm.metrics.rulesAdded.Inc()
+
 	frm.lock.Lock()
 	frm.rules.Add(re)
 	frm.lock.Unlock()
@@ -168,6 +179,17 @@ func (frm *FirewallRuleManager) Debug() map[string]interface{} {
 	return map[string]interface{}{
 		"rules": rules,
 	}
+}
+
+func newFirewallRuleManagerMetrics() firewallRuleManagerMetrics {
+	f := firewallRuleManagerMetrics{}
+	mr := getMetricsRepository()
+	lbl := observability.NewLabels()
+
+	f.rulesAdded = mr.Count("fw_rules_added", lbl)
+	f.rulesRemoved = mr.Count("fw_rules_removed", lbl)
+
+	return f
 }
 
 type FirewallRuleWithExpiration struct {
