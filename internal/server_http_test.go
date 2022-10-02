@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"testing"
@@ -13,7 +14,9 @@ import (
 func TestHTTPServer(t *testing.T) {
 	localhost := net.IPv4(127, 0, 0, 1).To4()
 
-	h := NewHTTPServer(localhost, 8084)
+	serverPort := 23881 // sufficiently high port that is probably not taken
+
+	h := NewHTTPServer(localhost, serverPort)
 	done := make(chan bool)
 	go func() {
 		err := h.Start()
@@ -26,7 +29,7 @@ func TestHTTPServer(t *testing.T) {
 	c := http.DefaultClient
 	c.Timeout = time.Second
 
-	resp, err := c.Get("http://localhost:8084/")
+	resp, err := c.Get(fmt.Sprintf("http://localhost:%d/", serverPort))
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 

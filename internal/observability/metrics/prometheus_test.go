@@ -336,6 +336,8 @@ func BenchmarkCountNameKeyWithStringsJoin(b *testing.B) {
 	}
 }
 
+const descFoo = `Desc{fqName: "openspa_server_foo", help: "", constLabels: {}, variableLabels: []}`
+
 func TestPrometheusCounter_Name(t *testing.T) {
 	r := prometheus.NewRegistry()
 
@@ -343,8 +345,7 @@ func TestPrometheusCounter_Name(t *testing.T) {
 
 	d := c.c.Desc().String()
 
-	dExpt := `Desc{fqName: "openspa_server_foo", help: "", constLabels: {}, variableLabels: []}`
-	assert.Equal(t, dExpt, d)
+	assert.Equal(t, descFoo, d)
 }
 
 func TestPrometheusCounter_Labels(t *testing.T) {
@@ -364,6 +365,7 @@ func TestPrometheusCounter_Labels(t *testing.T) {
 	fooOk := false
 	barOk := false
 
+	//nolint:goconst
 	for _, label := range m.Label {
 		if *label.Name == "foo" && *label.Value == "one" {
 			fooOk = true
@@ -482,8 +484,7 @@ func TestPrometheusCounterFunc_Name(t *testing.T) {
 	c := NewPrometheusCounterFunc(r, "foo", nil)
 
 	d := c.c.Desc().String()
-	dExp := `Desc{fqName: "openspa_server_foo", help: "", constLabels: {}, variableLabels: []}`
-	assert.Equal(t, dExp, d)
+	assert.Equal(t, descFoo, d)
 }
 
 func TestPrometheusCounterFunc_Labels(t *testing.T) {
@@ -566,8 +567,7 @@ func TestPrometheusGauge_Name(t *testing.T) {
 
 	d := g.g.Desc().String()
 
-	dExpt := `Desc{fqName: "openspa_server_foo", help: "", constLabels: {}, variableLabels: []}`
-	assert.Equal(t, dExpt, d)
+	assert.Equal(t, descFoo, d)
 }
 
 func TestPrometheusGauge_Labels(t *testing.T) {
@@ -629,8 +629,7 @@ func TestPrometheusGaugeFunc_Name(t *testing.T) {
 	g := NewPrometheusGaugeFunc(r, "foo", nil)
 
 	d := g.g.Desc().String()
-	dExp := `Desc{fqName: "openspa_server_foo", help: "", constLabels: {}, variableLabels: []}`
-	assert.Equal(t, dExp, d)
+	assert.Equal(t, descFoo, d)
 }
 
 func TestPrometheusGaugeFunc_Labels(t *testing.T) {

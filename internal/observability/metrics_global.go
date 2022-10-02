@@ -37,6 +37,7 @@ type globalMetricsRepository struct {
 
 type globalMetricsRepositoryChangeCallback func(m MetricsRepository)
 
+//nolint:revive
 func NewGlobalMetricsRepository(mr MetricsRepository) *globalMetricsRepository {
 	g := &globalMetricsRepository{
 		r: mr,

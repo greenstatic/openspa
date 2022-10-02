@@ -44,8 +44,10 @@ func (h *HTTPServer) start() error {
 	h.setHandles(mux)
 
 	h.server = &http.Server{
-		Handler: mux,
-		Addr:    net.JoinHostPort(h.bindIP.String(), strconv.Itoa(h.bindPort)),
+		Handler:      mux,
+		Addr:         net.JoinHostPort(h.bindIP.String(), strconv.Itoa(h.bindPort)),
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	log.Info().Msgf("Starting HTTP server on: %s", h.server.Addr)
@@ -81,7 +83,6 @@ func (h *HTTPServer) setHandles(m *http.ServeMux) {
 	if h.prom != nil {
 		m.Handle("/metrics", h.prom.Handler())
 	}
-
 }
 
 func handleEndpointRoot(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +92,7 @@ func handleEndpointRoot(w http.ResponseWriter, r *http.Request) {
 		handleStatusNotFound(w, r)
 		return
 	}
-	
+
 	panicOnErr(json.NewEncoder(w).Encode(struct {
 		Msg     string `json:"msg"`
 		Version string `json:"version"`
@@ -101,7 +102,7 @@ func handleEndpointRoot(w http.ResponseWriter, r *http.Request) {
 	}))
 }
 
-func handleStatusNotFound(w http.ResponseWriter, r *http.Request) {
+func handleStatusNotFound(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	panicOnErr(json.NewEncoder(w).Encode(struct {
 		Error string `json:"error"`

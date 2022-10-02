@@ -44,7 +44,7 @@ func NewServer(set ServerSettings) *Server {
 	h := NewServerHandler(frm, set.CS, set.Authz, ServerHandlerOpt{ADKSecret: set.ADKSecret})
 	rc := NewRequestCoordinator(h, set.NoRequestHandlers)
 
-	var httpServer *HTTPServer = nil
+	var httpServer *HTTPServer
 	if set.HTTPServerPort != 0 {
 		httpServer = NewHTTPServer(set.HTTPServerIP, set.HTTPServerPort)
 	}

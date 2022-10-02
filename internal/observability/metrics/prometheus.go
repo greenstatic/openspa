@@ -294,7 +294,6 @@ func NewPrometheusCounterFunc(r prometheus.Registerer, name string, l observabil
 
 func (cf *PrometheusCounterFunc) CounterFuncRegister(fn func() float64) {
 	cf.callback = fn
-
 }
 
 func (cf *PrometheusCounterFunc) CounterFuncDeregister() {
@@ -362,7 +361,6 @@ func NewPrometheusGaugeFunc(r prometheus.Registerer, name string, l observabilit
 
 func (cf *PrometheusGaugeFunc) GaugeFuncRegister(fn func() float64) {
 	cf.callback = fn
-
 }
 
 func (cf *PrometheusGaugeFunc) GaugeFuncDeregister() {
@@ -381,7 +379,7 @@ func countNameKeyWithForLoop(name string, l observability.Labels) string {
 	s := name
 
 	keys := make([]string, 0, len(l))
-	for k, _ := range l {
+	for k := range l {
 		keys = append(keys, k)
 	}
 
@@ -400,7 +398,7 @@ func countNameKeyWithBuilder(name string, l observability.Labels) string {
 	s.WriteString(name)
 
 	keys := make([]string, 0, len(l))
-	for k, _ := range l {
+	for k := range l {
 		keys = append(keys, k)
 	}
 
@@ -419,7 +417,7 @@ func countNameKeyWithBuilder(name string, l observability.Labels) string {
 
 func countNameKeyWithStringsJoin(name string, l observability.Labels) string {
 	keys := make([]string, 0, len(l))
-	for k, _ := range l {
+	for k := range l {
 		keys = append(keys, k)
 	}
 
