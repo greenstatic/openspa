@@ -6,8 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/greenstatic/openspa/internal/observability"
 	"github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +21,14 @@ func TestServerHandler_DatagramRequestHandler(t *testing.T) {
 	cs := crypto.NewCipherSuiteStub()
 	adkSecret := "7O4ZIRI"
 
+	SetMetricsRepository(observability.MetricsRepositoryStub{})
+
 	sh := NewServerHandler(frm, cs, NewAuthorizationStrategyAllow(time.Hour), ServerHandlerOpt{ADKSecret: adkSecret})
+
+	assert.Equal(t, 0, sh.metrics.openspaRequest.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestADKFailed.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestAuthorizationFailed.Get())
+	assert.Equal(t, 0, sh.metrics.openspaResponse.Get())
 
 	reqData := openspalib.RequestData{
 		TransactionID:   23,
@@ -60,6 +69,11 @@ func TestServerHandler_DatagramRequestHandler(t *testing.T) {
 
 	resp.AssertExpectations(t)
 	fw.AssertExpectations(t)
+
+	assert.Equal(t, 1, sh.metrics.openspaRequest.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestADKFailed.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestAuthorizationFailed.Get())
+	assert.Equal(t, 1, sh.metrics.openspaResponse.Get())
 }
 
 //nolint:dupl
@@ -69,7 +83,14 @@ func TestServerHandler_DatagramRequestHandler_WithoutADKProof(t *testing.T) {
 	cs := crypto.NewCipherSuiteStub()
 	adkSecret := ""
 
+	SetMetricsRepository(observability.MetricsRepositoryStub{})
+
 	sh := NewServerHandler(frm, cs, NewAuthorizationStrategyAllow(time.Hour), ServerHandlerOpt{ADKSecret: adkSecret})
+
+	assert.Equal(t, 0, sh.metrics.openspaRequest.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestADKFailed.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestAuthorizationFailed.Get())
+	assert.Equal(t, 0, sh.metrics.openspaResponse.Get())
 
 	reqData := openspalib.RequestData{
 		TransactionID:   23,
@@ -110,6 +131,11 @@ func TestServerHandler_DatagramRequestHandler_WithoutADKProof(t *testing.T) {
 
 	resp.AssertExpectations(t)
 	fw.AssertExpectations(t)
+
+	assert.Equal(t, 1, sh.metrics.openspaRequest.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestADKFailed.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestAuthorizationFailed.Get())
+	assert.Equal(t, 1, sh.metrics.openspaResponse.Get())
 }
 
 func TestServerHandler_DatagramRequestHandler_InvalidADKProof(t *testing.T) {
@@ -117,7 +143,14 @@ func TestServerHandler_DatagramRequestHandler_InvalidADKProof(t *testing.T) {
 	frm := NewFirewallRuleManager(fw)
 	cs := crypto.NewCipherSuiteStub()
 
+	SetMetricsRepository(observability.MetricsRepositoryStub{})
+
 	sh := NewServerHandler(frm, cs, NewAuthorizationStrategyAllow(time.Hour), ServerHandlerOpt{ADKSecret: "7O4ZIRI"})
+
+	assert.Equal(t, 0, sh.metrics.openspaRequest.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestADKFailed.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestAuthorizationFailed.Get())
+	assert.Equal(t, 0, sh.metrics.openspaResponse.Get())
 
 	reqData := openspalib.RequestData{
 		TransactionID:   23,
@@ -147,6 +180,11 @@ func TestServerHandler_DatagramRequestHandler_InvalidADKProof(t *testing.T) {
 
 	resp.AssertExpectations(t)
 	fw.AssertExpectations(t)
+
+	assert.Equal(t, 0, sh.metrics.openspaRequest.Get())
+	assert.Equal(t, 1, sh.metrics.openspaRequestADKFailed.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestAuthorizationFailed.Get())
+	assert.Equal(t, 0, sh.metrics.openspaResponse.Get())
 }
 
 func TestFirewallRuleFromRequestContainer(t *testing.T) {

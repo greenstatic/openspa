@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/greenstatic/openspa/internal/observability"
 	"github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
 	"github.com/greenstatic/openspa/pkg/openspalib/tlv"
@@ -20,18 +21,27 @@ type ServerHandler struct {
 	authz AuthorizationStrategy
 
 	adkProver *openspalib.ADKProver
+	metrics   serverHandlerMetrics
 }
 
 type ServerHandlerOpt struct {
 	ADKSecret string
 }
 
+type serverHandlerMetrics struct {
+	openspaRequest                    observability.Counter
+	openspaRequestADKFailed           observability.Counter
+	openspaRequestAuthorizationFailed observability.Counter
+	openspaResponse                   observability.Counter
+}
+
 func NewServerHandler(frm *FirewallRuleManager, cs crypto.CipherSuite, authz AuthorizationStrategy,
 	opt ServerHandlerOpt) *ServerHandler {
 	o := &ServerHandler{
-		cs:    cs,
-		frm:   frm,
-		authz: authz,
+		cs:      cs,
+		frm:     frm,
+		authz:   authz,
+		metrics: newServerHandlerMetrics(),
 	}
 
 	if len(opt.ADKSecret) != 0 {
@@ -59,11 +69,13 @@ func (o *ServerHandler) DatagramRequestHandler(_ context.Context, resp UDPRespon
 
 		if header.ADKProof == 0 {
 			log.Debug().Msgf("OpenSPA request missing ADK proof for: %s", remote)
+			o.metrics.openspaRequestADKFailed.Inc()
 			return
 		}
 
 		if err := o.adkProver.Valid(header.ADKProof); err != nil {
 			log.Debug().Msgf("OpenSPA request ADK proof rejected for: %s", remote)
+			o.metrics.openspaRequestADKFailed.Inc()
 			return
 		}
 
@@ -80,6 +92,7 @@ func (o *ServerHandler) DatagramRequestHandler(_ context.Context, resp UDPRespon
 	dur, err := o.authz.RequestAuthorization(request.Body)
 	if err != nil {
 		log.Info().Err(err).Msgf("OpenSPA request not authorized")
+		o.metrics.openspaRequestAuthorizationFailed.Inc()
 		return
 	}
 
@@ -105,6 +118,8 @@ func (o *ServerHandler) DatagramRequestHandler(_ context.Context, resp UDPRespon
 		return
 	}
 
+	o.metrics.openspaRequest.Inc()
+
 	rd := openspalib.ResponseData{
 		TransactionID:   request.Header.TransactionID,
 		TargetProtocol:  fwReq.Proto,
@@ -127,6 +142,8 @@ func (o *ServerHandler) DatagramRequestHandler(_ context.Context, resp UDPRespon
 		return
 	}
 
+	o.metrics.openspaResponse.Inc()
+
 	err = resp.SendUDPResponse(r.rAddr, responseB)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to send OpenSPA response")
@@ -135,6 +152,18 @@ func (o *ServerHandler) DatagramRequestHandler(_ context.Context, resp UDPRespon
 
 func (o *ServerHandler) ADKSupport() bool {
 	return o.adkProver != nil
+}
+
+func newServerHandlerMetrics() serverHandlerMetrics {
+	s := serverHandlerMetrics{}
+	mr := getMetricsRepository()
+	lbl := observability.NewLabels()
+
+	s.openspaRequest = mr.Count("request", lbl)
+	s.openspaRequestADKFailed = mr.Count("request_adk_failed", lbl)
+	s.openspaRequestAuthorizationFailed = mr.Count("request_authorization_failed", lbl)
+	s.openspaResponse = mr.Count("response", lbl)
+	return s
 }
 
 type UDPResponser interface {
