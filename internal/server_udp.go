@@ -14,21 +14,26 @@ import (
 const readRequestBufferSize = openspalib.MaxPDUSize
 
 type Server struct {
-	udpServer *UDPServer
-	reqCoord  *RequestCoordinator
-	frm       *FirewallRuleManager
-	settings  ServerSettings
+	udpServer  *UDPServer
+	httpServer *HTTPServer
+	reqCoord   *RequestCoordinator
+	frm        *FirewallRuleManager
+	settings   ServerSettings
 }
 
 const NoRequestHandlersDefault = 100
 
 type ServerSettings struct {
-	IP                net.IP
-	Port              int
+	UDPServerIP       net.IP
+	UDPServerPort     int
 	NoRequestHandlers int
 	FW                Firewall
 	CS                crypto.CipherSuite
 	Authz             AuthorizationStrategy
+
+	// HTTP server parameters, if HTTPServerPort is 0, the HTTP server will not be started
+	HTTPServerIP   net.IP
+	HTTPServerPort int
 
 	// Optional
 	ADKSecret string
@@ -39,13 +44,17 @@ func NewServer(set ServerSettings) *Server {
 	h := NewServerHandler(frm, set.CS, set.Authz, ServerHandlerOpt{ADKSecret: set.ADKSecret})
 	rc := NewRequestCoordinator(h, set.NoRequestHandlers)
 
-	udpServer := NewUDPServer(set.IP, set.Port, rc)
+	var httpServer *HTTPServer = nil
+	if set.HTTPServerPort != 0 {
+		httpServer = NewHTTPServer(set.HTTPServerIP, set.HTTPServerPort)
+	}
 
 	s := &Server{
-		udpServer: udpServer,
-		reqCoord:  rc,
-		settings:  set,
-		frm:       frm,
+		udpServer:  NewUDPServer(set.UDPServerIP, set.UDPServerPort, rc),
+		httpServer: httpServer,
+		reqCoord:   rc,
+		settings:   set,
+		frm:        frm,
 	}
 	return s
 }
@@ -59,7 +68,15 @@ func (s *Server) Start() error {
 		log.Fatal().Err(err).Msgf("Failed to start firewall rule manager")
 	}
 
-	bind := net.JoinHostPort(s.settings.IP.String(), strconv.Itoa(s.settings.Port))
+	if s.httpServer != nil {
+		go func() {
+			if err := s.httpServer.Start(); err != nil {
+				log.Fatal().Err(err).Msgf("HTTP server crashed")
+			}
+		}()
+	}
+
+	bind := net.JoinHostPort(s.settings.UDPServerIP.String(), strconv.Itoa(s.settings.UDPServerPort))
 	log.Info().Msgf("Starting UDP server (ADK support: %t): %s", s.reqCoord.ADKSupport(), bind)
 	s.reqCoord.Start()
 
@@ -68,6 +85,12 @@ func (s *Server) Start() error {
 
 func (s *Server) Stop() error {
 	// s.reqCoord.Stop() // TODO
+
+	if s.httpServer != nil {
+		if err := s.httpServer.Stop(); err != nil {
+			log.Error().Err(err).Msgf("Failed to stop HTTP server")
+		}
+	}
 
 	if err := s.udpServer.Stop(); err != nil {
 		return errors.Wrap(err, "udp server stop")

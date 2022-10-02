@@ -200,8 +200,8 @@ func TestServerShutdown(t *testing.T) {
 	fw.On("FirewallSetup").Return(nil).Once()
 
 	s := NewServer(ServerSettings{
-		IP:                net.IPv4(127, 0, 0, 1).To4(),
-		Port:              8083,
+		UDPServerIP:       net.IPv4(127, 0, 0, 1).To4(),
+		UDPServerPort:     8083,
 		NoRequestHandlers: 10,
 		FW:                fw,
 		CS:                cs,

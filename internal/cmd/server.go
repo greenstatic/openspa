@@ -65,14 +65,18 @@ func server(_ *cobra.Command, config internal.ServerConfig) {
 		log.Fatal().Err(err).Msgf("Failed to initialize authorization backend")
 	}
 
+	httpIP, httpPort := serverHTTPServerSettingsFromConfig(config)
+
 	s := internal.NewServer(internal.ServerSettings{
-		IP:                net.ParseIP(config.Server.IP),
-		Port:              config.Server.Port,
+		UDPServerIP:       net.ParseIP(config.Server.IP),
+		UDPServerPort:     config.Server.Port,
 		NoRequestHandlers: config.Server.RequestHandlers,
 		FW:                fw,
 		CS:                cs,
 		Authz:             authz,
 		ADKSecret:         config.Server.ADK.Secret,
+		HTTPServerIP:      httpIP,
+		HTTPServerPort:    httpPort,
 	})
 
 	go func() {
@@ -93,4 +97,13 @@ func server(_ *cobra.Command, config internal.ServerConfig) {
 		log.Error().Err(err).Msgf("Server stop")
 	}
 	log.Info().Msgf("Successfully stopped server")
+}
+
+func serverHTTPServerSettingsFromConfig(config internal.ServerConfig) (net.IP, int) {
+	port := config.Server.HTTP.Port
+	if !config.Server.HTTP.Enable {
+		port = 0
+	}
+
+	return net.ParseIP(config.Server.HTTP.IP), port
 }

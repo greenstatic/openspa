@@ -126,12 +126,6 @@ func getTestEnv() testEnv {
 	return t
 }
 
-func panicOnErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func TestPerformRequest(t *testing.T) {
 	sender := &udpSenderMock{}
 	cs := crypto.NewCipherSuiteStub()
