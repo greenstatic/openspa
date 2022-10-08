@@ -47,4 +47,4 @@ coverage:
 	$(shell mkdir -p $(BUILD_DIR))
 	go test $(shell go list ./... | grep -v internal/xdp) -covermode=count -coverprofile=$(BUILD_DIR)/coverage_raw.out
 	cat $(BUILD_DIR)/coverage_raw.out | grep -v "mock" | grep -v "stub" > $(BUILD_DIR)/coverage_filtered.out
-	go tool cover -func=$(BUILD_DIR)/coverage_filtered.out -o=$(BUILD_DIR)/coverage.out
+	go tool cover -func=$(BUILD_DIR)/coverage_filtered.out
