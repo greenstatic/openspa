@@ -21,7 +21,7 @@ adk:
 
 crypto:
   cipherSuitePriority:
-    - "CipherRSA_SHA256_AES256CBC"
+    - "CipherSuite_RSA_SHA256_AES256CBC"
 
   rsa:
     client:
@@ -47,7 +47,7 @@ crypto:
 	assert.Equal(t, "localhost", o.ServerHost)
 	assert.Equal(t, 22211, o.ServerPort)
 	assert.Equal(t, "7O4ZIRI", o.ADK.Secret)
-	assert.Equal(t, []string{"CipherRSA_SHA256_AES256CBC"}, o.Crypto.CipherSuitePriority)
+	assert.Equal(t, []string{"CipherSuite_RSA_SHA256_AES256CBC"}, o.Crypto.CipherSuitePriority)
 
 	clientPrivKey := "-----BEGIN RSA PRIVATE KEY-----\n<PRIVATE KEY CONTENTS HERE>\n-----END RSA PRIVATE KEY-----\n"
 	assert.Equal(t, clientPrivKey, o.Crypto.RSA.Client.PrivateKey)
@@ -57,4 +57,6 @@ crypto:
 
 	serverPubKey := "-----BEGIN RSA PUBLIC KEY-----\n<PUBLIC KEY CONTENTS HERE>\n-----END RSA PUBLIC KEY-----\n"
 	assert.Equal(t, serverPubKey, o.Crypto.RSA.Server.PublicKey)
+
+	assert.NoError(t, o.Verify())
 }

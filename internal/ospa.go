@@ -2,6 +2,7 @@ package internal
 
 import (
 	"os"
+	"strings"
 
 	lib "github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/greenstatic/openspa/pkg/openspalib/crypto"
@@ -135,18 +136,19 @@ func (o OSPACryptoRSA) Verify() error {
 }
 
 func (o OSPACryptoRSAClient) Verify() error {
-	if len(o.PrivateKey) < 512 {
-		return errors.New("private key empty or too short")
+	if !strings.Contains(o.PrivateKey, "PRIVATE KEY") {
+		return errors.New("private key is not  in PKCS #1 ASN.1 DER format")
 	}
-	if len(o.PublicKey) < 512 {
-		return errors.New("public key empty or too short")
+
+	if !strings.Contains(o.PublicKey, "PUBLIC KEY") {
+		return errors.New("public key is not in PKIX ASN.1 DER format")
 	}
 	return nil
 }
 
 func (o OSPACryptoRSAServer) Verify() error {
-	if len(o.PublicKey) < 512 {
-		return errors.New("public key empty or too short")
+	if !strings.Contains(o.PublicKey, "PUBLIC KEY") {
+		return errors.New("public key is not in PKIX ASN.1 DER format")
 	}
 	return nil
 }
