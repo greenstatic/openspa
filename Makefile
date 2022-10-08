@@ -6,6 +6,7 @@ build:
 	$(shell mkdir -p $(BUILD_DIR))
 	$(MAKE) build-linux_amd64
 	$(MAKE) build-darwin_amd64
+	$(MAKE) build-server-xdp-linux_amd64
 
 .PHONY: build-server-xdp-linux_amd64
 build-server-xdp-linux_amd64:
