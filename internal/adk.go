@@ -40,6 +40,7 @@ func (a ADKProofGen) ADKProofNext() uint32 {
 
 func SetupXDPADKMetrics(sp xdp.StatsProvider, stop chan bool) {
 	x := newXDPADKMetrics(sp)
+	x.setupMetrics()
 	go func() {
 		<-stop
 		x.teardownMetrics()

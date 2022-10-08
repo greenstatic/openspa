@@ -132,7 +132,7 @@ func serverHTTPServerSettingsFromConfig(config internal.ServerConfig) (net.IP, i
 }
 
 func xdpADKEnabled(config internal.ServerConfig) bool {
-	return config.Server.ADK.XDP.Mode == ""
+	return config.Server.ADK.XDP.Mode != ""
 }
 
 func xdpPrecheck(config internal.ServerConfig) error {
@@ -155,6 +155,8 @@ func xdpSetup(config internal.ServerConfig, metricsStop chan bool) (xdp.ADK, err
 	if !xdpADKEnabled(config) {
 		return nil, nil
 	}
+
+	log.Info().Msgf("Setting up XDP ADK acceleration")
 
 	xdpConf := config.Server.ADK.XDP
 	mode, ok := xdp.ModeFromString(xdpConf.Mode)
