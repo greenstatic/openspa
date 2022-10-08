@@ -26,10 +26,15 @@ func TestADKGenerateProof(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEqual(t, uint32(0), proof0)
 
+	proof1, err := ADKGenerateNextProof(s)
+	assert.NoError(t, err)
+	assert.NotEqual(t, uint32(0), proof1)
+
 	for i := 0; i < 10; i++ {
 		proof, err := ADKGenerateProof(s)
 		assert.NoError(t, err)
 		assert.Equal(t, proof0, proof)
+		assert.NotEqual(t, proof0, proof1)
 	}
 }
 

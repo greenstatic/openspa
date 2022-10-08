@@ -36,7 +36,7 @@ func rootCmdSetup(c *cobra.Command) {
 	c.AddCommand(cmd.ADKCmd)
 	cmd.ADKCmdSetup(cmd.ADKCmd)
 
-	c.AddCommand(cmd.VersionCmd)
+	c.AddCommand(cmd.VersionCmdGet(true))
 }
 
 var clientCmd = &cobra.Command{

@@ -27,16 +27,16 @@ crypto:
     client:
       privateKey: |
         -----BEGIN RSA PRIVATE KEY-----
-        <TODO: PRIVATE KEY CONTENTS HERE>
+        <PRIVATE KEY CONTENTS HERE>
         -----END RSA PRIVATE KEY-----
       publicKey: |
         -----BEGIN RSA PUBLIC KEY-----
-        <TODO: PUBLIC KEY CONTENTS HERE>
+        <PUBLIC KEY CONTENTS HERE>
         -----END RSA PUBLIC KEY-----
     server:
       publicKey: |
         -----BEGIN RSA PUBLIC KEY-----
-        <TODO: PUBLIC KEY CONTENTS HERE>
+        <PUBLIC KEY CONTENTS HERE>
         -----END RSA PUBLIC KEY-----
 `
 	o, err := OSPAParse([]byte(content))
@@ -49,12 +49,12 @@ crypto:
 	assert.Equal(t, "7O4ZIRI", o.ADK.Secret)
 	assert.Equal(t, []string{"CipherRSA_SHA256_AES256CBC"}, o.Crypto.CipherSuitePriority)
 
-	clientPrivKey := "-----BEGIN RSA PRIVATE KEY-----\n<TODO: PRIVATE KEY CONTENTS HERE>\n-----END RSA PRIVATE KEY-----\n"
+	clientPrivKey := "-----BEGIN RSA PRIVATE KEY-----\n<PRIVATE KEY CONTENTS HERE>\n-----END RSA PRIVATE KEY-----\n"
 	assert.Equal(t, clientPrivKey, o.Crypto.RSA.Client.PrivateKey)
 
-	clientPubKey := "-----BEGIN RSA PUBLIC KEY-----\n<TODO: PUBLIC KEY CONTENTS HERE>\n-----END RSA PUBLIC KEY-----\n"
+	clientPubKey := "-----BEGIN RSA PUBLIC KEY-----\n<PUBLIC KEY CONTENTS HERE>\n-----END RSA PUBLIC KEY-----\n"
 	assert.Equal(t, clientPubKey, o.Crypto.RSA.Client.PublicKey)
 
-	serverPubKey := "-----BEGIN RSA PUBLIC KEY-----\n<TODO: PUBLIC KEY CONTENTS HERE>\n-----END RSA PUBLIC KEY-----\n"
+	serverPubKey := "-----BEGIN RSA PUBLIC KEY-----\n<PUBLIC KEY CONTENTS HERE>\n-----END RSA PUBLIC KEY-----\n"
 	assert.Equal(t, serverPubKey, o.Crypto.RSA.Server.PublicKey)
 }

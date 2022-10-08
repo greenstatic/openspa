@@ -21,15 +21,23 @@ server:
 
   adk:
     secret: "7O4ZIRI"
+    xdp:
+      mode: "skb"
+      interfaces: ["eth0"]
 
 firewall:
   backend: "iptables"
   iptables:
     chain: "OPENSPA-ALLOW"
 
+authorization:
+  backend: "simple"
+  simple:
+    duration: "5s"
+
 crypto:
   cipherSuitePriority:
-    - "CipherRSA_SHA256_AES256CBC"
+    - "CipherSuite_RSA_SHA256_AES256CBC"
 
   rsa:
     client:
@@ -41,17 +49,24 @@ crypto:
 	sc, err := ServerConfigParse([]byte(content))
 	assert.NoError(t, err)
 
+	// We are not calling sc.Verify() since we would otherwise have to create temporary files for the crypto paths
+	assert.NoError(t, sc.Server.Verify())
+	assert.NoError(t, sc.Firewall.Verify())
+	assert.NoError(t, sc.Authorization.Verify())
+
 	assert.Equal(t, "0.0.0.0", sc.Server.IP)
 	assert.Equal(t, 22211, sc.Server.Port)
 	assert.Equal(t, true, sc.Server.HTTP.Enable)
 	assert.Equal(t, "0.0.0.0", sc.Server.HTTP.IP)
 	assert.Equal(t, 22212, sc.Server.HTTP.Port)
 	assert.Equal(t, "7O4ZIRI", sc.Server.ADK.Secret)
+	assert.Equal(t, "skb", sc.Server.ADK.XDP.Mode)
+	assert.Equal(t, []string{"eth0"}, sc.Server.ADK.XDP.Interfaces)
 
 	assert.Equal(t, "iptables", sc.Firewall.Backend)
 	assert.Equal(t, "OPENSPA-ALLOW", sc.Firewall.IPTables.Chain)
 
-	assert.Equal(t, []string{"CipherRSA_SHA256_AES256CBC"}, sc.Crypto.CipherSuitePriority)
+	assert.Equal(t, []string{"CipherSuite_RSA_SHA256_AES256CBC"}, sc.Crypto.CipherSuitePriority)
 	assert.Equal(t, "/home/openspa/server/authorized", sc.Crypto.RSA.Client.PublicKeyLookupDir)
 	assert.Equal(t, "/home/openspa/server/server_private.key", sc.Crypto.RSA.Server.PrivateKeyPath)
 	assert.Equal(t, "/home/openspa/server/server_public.key", sc.Crypto.RSA.Server.PublicKeyPath)
@@ -61,7 +76,7 @@ func TestServerConfig_ParseWithDefaults(t *testing.T) {
 	content := `
 crypto:
   cipherSuitePriority:
-    - "CipherRSA_SHA256_AES256CBC"
+    - "CipherSuite_RSA_SHA256_AES256CBC"
 
   rsa:
     client:
@@ -80,7 +95,7 @@ crypto:
 	assert.Equal(t, 22212, sc.Server.HTTP.Port)
 	assert.Equal(t, "", sc.Server.ADK.Secret)
 
-	assert.Equal(t, []string{"CipherRSA_SHA256_AES256CBC"}, sc.Crypto.CipherSuitePriority)
+	assert.Equal(t, []string{"CipherSuite_RSA_SHA256_AES256CBC"}, sc.Crypto.CipherSuitePriority)
 	assert.Equal(t, "/home/openspa/server/authorized", sc.Crypto.RSA.Client.PublicKeyLookupDir)
 	assert.Equal(t, "/home/openspa/server/server_private.key", sc.Crypto.RSA.Server.PrivateKeyPath)
 	assert.Equal(t, "/home/openspa/server/server_public.key", sc.Crypto.RSA.Server.PublicKeyPath)

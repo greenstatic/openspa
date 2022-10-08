@@ -53,11 +53,11 @@ and server
   * Native IPtables integration
   * External firewall integration
   * External authorization integration
-* ADK (Anti DoS Knocking protection) implemented using TOTP
+* adk (Anti DoS Knocking protection) implemented using TOTP
 * Server should expose Prometheus metrics via HTTP
 
 In progress:
-* eBPF/XDP ADK acceleration (Anti DoS knocking protection)
+* eBPF/XDP adk acceleration (Anti DoS knocking protection)
 
 Planned:
 * ECC support

@@ -37,7 +37,19 @@ type ServerConfigServerHTTP struct {
 }
 
 type ServerConfigADK struct {
-	Secret string `yaml:"secret"`
+	Secret string             `yaml:"secret"`
+	XDP    ServerConfigADKXDP `yaml:"xdp"`
+}
+
+const (
+	ServerConfigADKXDPModeSKB    = "skb"
+	ServerConfigADKXDPModeDriver = "driver"
+	// ServerConfigADKXDPModeHW     = "hw"
+)
+
+type ServerConfigADKXDP struct {
+	Mode       string   `yaml:"mode"`
+	Interfaces []string `yaml:"interfaces"`
 }
 
 const (
@@ -161,6 +173,29 @@ func (s ServerConfigADK) Verify() error {
 			return errors.New("encoded secret should be length 7")
 		}
 	}
+
+	if err := s.XDP.Verify(); err != nil {
+		return errors.Wrap(err, "xdp")
+	}
+
+	return nil
+}
+
+func (s ServerConfigADKXDP) Verify() error {
+	modeErr := serverConfigADKXDPValidMode(s.Mode)
+
+	if s.Mode == "" && len(s.Interfaces) > 0 {
+		return nil
+	}
+
+	if s.Mode == "" && len(s.Interfaces) != 0 {
+		return errors.New("missing mode")
+	}
+
+	if modeErr == nil && len(s.Interfaces) == 0 {
+		return errors.New("missing interfaces")
+	}
+
 	return nil
 }
 
@@ -392,7 +427,21 @@ func DefaultServerConfig() ServerConfig {
 			},
 			ADK: ServerConfigADK{
 				Secret: "",
+				XDP: ServerConfigADKXDP{
+					Mode:       "",
+					Interfaces: nil,
+				},
 			},
 		},
+	}
+}
+
+func serverConfigADKXDPValidMode(m string) error {
+	switch m {
+	// case ServerConfigADKXDPModeSKB, ServerConfigADKXDPModeDriver, ServerConfigADKXDPModeHW:
+	case ServerConfigADKXDPModeSKB, ServerConfigADKXDPModeDriver:
+		return nil
+	default:
+		return errors.New("unsupported mode")
 	}
 }

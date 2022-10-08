@@ -3,6 +3,7 @@ module github.com/greenstatic/openspa
 go 1.18
 
 require (
+	github.com/cilium/ebpf v0.9.3
 	github.com/emirpasic/gods v1.18.1
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.3.0
@@ -12,6 +13,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.0
+	github.com/vishvananda/netlink v1.1.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -30,7 +32,8 @@ require (
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
-	golang.org/x/sys v0.0.0-20220808155132-1c4a2a72c664 // indirect
+	github.com/vishvananda/netns v0.0.0-20191106174202-0a2b9b5464df // indirect
+	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

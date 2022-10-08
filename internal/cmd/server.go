@@ -7,6 +7,8 @@ import (
 	"syscall"
 
 	"github.com/greenstatic/openspa/internal"
+	"github.com/greenstatic/openspa/internal/xdp"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -50,6 +52,12 @@ func server(_ *cobra.Command, config internal.ServerConfig) {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	done := make(chan bool, 1)
 
+	xdkMetricsStop := make(chan bool)
+	xadk, err := xdpSetup(config, xdkMetricsStop)
+	if err != nil {
+		log.Fatal().Err(err).Msgf("ADK/XDP setup error")
+	}
+
 	cs, err := internal.NewServerCipherSuite(config.Crypto)
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Failed to setup server cipher suite")
@@ -79,6 +87,12 @@ func server(_ *cobra.Command, config internal.ServerConfig) {
 		HTTPServerPort:    httpPort,
 	})
 
+	if xadk != nil {
+		if err := xadk.Start(); err != nil {
+			log.Fatal().Err(err).Msgf("XDP/ADK start error")
+		}
+	}
+
 	go func() {
 		sig := <-sigs
 		log.Info().Msgf("Received signal %s", sig.String())
@@ -92,6 +106,15 @@ func server(_ *cobra.Command, config internal.ServerConfig) {
 	}()
 
 	<-done
+
+	if xadk != nil {
+		log.Info().Msgf("Stopping XDP/ADK")
+		if err := xadk.Stop(); err != nil {
+			log.Error().Err(err).Msgf("Failed to stop XDP/ADK")
+		}
+		xdkMetricsStop <- true
+	}
+
 	log.Info().Msgf("Stopping server")
 	if err := s.Stop(); err != nil {
 		log.Error().Err(err).Msgf("Server stop")
@@ -106,4 +129,54 @@ func serverHTTPServerSettingsFromConfig(config internal.ServerConfig) (net.IP, i
 	}
 
 	return net.ParseIP(config.Server.HTTP.IP), port
+}
+
+func xdpADKEnabled(config internal.ServerConfig) bool {
+	return config.Server.ADK.XDP.Mode == ""
+}
+
+func xdpPrecheck(config internal.ServerConfig) error {
+	if !xdpADKEnabled(config) {
+		return nil
+	}
+
+	if !xdp.IsSupported() {
+		return errors.New("xdp is not supported in this build")
+	}
+
+	return nil
+}
+
+func xdpSetup(config internal.ServerConfig, metricsStop chan bool) (xdp.ADK, error) {
+	if err := xdpPrecheck(config); err != nil {
+		return nil, errors.Wrap(err, "xdp precheck")
+	}
+
+	if !xdpADKEnabled(config) {
+		return nil, nil
+	}
+
+	xdpConf := config.Server.ADK.XDP
+	mode, ok := xdp.ModeFromString(xdpConf.Mode)
+	if !ok {
+		return nil, errors.New("unsupported mode")
+	}
+
+	iName := xdpConf.Interfaces[0] // currently we only support a single interface
+
+	set := xdp.ADKSettings{
+		InterfaceName:   iName,
+		Mode:            mode,
+		ReplaceIfLoaded: true,
+		UDPServerPort:   config.Server.Port,
+	}
+
+	adk, err := xdp.NewADK(set, internal.NewADKProofGen(config.Server.ADK.Secret))
+	if err != nil {
+		return nil, errors.Wrap(err, "new adk")
+	}
+
+	internal.SetupXDPADKMetrics(adk, metricsStop)
+
+	return adk, nil
 }

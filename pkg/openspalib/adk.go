@@ -13,6 +13,7 @@ import (
 const (
 	ADKSecretLen        = ADKLength // in bytes
 	ADKSecretEncodedLen = 7
+	totpPeriod          = 60 // in seconds
 )
 
 var b32NoPadding = base32.StdEncoding.WithPadding(base32.NoPadding)
@@ -34,8 +35,16 @@ func ADKGenerateSecret() (string, error) {
 }
 
 func ADKGenerateProof(secret string) (uint32, error) {
-	passcode, err := totp.GenerateCodeCustom(secret, time.Now(), totp.ValidateOpts{
-		Period: 60,
+	return ADKGenerateProofCustom(secret, time.Now())
+}
+
+func ADKGenerateNextProof(secret string) (uint32, error) {
+	return ADKGenerateProofCustom(secret, time.Now().Add(time.Second*totpPeriod))
+}
+
+func ADKGenerateProofCustom(secret string, t time.Time) (uint32, error) {
+	passcode, err := totp.GenerateCodeCustom(secret, t, totp.ValidateOpts{
+		Period: totpPeriod,
 		Skew:   1,
 		Digits: 9,
 	})

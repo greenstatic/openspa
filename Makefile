@@ -7,6 +7,10 @@ build:
 	$(MAKE) build-linux_amd64
 	$(MAKE) build-darwin_amd64
 
+.PHONY: build-server-xdp-linux_amd64
+build-server-xdp-linux_amd64:
+	GOOS=linux GOARCH=amd64 go build -tags xdp -o $(BUILD_DIR)/openspa_xdp_linux_amd64 ./cli/openspa
+
 .PHONY: build-linux_amd64
 build-linux_amd64:
 	GOOS=linux GOARCH=amd64 go build -o $(BUILD_DIR)/openspa_linux_amd64 ./cli/openspa

@@ -34,5 +34,5 @@ func rootCmdSetup(c *cobra.Command) {
 	c.AddCommand(cmd.ReqCmd)
 	cmd.ReqCmdSetup(cmd.ReqCmd)
 
-	c.AddCommand(cmd.VersionCmd)
+	c.AddCommand(cmd.VersionCmdGet(false))
 }
