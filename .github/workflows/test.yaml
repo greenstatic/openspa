@@ -49,6 +49,7 @@ jobs:
 
       - run: make bench
       - run: make test
+      - run: make build
 
   test-win:
     name: MINGW64
