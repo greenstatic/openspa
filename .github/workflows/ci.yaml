@@ -1,7 +1,7 @@
 # This workflow was based on spf13/cobra
 # https://github.com/spf13/cobra/blob/22b617914c8890ba20db7ceafcdc2ef4ca4817d3/.github/workflows/test.yml
 
-name: Test
+name: CI
 
 on:
   push:
@@ -50,7 +50,23 @@ jobs:
       - run: make bench
       - run: make test
       - run: make build
-      - run: make coverage
+
+      # Inspired by: https://github.com/lluuiissoo/go-testcoverage
+      - name: Quality Gate - Test coverage shall be above threshold
+        env:
+          TESTCOVERAGE_THRESHOLD: 70
+        run: |
+          echo "Quality Gate: checking test coverage is above threshold ..."
+          echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
+          totalCoverage=`make coverage | tail -n 1 | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+          echo "Current test coverage : $totalCoverage %"
+          if (( $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 > $2)}') )); then
+            echo "OK"
+          else
+            echo "Current test coverage is below threshold. Please add more unit tests or adjust threshold to a lower value."
+            echo "Failed"
+            exit 1
+          fi
 
   test-win:
     name: MINGW64
