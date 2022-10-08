@@ -50,6 +50,7 @@ jobs:
       - run: make bench
       - run: make test
       - run: make build
+      - run: make coverage
 
   test-win:
     name: MINGW64
@@ -83,3 +84,4 @@ jobs:
       # Windows runners are too slow for running benchmarks, since it will kill the process for taking too long (11 min).
       # - run: make bench
       - run: make test
+      - run: make build-windows_amd64
