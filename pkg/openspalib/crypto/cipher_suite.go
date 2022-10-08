@@ -55,7 +55,7 @@ type SignatureVerifier interface {
 
 func CipherSuiteStringToID(s string) CipherSuiteID {
 	switch s {
-	case "CipherNoSecurity":
+	case "CipherSuite_NoSecurity":
 		return CipherNoSecurity
 	case "CipherSuite_RSA_SHA256_AES256CBC":
 		return CipherRSA_SHA256_AES256CBC_ID
@@ -67,7 +67,7 @@ func CipherSuiteStringToID(s string) CipherSuiteID {
 func CipherSuiteIDToString(c CipherSuiteID) (string, error) {
 	switch c {
 	case CipherNoSecurity:
-		return "CipherNoSecurity", nil
+		return "CipherSuite_NoSecurity", nil
 	case CipherRSA_SHA256_AES256CBC_ID:
 		return "CipherSuite_RSA_SHA256_AES256CBC", nil
 	case CipherUnknown:
