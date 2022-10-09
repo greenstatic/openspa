@@ -55,9 +55,10 @@ and server
   * External authorization integration
 * adk (Anti DoS Knocking protection) implemented using TOTP
 * Server should expose Prometheus metrics via HTTP
+* eBPF/XDP adk acceleration (Anti DoS knocking protection)
 
 In progress:
-* eBPF/XDP adk acceleration (Anti DoS knocking protection)
+* Benchmarks (ADK with XDP and without)
 
 Planned:
 * ECC support
