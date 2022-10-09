@@ -18,16 +18,19 @@ func TestXDPADKMetrics(t *testing.T) {
 
 	assert.Equal(t, 0, repo.noRegistered())
 
-	const noMetrics = 10
+	const noMetrics = 13
 	// The values should be incremented by one according to the metricNames. This helps us
 	// test all of these values in a for loop by using the variable mStatsRecordValue which gets incremented by one
 	// hence the requirement for these values to be incremented by one.
 	mStats := xdp.Stats{
-		XDPAborted:  xdp.StatsRecord{Packets: 1, Bytes: 2},
-		XDPDrop:     xdp.StatsRecord{Packets: 3, Bytes: 4},
-		XDPPass:     xdp.StatsRecord{Packets: 5, Bytes: 6},
-		XDPTX:       xdp.StatsRecord{Packets: 7, Bytes: 8},
-		XDPRedirect: xdp.StatsRecord{Packets: 9, Bytes: 10},
+		XDPAborted:             xdp.StatsRecord{Packets: 1, Bytes: 2},
+		XDPDrop:                xdp.StatsRecord{Packets: 3, Bytes: 4},
+		XDPPass:                xdp.StatsRecord{Packets: 5, Bytes: 6},
+		XDPTX:                  xdp.StatsRecord{Packets: 7, Bytes: 8},
+		XDPRedirect:            xdp.StatsRecord{Packets: 9, Bytes: 10},
+		OpenSPANot:             11,
+		OpenSPAADKProofInvalid: 12,
+		OpenSPAADKProofValid:   13,
 	}
 
 	m.On("Stats").Return(mStats, nil)
@@ -46,6 +49,9 @@ func TestXDPADKMetrics(t *testing.T) {
 		"xdp_tx_bytes",
 		"xdp_redirect_packets",
 		"xdp_redirect_bytes",
+		"xdp_openspa_not",
+		"xdp_openspa_adk_proof_invalid",
+		"xdp_openspa_adk_proof_valid",
 	}
 
 	mStatsRecordValue := 1

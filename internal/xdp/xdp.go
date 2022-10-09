@@ -20,6 +20,17 @@ func (m Mode) Valid() bool {
 	}
 }
 
+func ModeFromString(s string) (m Mode, ok bool) {
+	switch s {
+	case "skb":
+		return ModeSKB, true
+	case "driver":
+		return ModeDriver, true
+	default:
+		return ModeUndefined, false
+	}
+}
+
 type Action uint8
 
 const (
@@ -51,13 +62,14 @@ func (x Action) Uint32() uint32 {
 	return uint32(x)
 }
 
-func ModeFromString(s string) (m Mode, ok bool) {
-	switch s {
-	case "skb":
-		return ModeSKB, true
-	case "driver":
-		return ModeDriver, true
-	default:
-		return ModeUndefined, false
-	}
+type OSPAStatID uint8
+
+const (
+	OSPAStatIDNotOpenSPAPacket OSPAStatID = iota
+	OSPAStatIDADKProofInvalid
+	OSPAStatIDADKProofValid
+)
+
+func (o OSPAStatID) Uint32() uint32 {
+	return uint32(o)
 }

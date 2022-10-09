@@ -36,6 +36,10 @@ type Stats struct {
 	XDPPass     StatsRecord
 	XDPTX       StatsRecord
 	XDPRedirect StatsRecord
+
+	OpenSPANot             uint64
+	OpenSPAADKProofInvalid uint64
+	OpenSPAADKProofValid   uint64
 }
 
 type StatsRecord struct {
@@ -103,4 +107,62 @@ func (a *adkProofSynchronize) Stop() {
 
 	a.quit <- true
 	a.quit = nil
+}
+
+func (s Stats) Merge(u Stats) Stats {
+	out := s
+
+	if u.XDPAborted.Packets > 0 {
+		out.XDPAborted.Packets = u.XDPAborted.Packets
+	}
+
+	if u.XDPAborted.Bytes > 0 {
+		out.XDPAborted.Bytes = u.XDPAborted.Bytes
+	}
+
+	if u.XDPDrop.Packets > 0 {
+		out.XDPDrop.Packets = u.XDPDrop.Packets
+	}
+
+	if u.XDPDrop.Bytes > 0 {
+		out.XDPDrop.Bytes = u.XDPDrop.Bytes
+	}
+
+	if u.XDPPass.Packets > 0 {
+		out.XDPPass.Packets = u.XDPPass.Packets
+	}
+
+	if u.XDPPass.Bytes > 0 {
+		out.XDPPass.Bytes = u.XDPPass.Bytes
+	}
+
+	if u.XDPTX.Packets > 0 {
+		out.XDPTX.Packets = u.XDPTX.Packets
+	}
+
+	if u.XDPTX.Bytes > 0 {
+		out.XDPTX.Bytes = u.XDPTX.Bytes
+	}
+
+	if u.XDPRedirect.Packets > 0 {
+		out.XDPRedirect.Packets = u.XDPRedirect.Packets
+	}
+
+	if u.XDPRedirect.Bytes > 0 {
+		out.XDPRedirect.Bytes = u.XDPRedirect.Bytes
+	}
+
+	if u.OpenSPANot > 0 {
+		out.OpenSPANot = u.OpenSPANot
+	}
+
+	if u.OpenSPAADKProofInvalid > 0 {
+		out.OpenSPAADKProofInvalid = u.OpenSPAADKProofInvalid
+	}
+
+	if u.OpenSPAADKProofValid > 0 {
+		out.OpenSPAADKProofValid = u.OpenSPAADKProofValid
+	}
+
+	return out
 }

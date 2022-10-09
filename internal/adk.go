@@ -110,6 +110,9 @@ func (x *xdpADKMetrics) setupMetrics() {
 		{name: "xdp_tx_bytes", f: x.xdpTXBytes},
 		{name: "xdp_redirect_packets", f: x.xdpRedirectPackets},
 		{name: "xdp_redirect_bytes", f: x.xdpRedirectBytes},
+		{name: "xdp_openspa_not", f: x.xdpOpenSPANot},
+		{name: "xdp_openspa_adk_proof_invalid", f: x.xdpOpenSPAADKProofInvalid},
+		{name: "xdp_openspa_adk_proof_valid", f: x.xdpOpenSPAADKProofValid},
 	}
 
 	for _, reg := range regs {
@@ -180,4 +183,19 @@ func (x *xdpADKMetrics) xdpRedirectPackets() float64 {
 func (x *xdpADKMetrics) xdpRedirectBytes() float64 {
 	s, err := x.getStats()
 	return x.floatOrError(float64(s.XDPRedirect.Bytes), err)
+}
+
+func (x *xdpADKMetrics) xdpOpenSPANot() float64 {
+	s, err := x.getStats()
+	return x.floatOrError(float64(s.OpenSPANot), err)
+}
+
+func (x *xdpADKMetrics) xdpOpenSPAADKProofInvalid() float64 {
+	s, err := x.getStats()
+	return x.floatOrError(float64(s.OpenSPAADKProofInvalid), err)
+}
+
+func (x *xdpADKMetrics) xdpOpenSPAADKProofValid() float64 {
+	s, err := x.getStats()
+	return x.floatOrError(float64(s.OpenSPAADKProofValid), err)
 }

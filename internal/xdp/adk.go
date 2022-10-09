@@ -11,6 +11,9 @@ import (
 	"github.com/vishvananda/netlink/nl"
 )
 
+// $BPF_CLANG and $BPF_CFLAGS are set by the Makefile.
+//go:generate go run github.com/cilium/ebpf/cmd/bpf2go -cc $BPF_CLANG -cflags $BPF_CFLAGS bpf openspa_adk.c -- -I./headers
+
 func IsSupported() bool {
 	return true
 }
@@ -166,10 +169,21 @@ func (a *adk) setADKProof(g ADKProofGenerator) error {
 func (a *adk) closeMaps() {
 	a.objs.XdpConfigMap.Close()
 	a.objs.XdpStatsMap.Close()
+	a.objs.XdpOpenspaStatsMap.Close()
 }
 
 func (a *adk) Stats() (Stats, error) {
-	return a.statsFromXDPStatsMap(a.objs.XdpStatsMap)
+	s1, err := a.statsFromXDPStatsMap(a.objs.XdpStatsMap)
+	if err != nil {
+		return Stats{}, errors.Wrap(err, "xdp stats")
+	}
+
+	s2, err := a.statsFromOpenSPAStatsMap(a.objs.XdpOpenspaStatsMap)
+	if err != nil {
+		return Stats{}, errors.Wrap(err, "openspa stats")
+	}
+
+	return s1.Merge(s2), err
 }
 
 func (a *adk) statsFromXDPStatsMap(m *ebpf.Map) (Stats, error) {
@@ -215,6 +229,35 @@ func (a *adk) statsFromXDPStatsMap(m *ebpf.Map) (Stats, error) {
 	return s, nil
 }
 
+func (a *adk) statsFromOpenSPAStatsMap(m *ebpf.Map) (Stats, error) {
+	s := Stats{}
+	key := make([]byte, 4)
+	var val []bpfOspaStatDatarec
+
+	NativeOrder.PutUint32(key, OSPAStatIDNotOpenSPAPacket.Uint32())
+	if err := m.Lookup(&key, &val); err != nil {
+		return Stats{}, errors.Wrap(err, "lookup not openspa packet")
+	}
+
+	s.OpenSPANot = bpfOspaStatsDatarecSliceJoin(val)
+
+	NativeOrder.PutUint32(key, OSPAStatIDADKProofInvalid.Uint32())
+	if err := m.Lookup(&key, &val); err != nil {
+		return Stats{}, errors.Wrap(err, "lookup adk proof invalid")
+	}
+
+	s.OpenSPAADKProofInvalid = bpfOspaStatsDatarecSliceJoin(val)
+
+	NativeOrder.PutUint32(key, OSPAStatIDADKProofValid.Uint32())
+	if err := m.Lookup(&key, &val); err != nil {
+		return Stats{}, errors.Wrap(err, "lookup action aborted")
+	}
+
+	s.OpenSPAADKProofValid = bpfOspaStatsDatarecSliceJoin(val)
+
+	return s, nil
+}
+
 func bpfStatsDatarecSliceToStatRecord(b []bpfStatsDatarec) StatsRecord {
 	s := StatsRecord{}
 
@@ -224,6 +267,15 @@ func bpfStatsDatarecSliceToStatRecord(b []bpfStatsDatarec) StatsRecord {
 	}
 
 	return s
+}
+
+func bpfOspaStatsDatarecSliceJoin(b []bpfOspaStatDatarec) uint64 {
+	i := uint64(0)
+	for _, r := range b {
+		i += r.Value
+	}
+
+	return i
 }
 
 func (m Mode) ToNetlinkConst() int {

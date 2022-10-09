@@ -22,6 +22,13 @@ struct {
 	__type(value, struct stats_datarec);
 } xdp_stats_map SEC(".maps");
 
+struct {
+	__uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
+	__uint(max_entries, OSPA_STAT_ID_MAX);
+	__type(key, __u32);
+	__type(value, struct ospa_stat_datarec);
+} xdp_openspa_stats_map SEC(".maps");
+
 #define CONFIG_MAP_IDX_OPENSPA_SERVER_PORT 0
 #define CONFIG_MAP_IDX_ADK_PROOF_FIRST 1
 #define CONFIG_MAP_IDX_ADK_PROOF_LAST 2
@@ -56,6 +63,21 @@ __u32 xdp_stats_record_action(struct xdp_md *ctx, __u32 action)
 	rec->rx_bytes += (ctx->data_end - ctx->data);
 
 	return action;
+}
+
+static __always_inline
+int xdp_openspa_stats_record_action(struct xdp_md *ctx, __u32 id)
+{
+	if (id >= OSPA_STAT_ID_MAX)
+		return -1;
+
+	struct ospa_stat_datarec *rec = bpf_map_lookup_elem(&xdp_openspa_stats_map, &id);
+	if (!rec)
+		return -1;
+
+	rec->value++;
+
+	return 0;
 }
 
 /* Checks weather the adk proof is valid or not.
@@ -154,28 +176,34 @@ int xdp_openspa_adk(struct xdp_md *ctx)
     }
 
     if (bpf_ntohs(udphdr->dest) != ospa_server_port) {
-        // UDP datagram destination is not OpenSPA server
+        // UDP datagram destination is not to the OpenSPA server
         goto out;
     }
 
     if (parse_ospahdr(&nh, data_end, &ospahdr) < 0) {
-        // UDP datagram is not an OpenSPA packet, pass it up the GNU/Linux network stack to be handled
+        // UDP datagram is not an OpenSPA packet
+        xdp_openspa_stats_record_action(ctx, OSPA_STAT_ID_NOT_OPENSPA_PACKET);
+        action = XDP_DROP;
         goto out;
     }
 
     if (potentially_ospa_packet(&nh, data_end, ospahdr) < 0) {
-        // Not OpenSPA packet, pass it up the GNU/Linux network stack to be handled
+        // Not OpenSPA packet
+        xdp_openspa_stats_record_action(ctx, OSPA_STAT_ID_NOT_OPENSPA_PACKET);
+        action = XDP_DROP;
         goto out;
     }
 
     adk_proof = bpf_ntohl(ospahdr->adk_proof);
 
     if (adk_proof_valid(ctx, &adk_proof) <= 0) {
+        xdp_openspa_stats_record_action(ctx, OSPA_STAT_ID_ADK_PROOF_INVALID);
         action = XDP_DROP;
         goto out;
+    } else {
+        // Proof is valid, default action (XDP_PASS)
+        xdp_openspa_stats_record_action(ctx, OSPA_STAT_ID_ADK_PROOF_VALID);
     }
-
-    // Proof is valid, default action (XDP_PASS)
 
 out:
 	return xdp_stats_record_action(ctx, action);

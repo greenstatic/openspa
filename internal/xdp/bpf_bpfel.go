@@ -13,6 +13,8 @@ import (
 	"github.com/cilium/ebpf"
 )
 
+type bpfOspaStatDatarec struct{ Value uint64 }
+
 type bpfStatsDatarec struct {
 	RxPackets uint64
 	RxBytes   uint64
@@ -66,8 +68,9 @@ type bpfProgramSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type bpfMapSpecs struct {
-	XdpConfigMap *ebpf.MapSpec `ebpf:"xdp_config_map"`
-	XdpStatsMap  *ebpf.MapSpec `ebpf:"xdp_stats_map"`
+	XdpConfigMap       *ebpf.MapSpec `ebpf:"xdp_config_map"`
+	XdpOpenspaStatsMap *ebpf.MapSpec `ebpf:"xdp_openspa_stats_map"`
+	XdpStatsMap        *ebpf.MapSpec `ebpf:"xdp_stats_map"`
 }
 
 // bpfObjects contains all objects after they have been loaded into the kernel.
@@ -89,13 +92,15 @@ func (o *bpfObjects) Close() error {
 //
 // It can be passed to loadBpfObjects or ebpf.CollectionSpec.LoadAndAssign.
 type bpfMaps struct {
-	XdpConfigMap *ebpf.Map `ebpf:"xdp_config_map"`
-	XdpStatsMap  *ebpf.Map `ebpf:"xdp_stats_map"`
+	XdpConfigMap       *ebpf.Map `ebpf:"xdp_config_map"`
+	XdpOpenspaStatsMap *ebpf.Map `ebpf:"xdp_openspa_stats_map"`
+	XdpStatsMap        *ebpf.Map `ebpf:"xdp_stats_map"`
 }
 
 func (m *bpfMaps) Close() error {
 	return _BpfClose(
 		m.XdpConfigMap,
+		m.XdpOpenspaStatsMap,
 		m.XdpStatsMap,
 	)
 }
@@ -123,6 +128,5 @@ func _BpfClose(closers ...io.Closer) error {
 }
 
 // Do not access this directly.
-//
 //go:embed bpf_bpfel.o
 var _BpfBytes []byte

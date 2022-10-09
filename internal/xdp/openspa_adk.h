@@ -42,6 +42,18 @@ struct ospahdr {
     __be32 adk_proof;
 };
 
+enum ospa_stat_id {
+    OSPA_STAT_ID_NOT_OPENSPA_PACKET = 0,
+    OSPA_STAT_ID_ADK_PROOF_INVALID,
+    OSPA_STAT_ID_ADK_PROOF_VALID,
+};
+
+struct ospa_stat_datarec {
+    __u64 value;
+};
+
+#define OSPA_STAT_ID_MAX (OSPA_STAT_ID_ADK_PROOF_VALID + 1)
+
 /*
  *	struct vlan_hdr - vlan header
  *	@h_vlan_TCI: priority and VLAN ID
