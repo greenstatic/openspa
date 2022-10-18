@@ -139,7 +139,7 @@ func (s ServerConfigServer) Verify() error {
 		return errors.New("invalid port")
 	}
 
-	if s.RequestHandlers <= 0 {
+	if s.RequestHandlers < 0 {
 		return errors.New("invalid request handlers")
 	}
 
@@ -378,9 +378,7 @@ func (s ServerConfig) Merge(sc ServerConfig) ServerConfig {
 		f.Server.Port = sc.Server.Port
 	}
 
-	if sc.Server.RequestHandlers != 0 {
-		f.Server.RequestHandlers = sc.Server.RequestHandlers
-	}
+	f.Server.RequestHandlers = sc.Server.RequestHandlers
 
 	f.Server.HTTP.Enable = sc.Server.HTTP.Enable
 

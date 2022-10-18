@@ -17,6 +17,7 @@ const readRequestBufferSize = openspalib.MaxPDUSize
 type Server struct {
 	udpServer  *UDPServer
 	httpServer *HTTPServer
+	handler    UDPDatagramRequestHandler
 	reqCoord   *RequestCoordinator
 	frm        *FirewallRuleManager
 	settings   ServerSettings
@@ -42,8 +43,16 @@ type ServerSettings struct {
 
 func NewServer(set ServerSettings) *Server {
 	frm := NewFirewallRuleManager(set.FW)
+
 	h := NewServerHandler(frm, set.CS, set.Authz, ServerHandlerOpt{ADKSecret: set.ADKSecret})
-	rc := NewRequestCoordinator(h, set.NoRequestHandlers)
+	var handler UDPDatagramRequestHandler
+	var rc *RequestCoordinator = nil
+	if set.NoRequestHandlers > 0 {
+		rc = NewRequestCoordinator(h, set.NoRequestHandlers)
+		handler = rc
+	} else {
+		handler = &UDPDatagramRequestHandlerUnbound{h}
+	}
 
 	var httpServer *HTTPServer
 	if set.HTTPServerPort != 0 {
@@ -51,8 +60,9 @@ func NewServer(set ServerSettings) *Server {
 	}
 
 	s := &Server{
-		udpServer:  NewUDPServer(set.UDPServerIP, set.UDPServerPort, rc),
+		udpServer:  NewUDPServer(set.UDPServerIP, set.UDPServerPort, handler),
 		httpServer: httpServer,
+		handler:    handler,
 		reqCoord:   rc,
 		settings:   set,
 		frm:        frm,
@@ -78,8 +88,11 @@ func (s *Server) Start() error {
 	}
 
 	bind := net.JoinHostPort(s.settings.UDPServerIP.String(), strconv.Itoa(s.settings.UDPServerPort))
-	log.Info().Msgf("Starting UDP server (ADK support: %t): %s", s.reqCoord.ADKSupport(), bind)
-	s.reqCoord.Start()
+	rc := s.reqCoord != nil // do we have a request coordinator?
+	log.Info().Msgf("Starting UDP server (ADK support: %t, request coordinator: %t): %s", s.handler.ADKSupport(), rc, bind)
+	if s.reqCoord != nil {
+		s.reqCoord.Start()
+	}
 
 	return s.udpServer.Start()
 }
@@ -262,4 +275,15 @@ func (d *RequestCoordinator) handler(queue chan QueuedDatagramRequest) {
 			d.reqHandler.DatagramRequestHandler(r.ctx, r.resp, r.DatagramRequest)
 		}
 	}
+}
+
+// UDPDatagramRequestHandlerUnbound spawns each DatagramRequestHandler in its own goroutine. This is dangerous
+// since we spawn goroutines without any limit.
+type UDPDatagramRequestHandlerUnbound struct {
+	UDPDatagramRequestHandler
+}
+
+func (h *UDPDatagramRequestHandlerUnbound) DatagramRequestHandler(ctx context.Context, resp UDPResponser, r DatagramRequest) {
+	//go h.UDPDatagramRequestHandler.DatagramRequestHandler(ctx, resp, r)
+	h.UDPDatagramRequestHandler.DatagramRequestHandler(ctx, resp, r)
 }

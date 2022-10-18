@@ -241,3 +241,71 @@ func TestServerShutdown(t *testing.T) {
 
 	fw.AssertExpectations(t)
 }
+
+func TestServerCreation_10RequestHandlers(t *testing.T) {
+	fw := &FirewallMock{}
+	cs := crypto.NewCipherSuiteStub()
+	authz := &AuthorizationStrategySimple{
+		dur: time.Hour,
+	}
+
+	fw.On("FirewallSetup").Return(nil).Once()
+
+	s := NewServer(ServerSettings{
+		UDPServerIP:       net.IPv4(127, 0, 0, 1).To4(),
+		UDPServerPort:     8083,
+		NoRequestHandlers: 10,
+		FW:                fw,
+		CS:                cs,
+		Authz:             authz,
+	})
+
+	assert.NotNil(t, s.reqCoord)
+
+	startDone := make(chan bool)
+	go func() {
+		assert.NoError(t, s.Start())
+		startDone <- true
+	}()
+
+	time.Sleep(time.Second)
+	assert.NoError(t, s.Stop())
+
+	<-startDone
+
+	fw.AssertExpectations(t)
+}
+
+func TestServerCreation_0RequestHandlers(t *testing.T) {
+	fw := &FirewallMock{}
+	cs := crypto.NewCipherSuiteStub()
+	authz := &AuthorizationStrategySimple{
+		dur: time.Hour,
+	}
+
+	fw.On("FirewallSetup").Return(nil).Once()
+
+	s := NewServer(ServerSettings{
+		UDPServerIP:       net.IPv4(127, 0, 0, 1).To4(),
+		UDPServerPort:     8083,
+		NoRequestHandlers: 0,
+		FW:                fw,
+		CS:                cs,
+		Authz:             authz,
+	})
+
+	assert.Nil(t, s.reqCoord)
+
+	startDone := make(chan bool)
+	go func() {
+		assert.NoError(t, s.Start())
+		startDone <- true
+	}()
+
+	time.Sleep(time.Second)
+	assert.NoError(t, s.Stop())
+
+	<-startDone
+
+	fw.AssertExpectations(t)
+}
