@@ -1,6 +1,7 @@
 package openspalib
 
 import (
+	"math/rand"
 	"net"
 	"testing"
 	"time"
@@ -295,12 +296,23 @@ func BenchmarkRequestUnmarshal_RSA_SHA256_AES_256_CBC_with2048Keypair(b *testing
 	}
 }
 
-func BenchmarkRequestUnmarshal_RSA_SHA256_AES_256_CBC_withFakeData(b *testing.B) {
+func BenchmarkRequestUnmarshal_RSA_SHA256_AES_256_CBC_with2048Keypair_withFakeData(b *testing.B) {
+	const buffSize = 50
+	const overhead = 8 + 4 + 2 // header + encrypted payload tlv entry + encrypted session tlv type and length
+	const encryptedSessionSize = buffSize - overhead
+	assert.Equal(b, encryptedSessionSize, 36)
+
 	buff := []byte{
-		0x20, 0x42, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, // Geader
+		0x20, 0x42, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, // Header
 		0x01, 0x02, 0x42, 0x24, // Encrypted Payload TLV entry
-		0x02, 0x04, 0x24, 0x42, 0x32, 0x77, // Encrypted session (decrypt using RSA) TLV entry
+		0x02, encryptedSessionSize, // Encrypted session (decrypt using RSA) TLV entry
 	}
+
+	for i := 0; i < encryptedSessionSize; i++ {
+		buff = append(buff, byte(rand.Int()))
+	}
+
+	assert.Len(b, buff, buffSize)
 
 	key1, _, err := crypto.RSAKeypair(2048)
 	assert.NoError(b, err)
