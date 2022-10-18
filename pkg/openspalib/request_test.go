@@ -260,3 +260,65 @@ func TestRequestUnmarshalHeader(t *testing.T) {
 	_, err = RequestUnmarshalHeader([]byte{0x1, 0x00, 0x00, 0x00})
 	assert.Error(t, err)
 }
+
+func BenchmarkRequestUnmarshal_RSA_SHA256_AES_256_CBC_with2048Keypair(b *testing.B) {
+	key1, pub1, err := crypto.RSAKeypair(2048)
+	assert.NoError(b, err)
+
+	key2, pub2, err := crypto.RSAKeypair(2048)
+	assert.NoError(b, err)
+
+	res1 := crypto.NewPublicKeyResolverMock()
+	res1.On("PublicKey", mock.Anything, nil).Return(pub2, nil)
+	cs1 := crypto.NewCipherSuite_RSA_SHA256_AES256CBC(key1, res1)
+
+	res2 := crypto.NewPublicKeyResolverMock()
+	res2.On("PublicKey", mock.Anything, mock.Anything).Return(pub1, nil)
+	cs2 := crypto.NewCipherSuite_RSA_SHA256_AES256CBC(key2, res2)
+
+	r, err := NewRequest(testRequestData(), cs1, RequestDataOpt{})
+	assert.NoError(b, err)
+	assert.NotNil(b, r)
+
+	buff, err := r.Marshal()
+	assert.NoError(b, err)
+
+	buff[len(buff)-1] ^= 0xFE // taint the encrypted session last byte to make decryption fail
+
+	b.Logf("request unmarshal buff size: %d", len(buff))
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, err = RequestUnmarshal(buff, cs2)
+		assert.Error(b, err)
+	}
+}
+
+func BenchmarkRequestUnmarshal_RSA_SHA256_AES_256_CBC_withFakeData(b *testing.B) {
+	buff := []byte{
+		0x20, 0x42, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, // Geader
+		0x01, 0x02, 0x42, 0x24, // Encrypted Payload TLV entry
+		0x02, 0x04, 0x24, 0x42, 0x32, 0x77, // Encrypted session (decrypt using RSA) TLV entry
+	}
+
+	key1, _, err := crypto.RSAKeypair(2048)
+	assert.NoError(b, err)
+
+	_, pub2, err := crypto.RSAKeypair(2048)
+	assert.NoError(b, err)
+
+	res := crypto.NewPublicKeyResolverMock()
+	res.On("PublicKey", mock.Anything, nil).Return(pub2, nil)
+
+	cs := crypto.NewCipherSuite_RSA_SHA256_AES256CBC(key1, res)
+
+	b.Logf("request unmarshal buff size: %d", len(buff))
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, err = RequestUnmarshal(buff, cs)
+		assert.Error(b, err)
+	}
+}
