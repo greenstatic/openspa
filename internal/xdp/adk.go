@@ -7,6 +7,7 @@ import (
 
 	"github.com/cilium/ebpf"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/vishvananda/netlink"
 	"github.com/vishvananda/netlink/nl"
 )
@@ -57,7 +58,7 @@ func (a *adk) Start() error {
 
 	if err := a.link(); err != nil {
 		_ = a.unload()
-		return errors.Wrap(err, "unlink")
+		return errors.Wrap(err, "link")
 	}
 
 	a.proofSync.Start()
@@ -109,6 +110,8 @@ func (a *adk) link() error {
 	}
 
 	a.flags = flags
+
+	log.Info().Msgf("Linking XDP program with flags: 0x%x", flags)
 
 	if err := netlink.LinkSetXdpFdWithFlags(a.iface, a.objs.XdpOpenspaAdk.FD(), flags); err != nil {
 		return errors.Wrap(err, "link set xdp")
