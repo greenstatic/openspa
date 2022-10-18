@@ -135,3 +135,31 @@ func TestRSAEncodeDecode(t *testing.T) {
 
 	assert.True(t, pubDec.Equal(pub))
 }
+
+func BenchmarkRSADecrypter_ActualCipher(b *testing.B) {
+	priv, pub, err := RSAKeypair(2048)
+	assert.NoError(b, err)
+	re := NewRSAEncrypter(pub)
+	rd := NewRSADecrypter(priv)
+
+	plaintext := []byte("Hello world!")
+
+	cipher, err := re.Encrypt(plaintext)
+	require.NoError(b, err)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = rd.Decrypt(cipher)
+	}
+}
+
+func BenchmarkRSADecrypter_2Bytes(b *testing.B) {
+	priv, _, err := RSAKeypair(2048)
+	assert.NoError(b, err)
+	rd := NewRSADecrypter(priv)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = rd.Decrypt([]byte{0xef, 0xfe})
+	}
+}
