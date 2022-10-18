@@ -26,6 +26,7 @@ func TestServerHandler_DatagramRequestHandler(t *testing.T) {
 	sh := NewServerHandler(frm, cs, NewAuthorizationStrategyAllow(time.Hour), ServerHandlerOpt{ADKSecret: adkSecret})
 
 	assert.Equal(t, 0, sh.metrics.openspaRequest.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestBad.Get())
 	assert.Equal(t, 0, sh.metrics.openspaRequestADKFailed.Get())
 	assert.Equal(t, 0, sh.metrics.openspaRequestAuthorizationFailed.Get())
 	assert.Equal(t, 0, sh.metrics.openspaResponse.Get())
@@ -71,6 +72,7 @@ func TestServerHandler_DatagramRequestHandler(t *testing.T) {
 	fw.AssertExpectations(t)
 
 	assert.Equal(t, 1, sh.metrics.openspaRequest.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestBad.Get())
 	assert.Equal(t, 0, sh.metrics.openspaRequestADKFailed.Get())
 	assert.Equal(t, 0, sh.metrics.openspaRequestAuthorizationFailed.Get())
 	assert.Equal(t, 1, sh.metrics.openspaResponse.Get())
@@ -88,6 +90,7 @@ func TestServerHandler_DatagramRequestHandler_WithoutADKProof(t *testing.T) {
 	sh := NewServerHandler(frm, cs, NewAuthorizationStrategyAllow(time.Hour), ServerHandlerOpt{ADKSecret: adkSecret})
 
 	assert.Equal(t, 0, sh.metrics.openspaRequest.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestBad.Get())
 	assert.Equal(t, 0, sh.metrics.openspaRequestADKFailed.Get())
 	assert.Equal(t, 0, sh.metrics.openspaRequestAuthorizationFailed.Get())
 	assert.Equal(t, 0, sh.metrics.openspaResponse.Get())
@@ -133,6 +136,7 @@ func TestServerHandler_DatagramRequestHandler_WithoutADKProof(t *testing.T) {
 	fw.AssertExpectations(t)
 
 	assert.Equal(t, 1, sh.metrics.openspaRequest.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestBad.Get())
 	assert.Equal(t, 0, sh.metrics.openspaRequestADKFailed.Get())
 	assert.Equal(t, 0, sh.metrics.openspaRequestAuthorizationFailed.Get())
 	assert.Equal(t, 1, sh.metrics.openspaResponse.Get())
@@ -148,6 +152,7 @@ func TestServerHandler_DatagramRequestHandler_InvalidADKProof(t *testing.T) {
 	sh := NewServerHandler(frm, cs, NewAuthorizationStrategyAllow(time.Hour), ServerHandlerOpt{ADKSecret: "7O4ZIRI"})
 
 	assert.Equal(t, 0, sh.metrics.openspaRequest.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestBad.Get())
 	assert.Equal(t, 0, sh.metrics.openspaRequestADKFailed.Get())
 	assert.Equal(t, 0, sh.metrics.openspaRequestAuthorizationFailed.Get())
 	assert.Equal(t, 0, sh.metrics.openspaResponse.Get())
@@ -182,6 +187,7 @@ func TestServerHandler_DatagramRequestHandler_InvalidADKProof(t *testing.T) {
 	fw.AssertExpectations(t)
 
 	assert.Equal(t, 0, sh.metrics.openspaRequest.Get())
+	assert.Equal(t, 0, sh.metrics.openspaRequestBad.Get())
 	assert.Equal(t, 1, sh.metrics.openspaRequestADKFailed.Get())
 	assert.Equal(t, 0, sh.metrics.openspaRequestAuthorizationFailed.Get())
 	assert.Equal(t, 0, sh.metrics.openspaResponse.Get())

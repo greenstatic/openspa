@@ -30,6 +30,7 @@ type ServerHandlerOpt struct {
 
 type serverHandlerMetrics struct {
 	openspaRequest                    observability.Counter
+	openspaRequestBad                 observability.Counter
 	openspaRequestADKFailed           observability.Counter
 	openspaRequestAuthorizationFailed observability.Counter
 	openspaResponse                   observability.Counter
@@ -84,7 +85,8 @@ func (o *ServerHandler) DatagramRequestHandler(_ context.Context, resp UDPRespon
 
 	request, err := openspalib.RequestUnmarshal(r.data, o.cs)
 	if err != nil {
-		log.Info().Err(err).Msgf("OpenSPA request unmarshal failure")
+		log.Debug().Err(err).Msgf("OpenSPA request unmarshal failure")
+		o.metrics.openspaRequestBad.Inc()
 		return
 	}
 
@@ -160,6 +162,7 @@ func newServerHandlerMetrics() serverHandlerMetrics {
 	lbl := observability.NewLabels()
 
 	s.openspaRequest = mr.Count("request", lbl)
+	s.openspaRequestBad = mr.Count("request_bad", lbl)
 	s.openspaRequestADKFailed = mr.Count("request_adk_failed", lbl)
 	s.openspaRequestAuthorizationFailed = mr.Count("request_authorization_failed", lbl)
 	s.openspaResponse = mr.Count("response", lbl)
