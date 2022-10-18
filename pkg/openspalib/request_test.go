@@ -1,7 +1,7 @@
 package openspalib
 
 import (
-	"math/rand"
+	"crypto/rand"
 	"net"
 	"testing"
 	"time"
@@ -309,7 +309,10 @@ func BenchmarkRequestUnmarshal_RSA_SHA256_AES_256_CBC_with2048Keypair_withFakeDa
 	}
 
 	for i := 0; i < encryptedSessionSize; i++ {
-		buff = append(buff, byte(rand.Int()))
+		byt := []byte{0x00}
+		_, err := rand.Read(byt)
+		assert.NoError(b, err)
+		buff = append(buff, byt[0])
 	}
 
 	assert.Len(b, buff, buffSize)

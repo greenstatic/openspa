@@ -46,12 +46,12 @@ func NewServer(set ServerSettings) *Server {
 
 	h := NewServerHandler(frm, set.CS, set.Authz, ServerHandlerOpt{ADKSecret: set.ADKSecret})
 	var handler UDPDatagramRequestHandler
-	var rc *RequestCoordinator = nil
+	var rc *RequestCoordinator
 	if set.NoRequestHandlers > 0 {
 		rc = NewRequestCoordinator(h, set.NoRequestHandlers)
 		handler = rc
 	} else {
-		handler = &UDPDatagramRequestHandlerUnbound{h}
+		handler = &datagramRequestHandlerUnbound{h}
 	}
 
 	var httpServer *HTTPServer
@@ -277,13 +277,13 @@ func (d *RequestCoordinator) handler(queue chan QueuedDatagramRequest) {
 	}
 }
 
-// UDPDatagramRequestHandlerUnbound spawns each DatagramRequestHandler in its own goroutine. This is dangerous
+// datagramRequestHandlerUnbound spawns each DatagramRequestHandler in its own goroutine. This is dangerous
 // since we spawn goroutines without any limit.
-type UDPDatagramRequestHandlerUnbound struct {
+type datagramRequestHandlerUnbound struct {
 	UDPDatagramRequestHandler
 }
 
-func (h *UDPDatagramRequestHandlerUnbound) DatagramRequestHandler(ctx context.Context, resp UDPResponser, r DatagramRequest) {
-	//go h.UDPDatagramRequestHandler.DatagramRequestHandler(ctx, resp, r)
-	h.UDPDatagramRequestHandler.DatagramRequestHandler(ctx, resp, r)
+//nolint:lll
+func (d *datagramRequestHandlerUnbound) DatagramRequestHandler(ctx context.Context, resp UDPResponser, r DatagramRequest) {
+	go d.UDPDatagramRequestHandler.DatagramRequestHandler(ctx, resp, r)
 }
