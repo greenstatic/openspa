@@ -8,6 +8,7 @@ import (
 	"github.com/greenstatic/openspa/internal/xdp"
 	"github.com/greenstatic/openspa/pkg/openspalib"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 var _ xdp.ADKProofGenerator = ADKProofGen{}
@@ -63,7 +64,7 @@ type xdpADKMetrics struct {
 func newXDPADKMetrics(sp xdp.StatsProvider) *xdpADKMetrics {
 	x := &xdpADKMetrics{
 		provider:      sp,
-		cacheValidity: time.Second,
+		cacheValidity: 100 * time.Millisecond,
 		mr:            getMetricsRepository(),
 	}
 	return x
@@ -88,6 +89,8 @@ func (x *xdpADKMetrics) getStats() (xdp.Stats, error) {
 }
 
 func (x *xdpADKMetrics) setupMetrics() {
+	log.Debug().Msgf("Setting up XDP ADK metrics")
+
 	lbl := observability.NewLabels()
 
 	x.counterFuncs = make([]observability.CounterFunc, 0)
@@ -123,6 +126,7 @@ func (x *xdpADKMetrics) setupMetrics() {
 }
 
 func (x *xdpADKMetrics) teardownMetrics() {
+	log.Debug().Msgf("Tearing down XDP ADK metrics")
 	for _, count := range x.counterFuncs {
 		count.CounterFuncDeregister()
 	}

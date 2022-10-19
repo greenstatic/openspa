@@ -31,7 +31,7 @@ struct hdr_cursor {
 #define OSPA_CTRL_VERSION_MASK 0x70
 #define OSPA_CTRL_VERSION_OFFSET 4
 // Empirically the lowest bound value, not protocol wise
-#define OSPA_BODY_MIN_SIZE 50
+#define OSPA_BODY_MIN_SIZE 42
 
 /* OpenSPA Header */
 struct ospahdr {

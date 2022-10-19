@@ -186,7 +186,8 @@ func (a *adk) Stats() (Stats, error) {
 		return Stats{}, errors.Wrap(err, "openspa stats")
 	}
 
-	return s1.Merge(s2), err
+	s := s1.Merge(s2)
+	return s, err
 }
 
 func (a *adk) statsFromXDPStatsMap(m *ebpf.Map) (Stats, error) {

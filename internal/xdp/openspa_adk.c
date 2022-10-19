@@ -195,7 +195,6 @@ int xdp_openspa_adk(struct xdp_md *ctx)
     }
 
     adk_proof = bpf_ntohl(ospahdr->adk_proof);
-
     if (adk_proof_valid(ctx, &adk_proof) <= 0) {
         xdp_openspa_stats_record_action(ctx, OSPA_STAT_ID_ADK_PROOF_INVALID);
         action = XDP_DROP;
