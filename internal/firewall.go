@@ -48,7 +48,25 @@ func NewFirewallFromServerConfigFirewall(fc ServerConfigFirewall) (Firewall, err
 		return newIPTablesFromServerConfigFirewall(fc)
 	case ServerConfigFirewallBackendCommand:
 		return newFirewallCommandFromServerConfigFirewall(fc)
+	case ServerConfigFirewallBackendNone:
+		return firewallDummy{}, nil
 	}
 
 	return nil, errors.New("unsupported firewall backend")
+}
+
+// firewallDummy does nothing, it is just used to satisfy the interface definition. It is mostly used
+// for testing/performance measurement purposes. Do not use for production work.
+type firewallDummy struct{}
+
+func (f firewallDummy) FirewallSetup() error {
+	return nil
+}
+
+func (f firewallDummy) RuleAdd(r FirewallRule, meta FirewallRuleMetadata) error {
+	return nil
+}
+
+func (f firewallDummy) RuleRemove(r FirewallRule, meta FirewallRuleMetadata) error {
+	return nil
 }

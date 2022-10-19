@@ -116,9 +116,21 @@ func NewAuthorizationStrategyFromServerConfigAuthorization(s ServerConfigAuthori
 	switch s.Backend {
 	case ServerConfigAuthorizationBackendSimple:
 		return NewAuthorizationStrategyAllow(s.Simple.GetDuration()), nil
+
 	case ServerConfigAuthorizationBackendCommand:
 		return NewAuthorizationStrategyCommand(s.Command.AuthorizationCmd), nil
+
+	case ServerConfigAuthorizationBackendNone:
+		return authorizationStrategyDummy{}, nil
 	}
 
 	return nil, errors.New("unsupported authorization backend")
+}
+
+// authorizationStrategyDummy does nothing, it is just used to satisfy the interface definition. It is mostly used
+// for testing/performance measurement purposes. Do not use for production work.
+type authorizationStrategyDummy struct{}
+
+func (a authorizationStrategyDummy) RequestAuthorization(request tlv.Container) (time.Duration, error) {
+	return 3 * time.Second, nil
 }

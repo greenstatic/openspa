@@ -55,6 +55,7 @@ type ServerConfigADKXDP struct {
 const (
 	ServerConfigFirewallBackendIPTables = "iptables"
 	ServerConfigFirewallBackendCommand  = "command"
+	ServerConfigFirewallBackendNone     = "none" // used for performance measurements, not for production workload
 )
 
 type ServerConfigFirewall struct {
@@ -76,6 +77,7 @@ type ServerConfigFirewallCommand struct {
 const (
 	ServerConfigAuthorizationBackendSimple  = "simple"
 	ServerConfigAuthorizationBackendCommand = "command"
+	ServerConfigAuthorizationBackendNone    = "none" // used for performance measurements, not for production workload
 )
 
 type ServerConfigAuthorization struct {
@@ -213,6 +215,7 @@ func (s ServerConfigFirewall) Verify() error {
 		if err := s.IPTables.Verify(); err != nil {
 			return errors.Wrap(err, "iptables")
 		}
+
 	case ServerConfigFirewallBackendCommand:
 		if s.Command == nil {
 			return errors.New("command field is missing")
@@ -225,6 +228,10 @@ func (s ServerConfigFirewall) Verify() error {
 		if err := s.Command.Verify(); err != nil {
 			return errors.Wrap(err, "command")
 		}
+
+	case ServerConfigFirewallBackendNone:
+		return nil
+
 	default:
 		return errors.New("invalid backend")
 	}
@@ -270,6 +277,7 @@ func (s ServerConfigAuthorization) Verify() error {
 		if err := s.Simple.Verify(); err != nil {
 			return errors.Wrap(err, "simple")
 		}
+
 	case ServerConfigAuthorizationBackendCommand:
 		if s.Command == nil {
 			return errors.New("command field is missing")
@@ -282,6 +290,10 @@ func (s ServerConfigAuthorization) Verify() error {
 		if err := s.Command.Verify(); err != nil {
 			return errors.Wrap(err, "command")
 		}
+
+	case ServerConfigAuthorizationBackendNone:
+		return nil
+
 	default:
 		return errors.New("invalid backend")
 	}
