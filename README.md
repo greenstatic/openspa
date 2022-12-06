@@ -56,8 +56,6 @@ and server
 * adk (Anti DoS Knocking protection) implemented using TOTP
 * Server should expose Prometheus metrics via HTTP
 * eBPF/XDP adk acceleration (Anti DoS knocking protection)
-
-In progress:
 * Benchmarks (ADK with XDP and without)
 
 Planned:
@@ -65,6 +63,8 @@ Planned:
 * x509 certificate support
 * Helper utility to generate keys
 * Server external authentication support
+* Replay attack prevention
+* Use `SO_REUSEPORT` to increase performance on multi-core, multi-NIC queue systems [good blog post about the issue](https://blog.cloudflare.com/how-to-receive-a-million-packets/)
 
 ## Building from Source
 ```sh

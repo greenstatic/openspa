@@ -146,6 +146,8 @@ func (o *ServerHandler) DatagramRequestHandler(_ context.Context, resp UDPRespon
 
 	o.metrics.openspaResponse.Inc()
 
+	log.Debug().Msgf("Sending response to: %s", r.rAddr.String())
+
 	err = resp.SendUDPResponse(r.rAddr, responseB)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to send OpenSPA response")
