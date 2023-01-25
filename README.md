@@ -1,6 +1,6 @@
 # OpenSPA
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/greenstatic/openspa/Test)
+[![CI](https://github.com/greenstatic/openspa/actions/workflows/ci.yaml/badge.svg)](https://github.com/greenstatic/openspa/actions/workflows/ci.yaml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/greenstatic/openspa.svg)](https://pkg.go.dev/github.com/greenstatic/openspa)
 [![Go Report Card](https://goreportcard.com/badge/github.com/greenstatic/openspa)](https://goreportcard.com/report/github.com/greenstatic/openspa)
 ![License](https://img.shields.io/github/license/greenstatic/openspa)
